@@ -1,0 +1,22 @@
+set(SHADERS_IN_DIR "${CMAKE_SOURCE_DIR}/shaders")
+
+file(GLOB_RECURSE SHADERS "${SHADERS_IN_DIR}/*.vert" "${SHADERS_IN_DIR}/*.frag")
+
+foreach(SHADER ${SHADERS})
+    cmake_path(RELATIVE_PATH SHADER OUTPUT_VARIABLE TEMP)
+    cmake_path(REMOVE_FILENAME TEMP OUTPUT_VARIABLE SHADER_PATH)
+    cmake_path(GET TEMP FILENAME SHADER_NAME)
+
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${SHADER_PATH}")
+    set(SHADER_OUT_NAME "${CMAKE_BINARY_DIR}/${SHADER_PATH}/${SHADER_NAME}.spv")
+
+    list(APPEND SHADER_OUT_NAMES ${SHADER_OUT_NAME})
+
+    add_custom_command(
+            MAIN_DEPENDENCY ${SHADER}
+            OUTPUT ${SHADER_OUT_NAME}
+            COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${SHADER} "-o" ${SHADER_OUT_NAME}
+            VERBATIM)
+endforeach()
+
+add_custom_target(build_shaders DEPENDS ${SHADER_OUT_NAMES})
