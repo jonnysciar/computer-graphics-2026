@@ -29,6 +29,7 @@ target_link_libraries(${NAME} PRIVATE nlohmann_json::nlohmann_json)
 
 # Starter
 target_link_libraries(${NAME} PRIVATE Starter)
+target_precompile_headers(${NAME} REUSE_FROM Starter)
 
 # Shaders
 add_dependencies(${NAME} build_shaders)

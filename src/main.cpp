@@ -1,904 +1,907 @@
+// This has been adapted from the Vulkan tutorial
 #include <sstream>
+#include <vector>
+#include <cstdint>
+#include <cmath>
 
-#include <nlohmann/json.hpp>
-
-#define  STARTER_IMPLEMENTATION
 #include "modules/Starter.hpp"
 
-#define  TEXTMAKER_IMPLEMENTATION
-#include "modules/TextMaker.hpp"
-
-#define  SCENE_IMPLEMENTATION
-#include "modules/Scene.hpp"
-
-#define ANIMATIONS_IMPLEMENTATION
-#include "modules/Animations.hpp"
-
-struct VertexChar {
-	glm::vec3 pos;
-	glm::vec3 norm;
-	glm::vec2 UV;
-	glm::uvec4 jointIndices;
-	glm::vec4 weights;
-};
-
-struct UniformBufferObjectChar {
-	alignas(16) glm::mat4 mvpMat[65];
-	alignas(16) glm::mat4 mMat[65];
-	alignas(16) glm::mat4 nMat[65];
-};
-
-// The uniform buffer object used in this example
-struct UniformBufferObject {
-	alignas(16) glm::mat4 mvpMat;
-	alignas(16) glm::mat4 mMat;
-	alignas(16) glm::mat4 nMat;
-};
-
-struct GlobalUniformBufferObject {
-	alignas(16) glm::vec3 lightDir;
-	alignas(16) glm::vec4 lightColor;
-	alignas(16) glm::vec3 eyePos;
-	alignas(16) glm::vec4 debugView;
-};
-struct skyBoxUniformBufferObject {
-	alignas(16) glm::mat4 mvpMat;
-};
-struct ShadowMapUniformBufferObject {
-	alignas(16) glm::mat4 mvpMat;
-};
-
-struct skyBoxVertex {
-	glm::vec3 pos;
-};
+// Vertex definition
 struct Vertex {
-	glm::vec3 pos;
-	glm::vec3 norm;
-	glm::vec2 UV;
-	glm::vec4 tan;
+    glm::vec3 pos;		// now it defines the minimal parameters to support smooth shading in 3D
+    glm::vec3 norm;
+    glm::vec2 UV;
 };
 
-// MAIN !
-class E02 : public BaseProject {
-	protected:
-	// Here you list all the Vulkan objects you need:
-
-	// Descriptor Layouts [what will be passed to the shaders]
-	DescriptorSetLayout DSLlocalChar, DSLlocal, DSLglobal, DSLskyBox;
-	DescriptorSetLayout DSLOffScreen;
-
-	// Vertex formants, Pipelines [Shader couples] and Render passes
-	VertexDescriptor VDchar;
-	VertexDescriptor VD, VDskyBox;
-	RenderPass RP, RPOffScreen;
-	Pipeline Pchar,P, PskyBox, POffScreen, POffScreenChar;
-
-	// Models, textures and Descriptors (values assigned to the uniforms)
-	Model MSphere, Mplane, MCube, MSoftbal, MStatue,MskyBox;
-	Texture Talbedo[4], TNorm[4], Tmetal[4], Troughness[4], Tao[4], TskyBox, Tstars;
-	DescriptorSet DSglobal;
-	DescriptorSet DSlocalSphere, DSlocalCube, DSlocalSoftbal;
-	DescriptorSet DSlocalStatue, DSlocalPlane;
-	DescriptorSet DSskyBox;
-	DescriptorSet DSoff;
-
-	Scene SC;
-	std::vector<VertexDescriptorRef>  VDRs;
-	std::vector<TechniqueRef> PRs;
-
-	#define N_ANIMATIONS 5
-
-	AnimBlender AB;
-	Animations Anim[N_ANIMATIONS];
-	SkeletalAnimation SKA;
-
-	// to provide textual feedback
-	TextMaker txt;
-
-	// Other application parameters
-	float Ar;	// Aspect ratio
-
-	glm::mat4 ViewPrj;
-	glm::mat4 World;
-	glm::vec3 Pos = glm::vec3(0,0,15);
-	glm::vec3 cameraPos;
-	float Yaw = glm::radians(0.0f);
-	float Pitch = glm::radians(0.0f);
-	float Roll = glm::radians(0.0f);
-
-	glm::vec4 debugView = glm::vec4(0.0);
-
-	// ── Colliders ───────────────────────────────────────────────────────────────
-	// Static-object colliders (fitted to the mesh geometry in localInit)
-	Collider CldSphere, CldCube, CldSoftbal, CldStatue;
-	// Character collider (sphere updated every frame in GameLogic)
-	Collider CldChar;
-	// ────────────────────────────────────────────────────────────────────────────
-
-	// Here you set the main application parameters
-	void setWindowParameters() {
-		// window size, titile and initial background
-		windowWidth = 800;
-		windowHeight = 600;
-		windowTitle = "E02 - Setup the environment";
-    	windowResizable = GLFW_TRUE;
-
-		// Initial aspect ratio
-		Ar = 4.0f / 3.0f;
-	}
-
-	// What to do when the window changes size
-	void onWindowResize(int w, int h) {
-		std::cout << "Window resized to: " << w << " x " << h << "\n";
-		Ar = (float)w / (float)h;
-		// Update Render Pass
-		RP.width = w;
-		RP.height = h;
-
-		// updates the textual output
-		txt.resizeScreen(w, h);
-
-		// Updates the colliders shown
-		SC.ColShow.resizeScreen(w, h);
-	}
-
-	// Here you load and setup all your Vulkan Models and Texutures.
-	// Here you also create your Descriptor set layouts and load the shaders for the pipelines
-	void localInit() {
-		// Descriptor Layouts [what will be passed to the shaders]
-		DSLlocalChar.init(this, {
-			// this array contains the binding:
-			// first  element : the binding number
-			// second element : the type of element (buffer or texture)
-			// third  element : the pipeline stage where it will be used
-			{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObjectChar), 1},
-			{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 1},
-			{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1, 1}
-			});
-		DSLlocal.init(this, {
-					// this array contains the binding:
-					// first  element : the binding number
-					// second element : the type of element (buffer or texture)
-					// third  element : the pipeline stage where it will be used
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4},
-					{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 4, 4},
-					{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 8, 4},
-					{4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 12, 4},
-					{5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 16, 4},
-					{6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 20, 1},
-
-				  });
-		DSLglobal.init(this, {
-					// this array contains the binding:
-					// first  element : the binding number
-					// second element : the type of element (buffer or texture)
-					// third  element : the pipeline stage where it will be used
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject), 1}
-				  });
-		DSLskyBox.init(this, {
-			{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(skyBoxUniformBufferObject), 1},
-			{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 1},
-			{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1, 1}
-		  });
-		DSLOffScreen.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(ShadowMapUniformBufferObject), 1}
-					});
-		VDchar.init(this, {
-			{0, sizeof(VertexChar), VK_VERTEX_INPUT_RATE_VERTEX}
-		}, {
-			{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexChar, pos),
-					sizeof(glm::vec3), POSITION},
-			{0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VertexChar, norm),
-					sizeof(glm::vec3), NORMAL},
-			{0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(VertexChar, UV),
-					sizeof(glm::vec2), UV},
-			{0, 3, VK_FORMAT_R32G32B32A32_UINT, offsetof(VertexChar, jointIndices),
-					sizeof(glm::uvec4), JOINTINDEX},
-			{0, 4, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(VertexChar, weights),
-					sizeof(glm::vec4), JOINTWEIGHT}
-		});
-		VD.init(this, {
-				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
-				}, {
-				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
-				         sizeof(glm::vec3), POSITION},
-				  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
-				         sizeof(glm::vec3), NORMAL},
-				  {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
-				         sizeof(glm::vec2), UV},
-				  {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tan),
-				         sizeof(glm::vec4), TANGENT}
-				});
-		VDskyBox.init(this, {
-		  {0, sizeof(skyBoxVertex), VK_VERTEX_INPUT_RATE_VERTEX}
-		}, {
-		  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(skyBoxVertex, pos),
-				 sizeof(glm::vec3), POSITION}
-		});
-
-		VDRs.resize(1);
-		VDRs[0].init("VDchar",   &VDchar);
-
-		// initializes the render passes
-		RP.init(this);
-		// sets the blue sky
-		RP.properties[0].clearValue = {0.0f,0.9f,1.0f,1.0f};
-
-		float shadowMapSize = 2048;
-		RPOffScreen.init(this, shadowMapSize, shadowMapSize, 1,
-					RenderPass::getStandardAttchmentsProperties(AT_DEPTH_ONLY, this),
-					RenderPass::getStandardDependencies(ATDEP_DEPTH_TRANS), true);
-
-		// Pipelines [Shader couples]
-		// The last array, is a vector of pointer to the layouts of the sets that will
-		// be used in this pipeline. The first element will be set 0, and so on..
-
-		Pchar.init(this, &VDchar, "shaders/PosNormUvTanWeights.vert.spv", "shaders/CookTorranceForCharacter.frag.spv", {&DSLglobal, &DSLlocalChar, &DSLOffScreen});
-		POffScreenChar.init(this, &VDchar, "shaders/PosNormUvTanWeightsShadow.vert.spv", "shaders/ShadowMap.frag.spv", {&DSLOffScreen, &DSLlocalChar});
-
-		P.init(this, &VD, "shaders/SimplePosNormUvTan.vert.spv", "shaders/PBR.frag.spv", {&DSLglobal, &DSLlocal, &DSLOffScreen});
-
-		PskyBox.init(this, &VDskyBox, "shaders/SkyBoxShader.vert.spv", "shaders/SkyBoxShader.frag.spv", {&DSLskyBox});
-		PskyBox.setCompareOp(VK_COMPARE_OP_LESS_OR_EQUAL);
-		PskyBox.setCullMode(VK_CULL_MODE_BACK_BIT);
-		PskyBox.setPolygonMode(VK_POLYGON_MODE_FILL);
-
-		POffScreen.init(this, &VD, "shaders/ShadowMap.vert.spv", "shaders/ShadowMap.frag.spv", {&DSLOffScreen, &DSLlocal});
-
-
-		PRs.resize(1);
-		PRs[0].init("CookTorranceChar", {
-						 {&POffScreenChar, {//Pipeline and DSL for the shadow pass
-							 /*DSLOffScreen*/{},
-							 /*DSLlocalChar*/{
-									/*t0*/{true,  0, {}},
-									/*t1*/{false, 0, {}}
-									}
-								}},
-							{&Pchar, {//Pipeline and DSL for the main pass
-							 /*DSLglobal*/{},
-							 /*DSLlocalChar*/{
-									/*t0*/{true,  0, {}},
-									/*t1*/{false, 0, {}}
-								  },
-							 /*DSLOffScreen*/{}
-								 }
-								}
-						  }, /*TotalNtextures*/1, &VDchar);
-
-		// Models, textures and Descriptors (values assigned to the uniforms)
-
-		MSphere.init(this, &VD, "assets/models/Sphere.gltf", GLTF);
-		MCube.init(this, &VD, "assets/models/Cube.gltf", GLTF);
-		MSoftbal.init(this, &VD, "assets/models/Softball.gltf", GLTF);
-		MStatue.init(this, &VD, "assets/models/Statue.gltf", GLTF);
-		Mplane.init(this, &VD, "assets/models/Plane.gltf", GLTF);
-
-		MskyBox.init(this, &VDskyBox, "assets/models/SkyBoxCube.obj", OBJ);
-
-
-
-		Talbedo[0].init(this, "assets/textures/ice-field/ice_field_albedo.png");
-		TNorm[0].init(this, "assets/textures/ice-field/ice_field_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-		Tmetal[0].init(this, "assets/textures/ice-field/ice_field_metallic.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Troughness[0].init(this, "assets/textures/ice-field/ice_field_roughness.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Tao[0].init(this, "assets/textures/ice-field/ice_field_ao.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Talbedo[1].init(this, "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png");
-		TNorm[1].init(this, "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-		Tmetal[1].init(this, "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Troughness[1].init(this, "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Tao[1].init(this, "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Talbedo[2].init(this, "assets/textures/granite-tile/granite-tile_albedo.png");
-		TNorm[2].init(this, "assets/textures/granite-tile/granite-tile_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-		Tmetal[2].init(this, "assets/textures/granite-tile/granite-tile_metallic.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Troughness[2].init(this, "assets/textures/granite-tile/granite-tile_roughness.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Tao[2].init(this, "assets/textures/granite-tile/granite-tile_ao.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Talbedo[3].init(this, "assets/textures/clay-shingles1/clay-shingles1_albedo.png");
-		TNorm[3].init(this, "assets/textures/clay-shingles1/clay-shingles1_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-		Tmetal[3].init(this, "assets/textures/clay-shingles1/clay-shingles1_metallic.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Troughness[3].init(this, "assets/textures/clay-shingles1/clay-shingles1_roughness.png",VK_FORMAT_R8G8B8A8_UNORM);
-		Tao[3].init(this, "assets/textures/clay-shingles1/clay-shingles1_ao.png",VK_FORMAT_R8G8B8A8_UNORM);
-
-		TskyBox.init(this, "assets/textures/starmap_g4k.jpg");
-		Tstars.init(this, "assets/textures/constellation_figures.png");
-
-		// sets the size of the Descriptor Set Pool
-		DPSZs.uniformBlocksInPool = 65;
-		DPSZs.texturesInPool = 160;
-		DPSZs.setsInPool = 65;
-
-		if(SC.init(this, /*Npasses*/2, VDRs, PRs, "assets/models/scene.json") != 0) {
-			std::cout << "ERROR LOADING THE SCENE\n";
-			exit(0);
-		}
-
-		// ── Collider setup ──────────────────────────────────────────────────────
-		// Fit AABBs to each static mesh (local-space geometry)
-		CldSphere .fitAABB(&MSphere);
-		CldCube   .fitAABB(&MCube);
-		CldSoftbal.fitAABB(&MSoftbal);
-		CldStatue .fitAABB(&MStatue);
-
-		// Set world matrices to match the transforms used in updateUniformBuffer
-		CldSphere .setWorldMatrix(glm::translate(glm::mat4(1), glm::vec3(-6, 1, 0)));
-		CldCube   .setWorldMatrix(glm::translate(glm::mat4(1), glm::vec3( 6, 1, 0)));
-		CldSoftbal.setWorldMatrix(glm::translate(glm::mat4(1), glm::vec3(-3, 1,-5)));
-		CldStatue .setWorldMatrix(glm::translate(glm::mat4(1), glm::vec3( 3, 0,-5)) *
-		                          glm::scale(glm::mat4(1), glm::vec3(2.61f)));
-
-		// Character collider: sphere centred at waist height (local origin = Pos)
-		// radius 0.5 units, centre at y=0.9 (approx. body centre in world space)
-		CldChar.initSphere(0.0f, 0.9f, 0.0f, 0.5f);
-
-		// Register all colliders with the visualiser (ColShow is already init'd by SC.init)
-		//SC.ColShow.show(&CldSphere);
-		//SC.ColShow.show(&CldCube);
-		//SC.ColShow.show(&CldSoftbal);
-		//SC.ColShow.show(&CldStatue);
-		//SC.ColShow.show(&CldChar);
-
-		// Default stroke colours: blue for static objects, green for character
-		//SC.ColShow.setStroke(&CldSphere,   glm::vec4(0.0f, 0.4f, 1.0f, 1.0f));
-		//SC.ColShow.setStroke(&CldCube,     glm::vec4(0.0f, 0.4f, 1.0f, 1.0f));
-		//SC.ColShow.setStroke(&CldSoftbal,  glm::vec4(0.0f, 0.4f, 1.0f, 1.0f));
-		//SC.ColShow.setStroke(&CldStatue,   glm::vec4(0.0f, 0.4f, 1.0f, 1.0f));
-		//SC.ColShow.setStroke(&CldChar,     glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-		// ────────────────────────────────────────────────────────────────────────
-		// initializes animations
-		for(int ian = 0; ian < N_ANIMATIONS; ian++) {
-			Anim[ian].init(*SC.As[ian]);
-		}
-		AB.init({{0,32,0.0f,0}, {0,16,0.0f,1}, {0,263,0.0f,2}, {0,83,0.0f,3}, {0,16,0.0f,4}});
-		AB.Start(2, 0.0f); // start on idle
-		SKA.init(Anim, 5, "Armature|mixamo.com|Layer0", 0);
-
-		// initializes the textual output
-		txt.init(this, windowWidth, windowHeight);
-
-		// submits the main command buffer
-		submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
-
-		// Prepares for showing the FPS count
-		txt.print(1.0f, 1.0f, "FPS:",1,"CO",false,false,true,TAL_RIGHT,TRH_RIGHT,TRV_BOTTOM,{1.0f,0.0f,0.0f,1.0f},{0.8f,0.8f,0.0f,1.0f});
-
-		txt.print(-1.0f, -1.0f, "3 - Change texture", 3);
-	}
-
-	// Here you create your pipelines and Descriptor Sets!
-	void pipelinesAndDescriptorSetsInit() {
-		// creates the render passes
-		RP.create();
-		RPOffScreen.create();
-
-		// This creates a new pipeline (with the current surface), using its shaders for the provided render pass
-		Pchar.create(&RP);
-		P.create(&RP);
-		PskyBox.create(&RP);
-		POffScreen.create(&RPOffScreen);
-		POffScreenChar.create(&RPOffScreen);
-
-		DSglobal.init(this, &DSLglobal, {});
-
-		DSlocalSphere.init(this, &DSLlocal, {Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(), Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-												TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(), TNorm[3].getViewAndSampler(),
-												Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(), Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-												Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(), Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-												Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(), Tao[3].getViewAndSampler(),
-												RPOffScreen.attachments[0].getViewAndSampler()});
-		DSlocalCube.init(this, &DSLlocal, {Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(), Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-												TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(), TNorm[3].getViewAndSampler(),
-												Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(), Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-												Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(), Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-												Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(), Tao[3].getViewAndSampler(),
-												RPOffScreen.attachments[0].getViewAndSampler()});
-		DSlocalSoftbal.init (this, &DSLlocal, {Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(), Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-												TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(), TNorm[3].getViewAndSampler(),
-												Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(), Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-												Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(), Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-												Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(), Tao[3].getViewAndSampler(),
-												RPOffScreen.attachments[0].getViewAndSampler()});
-		DSlocalStatue.init( this, &DSLlocal, {Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(), Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-												TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(), TNorm[3].getViewAndSampler(),
-												Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(), Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-												Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(), Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-												Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(), Tao[3].getViewAndSampler(),
-												RPOffScreen.attachments[0].getViewAndSampler()});
-		DSlocalPlane.init( this, &DSLlocal, {Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(), Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-												TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(), TNorm[3].getViewAndSampler(),
-												Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(), Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-												Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(), Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-												Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(), Tao[3].getViewAndSampler(),
-												RPOffScreen.attachments[0].getViewAndSampler()});
-		DSskyBox.init(this, &DSLskyBox, {TskyBox.getViewAndSampler(), Tstars.getViewAndSampler()});
-		DSoff.init(this, &DSLOffScreen, {});
-
-// Here you define the data set
-		// If the scene has textures coming from a render pass, the corresponding element of the technique must be
-		// updated before calling SC.pipelinesAndDescriptorSetsInit();
-		SC.TechniqueIds["CookTorranceChar"]->PT[0].texDefs[1][1].info = RPOffScreen.attachments[0].getViewAndSampler();
-		SC.TechniqueIds["CookTorranceChar"]->PT[1].texDefs[1][1].info = RPOffScreen.attachments[0].getViewAndSampler();
-		SC.pipelinesAndDescriptorSetsInit();
-		txt.pipelinesAndDescriptorSetsInit();
-	}
-
-	// Here you destroy your pipelines and Descriptor Sets!
-	void pipelinesAndDescriptorSetsCleanup() {
-		Pchar.cleanup();
-		P.cleanup();
-		PskyBox.cleanup();
-		POffScreen.cleanup();
-		POffScreenChar.cleanup();
-
-		RP.cleanup();
-		RPOffScreen.cleanup();
-
-		DSglobal.cleanup();
-		DSlocalSphere .cleanup();
-		DSlocalCube   .cleanup();
-		DSlocalSoftbal.cleanup();
-		DSlocalStatue .cleanup();
-		DSlocalPlane.cleanup();
-		DSskyBox.cleanup();
-		DSoff.cleanup();
-
-		SC.pipelinesAndDescriptorSetsCleanup();
-		txt.pipelinesAndDescriptorSetsCleanup();
-	}
-
-	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
-	// You also have to destroy the pipelines
-	void localCleanup() {
-		MSphere .cleanup();
-		MCube   .cleanup();
-		MSoftbal.cleanup();
-		MStatue .cleanup();
-		Mplane.cleanup();
-		MskyBox.cleanup();
-
-		Talbedo[0].cleanup();
-		TNorm[0].cleanup();
-		Tmetal[0].cleanup();
-		Troughness[0].cleanup();
-		Tao[0].cleanup();
-		Talbedo[1].cleanup();
-		TNorm[1].cleanup();
-		Tmetal[1].cleanup();
-		Troughness[1].cleanup();
-		Tao[1].cleanup();
-		Talbedo[2].cleanup();
-		TNorm[2].cleanup();
-		Tmetal[2].cleanup();
-		Troughness[2].cleanup();
-		Tao[2].cleanup();
-		Talbedo[3].cleanup();
-		TNorm[3].cleanup();
-		Tmetal[3].cleanup();
-		Troughness[3].cleanup();
-		Tao[3].cleanup();
-
-		TskyBox.cleanup();
-		Tstars.cleanup();
-
-		DSLlocalChar.cleanup();
-		DSLlocal.cleanup();
-		DSLglobal.cleanup();
-		DSLskyBox.cleanup();
-		DSLOffScreen.cleanup();
-
-		Pchar.destroy();
-		P.destroy();
-		PskyBox.destroy();
-		POffScreen.destroy();
-		POffScreenChar.destroy();
-
-		RP.destroy();
-		RPOffScreen.destroy();
-
-		SC.localCleanup();
-		txt.localCleanup();
-
-		for(int ian = 0; ian < N_ANIMATIONS; ian++) {
-			Anim[ian].cleanup();
-		}
-	}
-
-	// Here it is the creation of the command buffer:
-	// You send to the GPU all the objects you want to draw,
-	// with their buffers and textures
-	static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
-		// Simple trick to avoid having always 'T->'
-		// in che code that populates the command buffer!
-//std::cout << "Populating command buffer for " << currentImage << "\n";
-		E02 *T = (E02 *)Params;
-		T->populateCommandBuffer(commandBuffer, currentImage);
-	}
-	// This is the real place where the Command Buffer is written
-	void populateMesh(VkCommandBuffer commandBuffer, int currentImage, Pipeline &pipe) {
-		MSphere.bind(commandBuffer);
-		DSlocalSphere.bind(commandBuffer, pipe, 1, currentImage);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(MSphere.indices.size()),
-				1, 0, 0, 0);
-
-		MCube.bind(commandBuffer);
-		DSlocalCube.bind(commandBuffer, pipe, 1, currentImage);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(MCube.indices.size()),
-				1, 0, 0, 0);
-
-		MSoftbal.bind(commandBuffer);
-		DSlocalSoftbal.bind(commandBuffer, pipe, 1, currentImage);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(MSoftbal.indices.size()),
-				1, 0, 0, 0);
-
-		MStatue.bind(commandBuffer);
-		DSlocalStatue.bind(commandBuffer, pipe, 1, currentImage);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(MStatue.indices.size()),
-				1, 0, 0, 0);
-
-		Mplane.bind(commandBuffer);
-		DSlocalPlane.bind(commandBuffer, pipe, 1, currentImage);
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(Mplane.indices.size()),
-				1, 0, 0, 0);
-
-	}
-
-	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-
-		// Offscreen pass - always required
-		RPOffScreen.begin(commandBuffer, 0);
-		POffScreen.bind(commandBuffer);
-		DSoff.bind(commandBuffer, POffScreen, 0, currentImage);
-
-		populateMesh(commandBuffer, currentImage, POffScreen);
-
-		DSoff.bind(commandBuffer, POffScreenChar, 0, currentImage);
-		SC.populateCommandBuffer(commandBuffer, 0, currentImage);
-
-		RPOffScreen.end(commandBuffer);
-
-		// begin standard pass
-		RP.begin(commandBuffer, currentImage);
-
-		P.bind(commandBuffer);
-		DSglobal.bind(commandBuffer, P, 0, currentImage);
-		DSoff.bind(commandBuffer, P, 2, currentImage);
-
-
-		populateMesh(commandBuffer, currentImage, P);
-
-		DSoff.bind(commandBuffer, Pchar, 2, currentImage);
-		SC.populateCommandBuffer(commandBuffer, 1, currentImage);
-
-		PskyBox.bind(commandBuffer);
-		MskyBox.bind(commandBuffer);
-		DSskyBox.bind(commandBuffer, PskyBox, 0, currentImage);
-		vkCmdDrawIndexed(commandBuffer,
-					static_cast<uint32_t>(MskyBox.indices.size()), 1, 0, 0, 0);
-
-
-		RP.end(commandBuffer);
-	}
-
-	// Here is where you update the uniforms.
-	// Very likely this will be where you will be writing the logic of your application.
-	void updateUniformBuffer(uint32_t currentImage) {
-		static bool debounce = false;
-		static int curDebounce = 0;
-
-		// press 3 to change the texture
-		if(glfwGetKey(window, GLFW_KEY_3)) {
-			if(!debounce) {
-				debounce = true;
-				curDebounce = GLFW_KEY_3;
-
-				debugView.z += 1.0f;
-				if(debugView.z > 3.5f) {
-					debugView.z = 0.0f;
-				}
-			}
-		} else {
-			if((curDebounce == GLFW_KEY_3) && debounce) {
-				debounce = false;
-				curDebounce = 0;
-			}
-		}
-		// handle the ESC key to exit the app
-		if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-			glfwSetWindowShouldClose(window, GL_TRUE);
-		}
-
-		// moves the view
-		float deltaT = GameLogic();
-
-		// updated the animation
-		const float SpeedUpAnimFact = 0.85f;
-		AB.Advance(deltaT * SpeedUpAnimFact);
-
-		// defines the global parameters for the uniform
-		static float lightRotationAngle = 0.0f; // Static variable to keep track of rotation
-		lightRotationAngle += 10.0f * deltaT; // Increment rotation angle based on time
-
-		const glm::mat4 lightView = glm::rotate(glm::mat4(1), glm::radians(lightRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f)) *
-									glm::rotate(glm::mat4(1), glm::radians(-45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		const glm::vec3 lightDir =  glm::vec3(lightView * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-
-		GlobalUniformBufferObject gubo{};
-
-		gubo.lightDir = lightDir;
-		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)*5.0f;
-		gubo.eyePos = cameraPos;
-		gubo.debugView = debugView;
-
-		DSglobal.map(currentImage, &gubo, 0);
-
-		// compute shadow MVP early so it's available for the character shadow pass
-		ShadowMapUniformBufferObject subo{};
-		const float hw = 24.0f;
-		const float vw = 24.0f;
-		const float lightN = -24.0f;
-		const float lightF =  24.0f;
-		const glm::mat4 offVP =
-					  glm::ortho(-hw, hw, vw, -vw, lightN, lightF) *
-					  glm::inverse(lightView);
-		subo.mvpMat = offVP;
-		DSoff.map(currentImage, &subo, 0);
-
-		// defines the local parameters for the uniforms
-		UniformBufferObject ubo{};
-
-
-		// defines the local parameters for the uniforms
-		UniformBufferObjectChar uboc{};
-		UniformBufferObjectChar uboc_shadow{};	// separate UBO for shadow pass: mvpMat = mMat only
-		SKA.Sample(AB);
-		std::vector<glm::mat4> *TMsp = SKA.getTransformMatrices();
-
-//printMat4("TF[55]", (*TMsp)[55]);
-
-		glm::mat4 AdaptMat =
-			glm::scale(glm::mat4(1.0f), glm::vec3(0.01f)) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f,0.0f,0.0f));
-
-		int instanceId;
-		// character
-		for(instanceId = 0; instanceId < SC.TI[0].InstanceCount; instanceId++) {
-			for(int im = 0; im < TMsp->size(); im++) {
-				uboc.mMat[im]   = World * AdaptMat * (*TMsp)[im];
-				uboc.mvpMat[im] = ViewPrj * uboc.mMat[im];
-				uboc.nMat[im]   = glm::inverse(glm::transpose(uboc.mMat[im]));
-				// shadow pass: mvpMat = mMat only; the shadow shader applies lightVP on top
-				uboc_shadow.mvpMat[im] = uboc.mMat[im];
-				uboc_shadow.mMat[im]   = uboc.mMat[im];
-				uboc_shadow.nMat[im]   = uboc.nMat[im];
-			}
-
-			// DS[0] = POffScreenChar pass (shadow): set0=DSLOffScreen, set1=DSLlocalChar
-			SC.TI[0].I[instanceId].DS[0][0]->map(currentImage, &subo, 0);        // light VP
-			SC.TI[0].I[instanceId].DS[0][1]->map(currentImage, &uboc_shadow, 0); // joint world matrices
-			// DS[1] = Pchar pass (main render): set0=DSLglobal, set1=DSLlocalChar
-			SC.TI[0].I[instanceId].DS[1][0]->map(currentImage, &gubo, 0); // global (light/camera)
-			SC.TI[0].I[instanceId].DS[1][1]->map(currentImage, &uboc, 0); // joint camera MVPs
-			SC.TI[0].I[instanceId].DS[1][2]->map(currentImage, &subo, 0); // joint camera MVPs
-
-		}
-
-		// ---- for the plane
-		ubo.mMat = glm::scale(glm::mat4(1), glm::vec3(16.0));
-		ubo.mvpMat = ViewPrj * ubo.mMat;
-		ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-		DSlocalPlane.map(currentImage, &ubo, 0);
-
-		// ---- for the object
-		ubo.mMat   = glm::translate(glm::mat4(1), glm::vec3(-6,1,0));
-		ubo.mvpMat = ViewPrj * ubo.mMat;
-		ubo.nMat   = glm::inverse(glm::transpose(ubo.mMat));
-		DSlocalSphere.map(currentImage, &ubo, 0);
-
-		ubo.mMat   = glm::translate(glm::mat4(1), glm::vec3(6,1,0));
-		ubo.mvpMat = ViewPrj * ubo.mMat;
-		ubo.nMat   = glm::inverse(glm::transpose(ubo.mMat));
-		DSlocalCube.map(currentImage, &ubo, 0);
-
-		ubo.mMat   = glm::translate(glm::mat4(1), glm::vec3(-3,1,-5));
-		ubo.mvpMat = ViewPrj * ubo.mMat;
-		ubo.nMat   = glm::inverse(glm::transpose(ubo.mMat));
-		DSlocalSoftbal.map(currentImage, &ubo, 0);
-
-		ubo.mMat   = glm::translate(glm::mat4(1), glm::vec3(3,0,-5)) * glm::scale(glm::mat4(1), glm::vec3(2.61));
-		ubo.mvpMat = ViewPrj * ubo.mMat;
-		ubo.nMat   = glm::inverse(glm::transpose(ubo.mMat));
-		DSlocalStatue.map(currentImage, &ubo, 0);
-
-		skyBoxUniformBufferObject sbubo{};
-		sbubo.mvpMat = ViewPrj * glm::translate(glm::mat4(1), cameraPos) * glm::scale(glm::mat4(1), glm::vec3(100.0f));
-		DSskyBox.map(currentImage, &sbubo, 0);
-
-		// updates the FPS
-		static float elapsedT = 0.0f;
-		static int countedFrames = 0;
-
-		countedFrames++;
-		elapsedT += deltaT;
-		if(elapsedT > 1.0f) {
-			float Fps = (float)countedFrames / elapsedT;
-
-			std::ostringstream oss;
-			oss << "FPS: " << Fps << "\n";
-
-			txt.print(1.0f, 1.0f, oss.str(), 1, "CO", false, false, true,TAL_RIGHT,TRH_RIGHT,TRV_BOTTOM,{1.0f,0.0f,0.0f,1.0f},{0.8f,0.8f,0.0f,1.0f});
-
-			elapsedT = 0.0f;
-		    countedFrames = 0;
-		}
-
-		txt.updateCommandBuffer();
-        // Updates the command buffer for the colliders visualization
-        //------------------------------------------------------------------------
-        SC.updateColliderVisualizer(currentImage, ViewPrj);
-
-        // Note: here I've put a refresh rate to avoid triggering the refresh every frame
-        static float colliderRefreshTimer = 0.0f;
-        const float colliderRefreshRate = 0.01f;
-
-        colliderRefreshTimer += deltaT;
-
-        if (colliderRefreshTimer >= colliderRefreshRate)
+// The uniform buffer objects used in this example
+
+// A local uniform buffer object with matrices and material parameters
+struct UniformBufferObject {
+    alignas(16) glm::mat4 vpMat;
+    alignas(16) glm::vec4 specular;
+    alignas(16) glm::vec3 ambient;
+};
+
+// A local uniform buffer for the instances
+struct InstanceUniformBufferObject {
+    alignas(16) glm::mat4 mMat[674];
+};
+
+// A local uniform buffer for creating the map
+struct MapMakeUniformBufferObject {
+    alignas(16) glm::mat4 Transform;
+    alignas(16) glm::vec4 Color;
+};
+
+// A global uniform buffer object with lights and eye position
+struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 lightDir;
+    alignas(16) glm::vec3 lightColor;
+    alignas(16) glm::vec3 eyePos;
+    alignas(16) glm::vec3 ambientLight;
+};
+
+
+// Push constants: this is the data structure for the push constants
+struct PushConstants {
+    glm::mat4 mMat;
+    glm::mat4 uvMat;
+};
+
+// The following classes were generated by ChatGPT. This is a way to show a good use
+// of IA based tools: the creation of the maze, is not  relevant with the course.
+// It is then OK to leave this part to ChatGPT.
+
+// This is the class containing the maze, and the procedure to create both the transform matrices
+// for the walls, and the lines for the map.
+class Labirynth
+{
+public:
+    static constexpr int rows = 25;
+    static constexpr int cols = 25;
+    static constexpr float cellSize = 4.0f;
+
+    struct LineMesh
+    {
+        std::vector<glm::vec3> vertices;
+        std::vector<unsigned int> indices;
+    };
+
+    static std::vector<glm::mat4> generateWallTransforms()
+    {
+        std::vector<glm::mat4> transforms;
+
+        constexpr float halfCell = cellSize * 0.5f;
+
+        // Horizontal walls
+        for (int r = 0; r < rows + 1; ++r)
         {
-            SC.refreshColliderVisualizer();
-            colliderRefreshTimer = 0.0f;
+            for (int c = 0; c < cols; ++c)
+            {
+                if (horizontalWalls[r][c] == 1)
+                {
+                    float x = (c - cols * 0.5f + 0.5f) * cellSize;
+                    float y = (rows * 0.5f - r) * cellSize;
+
+                    glm::mat4 matrix(1.0f);
+                    matrix = glm::scale(glm::mat4(1), glm::vec3(halfCell, halfCell, halfCell)) * matrix;
+                    matrix = glm::translate(glm::mat4(1), glm::vec3(x, 1.0f, y)) * matrix;
+
+                    transforms.push_back(matrix);
+                }
+            }
         }
-        //------------------------------------------------------------------------
-	}
 
-	float GameLogic() {
-		// Parameters
-		// Camera FOV-y, Near Plane and Far Plane
-		const float FOVy = glm::radians(45.0f);
-		const float nearPlane = 0.1f;
-		const float farPlane = 100.f;
-		// Player starting point
-		const glm::vec3 StartingPosition = glm::vec3(0.0, 0.0, -1.5);
-		// Camera target height and distance
-		static float camHeight = 1.5;
-		static float camDist = 5;
-		// Camera Pitch limits
-		const float minPitch = glm::radians(-8.75f);
-		const float maxPitch = glm::radians(60.0f);
-		// Rotation and motion speed
-		const float ROT_SPEED = glm::radians(120.0f);
-		const float MOVE_SPEED_BASE = 5.0f;
-		const float MOVE_SPEED_RUN  = 10.0f;
-		const float ZOOM_SPEED = MOVE_SPEED_BASE * 1.5f;
-		const float MAX_CAM_DIST =  7.5;
-		const float MIN_CAM_DIST =  1.5;
+        // Vertical walls
+        for (int r = 0; r < rows; ++r)
+        {
+            for (int c = 0; c < cols + 1; ++c)
+            {
+                if (verticalWalls[r][c] == 1)
+                {
+                    float x = (c - cols * 0.5f) * cellSize;
+                    float y = (rows * 0.5f - r - 0.5f) * cellSize;
 
-		// Integration with the timers and the controllers
-		float deltaT;
-		glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
-		bool fire = false;
-		getSixAxis(deltaT, m, r, fire);
-		float MOVE_SPEED = fire ? MOVE_SPEED_RUN : MOVE_SPEED_BASE;
+                    glm::mat4 matrix(1.0f);
+                    matrix = glm::scale(glm::mat4(1), glm::vec3(halfCell, halfCell, halfCell)) * matrix;
+                    matrix = glm::rotate(glm::mat4(1), glm::radians(90.0f), glm::vec3(0, 1, 0)) * matrix;
+                    matrix = glm::translate(glm::mat4(1), glm::vec3(x, 1.0f, y)) * matrix;
+
+                    transforms.push_back(matrix);
+                }
+            }
+        }
+
+        return transforms;
+    }
+
+    static LineMesh generateLineMesh()
+    {
+        LineMesh mesh;
+
+        auto addLine = [&](const glm::vec3& a, const glm::vec3& b)
+        {
+            unsigned int baseIndex = static_cast<unsigned int>(mesh.vertices.size());
+
+            mesh.vertices.push_back(a);
+            mesh.vertices.push_back(b);
+
+            mesh.indices.push_back(baseIndex);
+            mesh.indices.push_back(baseIndex + 1);
+        };
+
+        // Horizontal wall lines
+        for (int r = 0; r < rows + 1; ++r)
+        {
+            for (int c = 0; c < cols; ++c)
+            {
+                if (horizontalWalls[r][c] == 1)
+                {
+                    float x0 = (c - cols * 0.5f) * cellSize;
+                    float x1 = (c - cols * 0.5f + 1.0f) * cellSize;
+                    float y  = (rows * 0.5f - r) * cellSize;
+
+                    addLine(
+                        glm::vec3(x0, y, 0.0f),
+                        glm::vec3(x1, y, 0.0f)
+                    );
+                }
+            }
+        }
+
+        // Vertical wall lines
+        for (int r = 0; r < rows; ++r)
+        {
+            for (int c = 0; c < cols + 1; ++c)
+            {
+                if (verticalWalls[r][c] == 1)
+                {
+                    float x  = (c - cols * 0.5f) * cellSize;
+                    float y0 = (rows * 0.5f - r) * cellSize;
+                    float y1 = (rows * 0.5f - r - 1.0f) * cellSize;
+
+                    addLine(
+                        glm::vec3(x, y0, 0.0f),
+                        glm::vec3(x, y1, 0.0f)
+                    );
+                }
+            }
+        }
+
+        return mesh;
+    }
+
+public:
+    inline static constexpr int horizontalWalls[rows + 1][cols] = {
+        {1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1},
+        {0,0,1,0,1,0,0,0,1,1,0,0,1,1,1,1,0,0,0,0,1,0,0,1,1},
+        {1,1,0,0,0,1,0,1,1,0,1,0,1,0,0,0,1,0,0,0,1,1,1,0,0},
+        {0,0,1,1,0,0,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,1,1,0},
+        {0,1,0,1,1,0,0,0,1,1,1,1,0,1,0,0,1,1,0,0,0,0,0,1,0},
+        {0,0,1,0,1,1,1,1,0,0,1,1,0,0,0,1,1,0,1,0,0,0,1,0,1},
+        {0,1,1,1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,1,0,1,0,1,0},
+        {1,0,0,1,1,1,1,1,0,0,0,1,0,1,0,0,1,1,0,1,1,0,1,0,0},
+        {0,1,1,0,1,1,1,0,0,0,1,0,1,1,1,1,0,0,0,0,1,1,0,1,0},
+        {0,1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,0,0,1},
+        {0,1,0,1,1,0,0,1,0,1,1,0,1,0,1,0,1,1,1,1,0,0,0,1,0},
+        {0,0,1,0,0,0,1,0,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,1},
+        {0,1,0,1,1,1,0,1,0,0,1,0,0,1,0,0,1,1,0,1,1,0,0,1,0},
+        {0,0,1,0,1,0,1,1,0,0,1,0,1,0,0,1,1,0,0,0,0,0,0,0,0},
+        {0,1,1,1,1,0,0,0,1,1,0,1,0,0,0,0,1,1,1,1,1,1,0,1,0},
+        {1,0,0,0,0,0,0,1,1,0,1,0,0,1,0,0,0,1,1,0,0,1,1,1,1},
+        {0,1,0,0,1,1,1,1,0,1,1,1,0,0,0,0,0,1,0,0,0,0,0,1,0},
+        {0,0,1,0,0,1,1,1,1,0,1,0,1,0,0,1,1,1,1,0,1,0,1,1,0},
+        {0,1,0,1,1,1,1,0,0,0,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1},
+        {0,0,1,0,1,0,0,1,0,0,1,1,1,0,1,0,1,1,1,1,1,0,0,1,0},
+        {0,0,0,0,1,0,1,0,1,0,0,1,0,1,1,1,0,0,1,1,0,0,1,1,0},
+        {0,0,0,0,0,1,0,1,0,1,0,0,1,1,0,0,1,1,0,1,0,1,0,0,0},
+        {0,1,1,0,0,0,1,0,1,0,1,1,1,0,1,0,0,0,1,0,1,0,1,1,1},
+        {0,0,0,1,0,1,0,0,0,0,0,1,1,1,0,1,1,0,0,0,0,1,0,1,0},
+        {0,0,0,0,1,0,1,1,0,0,1,0,0,1,1,0,0,1,0,0,1,0,1,0,0},
+        {1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1}
+    };
+
+    inline static constexpr int verticalWalls[rows][cols + 1] = {
+        {1,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,1,0,0,1},
+        {1,0,1,0,1,0,1,1,0,0,1,1,0,0,1,1,0,1,1,1,1,0,0,1,0,1},
+        {1,0,0,1,1,1,1,0,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,0,1,1},
+        {1,1,1,0,0,1,0,1,0,1,0,1,1,0,0,1,1,0,0,1,1,0,1,0,0,1},
+        {1,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1,0,0,1,0,1,1,1,0,1,1},
+        {1,1,0,0,1,0,1,0,1,1,1,0,1,1,1,1,0,1,1,0,1,1,0,1,0,1},
+        {1,1,0,0,0,1,0,1,0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1},
+        {1,0,1,1,0,0,0,0,1,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1},
+        {1,0,0,0,1,0,0,0,1,1,0,1,0,0,0,0,0,1,0,1,0,0,1,1,0,1},
+        {1,0,1,0,0,1,1,0,1,0,0,1,0,0,1,0,0,0,0,0,0,1,1,1,0,1},
+        {1,1,0,1,0,1,0,1,1,0,0,1,1,0,0,0,1,0,1,0,1,1,1,1,0,1},
+        {1,1,0,1,1,0,0,1,0,1,0,1,1,0,0,1,0,1,1,1,0,1,1,1,0,1},
+        {1,1,0,1,0,0,1,0,0,1,1,0,1,0,1,1,0,0,1,1,0,1,1,0,1,1},
+        {1,1,0,0,0,1,1,0,1,1,0,1,0,1,1,1,0,0,1,0,1,0,1,1,1,1},
+        {1,0,1,1,0,1,1,1,0,0,1,0,1,0,1,1,1,0,0,0,1,0,0,0,0,1},
+        {1,1,0,1,1,0,1,0,0,1,0,0,1,1,1,1,1,1,0,1,1,1,0,1,0,1},
+        {1,1,0,1,1,0,0,0,0,1,0,0,1,0,1,1,0,0,0,1,0,1,1,0,0,1},
+        {1,1,0,1,0,1,0,0,1,0,1,0,1,0,1,0,0,0,0,1,0,0,1,0,0,1},
+        {1,1,0,1,0,0,0,1,0,1,1,0,0,0,1,1,0,0,0,1,0,0,1,1,0,1},
+        {1,1,1,1,0,1,1,0,1,1,1,0,0,1,0,0,1,0,0,0,0,1,1,0,0,1},
+        {1,1,1,1,1,0,1,0,1,0,1,1,0,0,0,1,0,1,0,1,0,0,1,0,1,1},
+        {1,0,1,0,1,1,0,1,0,1,0,1,0,0,1,1,1,0,1,0,1,1,0,1,0,1},
+        {1,1,0,1,1,1,0,1,1,1,1,0,0,1,0,1,0,1,1,1,1,0,1,0,0,1},
+        {1,1,1,1,0,1,1,0,1,1,1,0,1,0,0,1,0,1,0,1,1,0,1,1,0,1},
+        {1,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,1}
+    };
+};
 
 
-		// Game Logic implementation
-		// Current Player Position - statc variable make sure its value remain unchanged in subsequent calls to the procedure
-		static glm::vec3 Pos = StartingPosition;
-		static glm::vec3 oldPos;
-		static int currRunState = 1;
+// procedural textures for the walls and for the floor.
+class ProceduralTextures
+{
+public:
+
+    struct TextureData
+    {
+        int width;
+        int height;
+        std::vector<uint8_t> pixels; // RGBA8
+    };
+
+    static TextureData generateBrickWallTexture(
+        int width = 512,
+        int height = 512)
+    {
+        TextureData texture;
+        texture.width = width;
+        texture.height = height;
+        texture.pixels.resize(width * height * 4);
+
+        const int brickWidth  = 96;
+        const int brickHeight = 48;
+        const int mortarSize  = 4;
+
+        for (int y = 0; y < height; ++y)
+        {
+            int rowIndex = y / brickHeight;
+
+            // Offset every other row
+            int rowOffset = (rowIndex % 2) * (brickWidth / 2);
+
+            for (int x = 0; x < width; ++x)
+            {
+                int localX = (x + rowOffset) % brickWidth;
+                int localY = y % brickHeight;
+
+                bool isMortar =
+                    localX < mortarSize ||
+                    localY < mortarSize;
+
+                if (isMortar)
+                {
+                    // Mortar color
+                    setPixel(
+                        texture,
+                        x,
+                        y,
+                        190,
+                        185,
+                        175
+                    );
+                }
+                else
+                {
+                    // Simple procedural variation
+                    float noise =
+                        0.85f +
+                        0.15f *
+                        std::sin(x * 0.11f) *
+                        std::sin(y * 0.07f);
+
+                    uint8_t r =
+                        static_cast<uint8_t>(150 * noise);
+
+                    uint8_t g =
+                        static_cast<uint8_t>(55 * noise);
+
+                    uint8_t b =
+                        static_cast<uint8_t>(38 * noise);
+
+                    setPixel(texture, x, y, r, g, b);
+                }
+            }
+        }
+
+        return texture;
+    }
+
+    static TextureData generateTileGridTexture(
+        int width = 512,
+        int height = 512)
+    {
+        TextureData texture;
+        texture.width = width;
+        texture.height = height;
+        texture.pixels.resize(width * height * 4);
+
+        const int tileSize  = 64;
+        const int groutSize = 3;
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int localX = x % tileSize;
+                int localY = y % tileSize;
+
+                bool isGrout =
+                    localX < groutSize ||
+                    localY < groutSize;
+
+                if (isGrout)
+                {
+                    // Grout color
+                    setPixel(
+                        texture,
+                        x,
+                        y,
+                        80,
+                        80,
+                        85
+                    );
+                }
+                else
+                {
+                    // Slight radial shading
+                    float centerX = tileSize * 0.5f;
+                    float centerY = tileSize * 0.5f;
+
+                    float dx =
+                        (localX - centerX) / centerX;
+
+                    float dy =
+                        (localY - centerY) / centerY;
+
+                    float shade =
+                        1.0f -
+                        0.08f * (dx * dx + dy * dy);
+
+                    uint8_t value =
+                        static_cast<uint8_t>(210 * shade);
+
+                    setPixel(
+                        texture,
+                        x,
+                        y,
+                        value,
+                        value,
+                        value + 8
+                    );
+                }
+            }
+        }
+
+        return texture;
+    }
+
+private:
+
+    static void setPixel(
+        TextureData& texture,
+        int x,
+        int y,
+        uint8_t r,
+        uint8_t g,
+        uint8_t b,
+        uint8_t a = 255)
+    {
+        int index =
+            4 * (y * texture.width + x);
+
+        texture.pixels[index + 0] = r;
+        texture.pixels[index + 1] = g;
+        texture.pixels[index + 2] = b;
+        texture.pixels[index + 3] = a;
+    }
+};
+
+// utility function to find the closest point on a line segment, used for collision resolution
+static glm::vec2 closestPointOnSegment(glm::vec2 p, glm::vec2 a, glm::vec2 b) {
+    glm::vec2 ab = b - a;
+    float t = glm::dot(p - a, ab) / glm::dot(ab, ab);
+    t = glm::clamp(t, 0.0f, 1.0f);
+    return a + t * ab;
+}
+
+// collision resolution function, that takes a position and a radius, and returns a new position that is not colliding with the walls
+static glm::vec3 resolveCollisions(glm::vec3 pos, float radius) {
+    constexpr float halfCell = Labirynth::cellSize * 0.5f;
+    glm::vec2 p(pos.x, pos.z);
+
+    for (int r = 0; r <= Labirynth::rows; r++) {
+        for (int c = 0; c < Labirynth::cols; c++) {
+            if (Labirynth::horizontalWalls[r][c] == 1) {
+                float wx = (c - Labirynth::cols * 0.5f + 0.5f) * Labirynth::cellSize;
+                float wz = (Labirynth::rows * 0.5f - r) * Labirynth::cellSize;
+                glm::vec2 q = closestPointOnSegment(p, {wx - halfCell, wz}, {wx + halfCell, wz});
+                glm::vec2 d = p - q;
+                float dist = glm::length(d);
+                if (dist > 0.0001f && dist < radius)
+                    p = q + glm::normalize(d) * radius;
+            }
+        }
+    }
+
+    for (int r = 0; r < Labirynth::rows; r++) {
+        for (int c = 0; c <= Labirynth::cols; c++) {
+            if (Labirynth::verticalWalls[r][c] == 1) {
+                float wx = (c - Labirynth::cols * 0.5f) * Labirynth::cellSize;
+                float wz = (Labirynth::rows * 0.5f - r - 0.5f) * Labirynth::cellSize;
+                glm::vec2 q = closestPointOnSegment(p, {wx, wz - halfCell}, {wx, wz + halfCell});
+                glm::vec2 d = p - q;
+                float dist = glm::length(d);
+                if (dist > 0.0001f && dist < radius)
+                    p = q + glm::normalize(d) * radius;
+            }
+        }
+    }
+
+    return {p.x, pos.y, p.y};
+}
+
+// This is were the part generated by ChatGPT ends. From this point on, when we really
+// use the topics of the course, everything has been done by hand.
+// Moreover, the two classes were generate with a deep supervision, where i understood
+// everything ChatGPT did, because it was what i requested. Therefore, in an oral exam,
+// i would be able to perfectly explain the concepts behind the procedure, and i would
+// know precisely what every line of the previous code does.
+
+// MAIN ! 
+class Game : public BaseProject {
+    protected:
+    // Vertex formants, Pipelines and Render passes are always needed
+    VertexDescriptor VD, VDmap;
+    RenderPass RP;
+    RenderPass RPmap;	// Render pass for the map
+
+    Pipeline Pw;	// pipelines for the walls
+    Pipeline Pf;	// pipelines for the floor
+    Pipeline PwMap;	// pipelines for the walls when creating the map
+    Pipeline PsMap;	// pipeline to show the map
+
+    // Descriptor Layouts
+    DescriptorSetLayout DSLlocalWalls, DSLlocalFloor, DSLsMap, DSLglobal, DSLmMap;
+
+    // Descriptor sets
+    DescriptorSet DSglobal;
+    DescriptorSet DSlocalWalls, DSlocalFloor, DSlocalShowMap, DSlocalMakeMap;
 
 
-		camDist = (MIN_CAM_DIST + MAX_CAM_DIST) / 2.0f;
+    // Models
+    Model M1, M2;
 
-		// To be done in the assignment
-		ViewPrj = glm::mat4(1);
-		World = glm::mat4(1);
+    // Textures
+    Texture TWalls, TFloor;
 
-		oldPos = Pos;
+    // to properly support the resizing of the windows, we need to store in a variable the aspect ratio
+    float Ar;
 
-		static float Yaw = glm::radians(0.0f);
-		static float Pitch = glm::radians(0.0f);
-		static float relDir = glm::radians(0.0f);
-		static float dampedRelDir = glm::radians(0.0f);
-		static glm::vec3 dampedCamPos = StartingPosition;
+    // to support camera motion, we also need to remember the position and
+    // direction of the camera
+    glm::vec3 CamPos = {0.0f, 1.0f, 4.0f};
+    float Yaw = 0.0f;
+    float Pitch = 0.0f;
 
-		// World
-		// Position
-		glm::vec3 ux = glm::rotate(glm::mat4(1.0f), Yaw, glm::vec3(0,1,0)) * glm::vec4(1,0,0,1);
-		glm::vec3 uz = glm::rotate(glm::mat4(1.0f), Yaw, glm::vec3(0,1,0)) * glm::vec4(0,0,-1,1);
-		Pos = Pos + MOVE_SPEED * m.x * ux * deltaT;
-		Pos = Pos - MOVE_SPEED * m.z * uz * deltaT;
+    // the positions of the instances
+    InstanceUniformBufferObject iubo;
 
-		camHeight += MOVE_SPEED * m.y * deltaT;
-		// Rotation
-		Yaw = Yaw - ROT_SPEED * deltaT * r.y;
-		Pitch = Pitch - ROT_SPEED * deltaT * r.x;
-		Pitch  =  Pitch < minPitch ? minPitch :
-				   (Pitch > maxPitch ? maxPitch : Pitch);
+    // for minimap
+    int32_t Wframe = 16;
+    float MapH = 128;
+    float MapW = 128;
+
+    // Here you set the main application parameters
+    void setWindowParameters() {
+        // initial window size and title
+        windowWidth = 800;
+        windowHeight = 600;
+        windowTitle = "Haunted Castle Explorer";
+        windowResizable = GLFW_TRUE;	// makes the window resizable
+
+        // sets the aspect ratio
+        Ar = (float)windowWidth / (float)windowHeight;
+    }
+
+    // What to do when the window changes size
+    void onWindowResize(int w, int h) {
+        // Update Render Pass (this must always be done for all render pass the depends on the screen size)
+        RP.width = w;
+        RP.height = h;
+
+        // updates the aspect ratio
+        Ar = (float)w / (float)h;
+        windowWidth = w;
+        windowHeight = h;
+    }
+
+    // Here you load and setup all your Vulkan Resources.
+    void localInit() {
+        // creates an empty vertex definition
+        VD.init(this,
+            {			// number of "bindings" that this vertex uses
+                {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}	// binding number, size, and type
+            }, {		// this must match the structure Vertex defined above
+                  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
+                         sizeof(glm::vec3), POSITION},
+                  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
+                         sizeof(glm::vec3), NORMAL},
+                  {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
+                         sizeof(glm::vec2), UV}
+            });
+
+        VDmap.init(this,
+            {
+                {0, sizeof(glm::vec3), VK_VERTEX_INPUT_RATE_VERTEX}
+            }, {
+                  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0,
+                         sizeof(glm::vec3), POSITION},
+            });
+
+        // Descriptor Layouts [what will be passed to the shaders]
+        DSLlocalWalls.init(this, {
+                    {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject), 1},
+                    {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,  1},  // albedo
+                    {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,   sizeof(InstanceUniformBufferObject), 1}
+                  });
+        DSLlocalFloor.init(this, {
+                    {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject), 1},
+                    {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,  1}
+                  });
+        DSLmMap.init(this, {
+                    {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(MapMakeUniformBufferObject), 1}
+                  });
+        DSLsMap.init(this, {
+                    {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0,  1}
+                  });
+        DSLglobal.init(this, {
+                    {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject), 1}
+                  });
 
 
-		float ef = exp(-10.0 * deltaT);
-		// Rotational independence from view with damping
-		if(glm::length(glm::vec3(m.x, 0.0f, m.z)) > 0.001f) {
-			relDir = Yaw + atan2(m.x, m.z);
-			dampedRelDir = dampedRelDir > relDir + 3.1416f ? dampedRelDir - 6.28f :
-						   dampedRelDir < relDir - 3.1416f ? dampedRelDir + 6.28f : dampedRelDir;
-		}
-		dampedRelDir = ef * dampedRelDir + (1.0f - ef) * relDir;
+        // initializes the render passes (always needed)
+        RP.init(this);
+        // now the render pass for the map
+        RPmap.init(this, MapW, MapH, 1,
+                    RenderPass::getStandardAttchmentsProperties(AT_ONE_COLOR_AND_DEPTH, this),
+                    RenderPass::getStandardDependencies(ATDEP_SIMPLE), true);
 
-		// Final world matrix computaiton
-		World = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1.0f), dampedRelDir, glm::vec3(0,1,0));
+        // defines the pipeline, setting its vertex format and shaders
+        Pw.init(this, &VD, "shaders/PosNormUVInstance.vert.spv", "shaders/LambertBlinnTexture.frag.spv", {&DSLglobal, &DSLlocalWalls});
+        Pw.setCullMode(VK_CULL_MODE_NONE);
 
-		// ── Collision detection & response ──────────────────────────────────────
-		// Sync the character sphere with the new world position
-		CldChar.setWorldMatrix(World);
+        PwMap.init(this, &VDmap, "shaders/Map.vert.spv", "shaders/Map.frag.spv", {&DSLmMap});
+        PwMap.setTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
 
-		bool charCollides = CldChar.collidesWith(CldSphere)  ||
-		                    CldChar.collidesWith(CldCube)    ||
-		                    CldChar.collidesWith(CldSoftbal) ||
-		                    CldChar.collidesWith(CldStatue);
+        PsMap.init(this, &VD, "shaders/ShowMap.vert.spv", "shaders/ShowMap.frag.spv", {&DSLsMap});
+        PsMap.setCullMode(VK_CULL_MODE_NONE);
+/*		PsMap.setScissor({{{(int32_t)(windowWidth - MapW) - Wframe, (int32_t)(windowHeight - MapH) - Wframe},
+                           {(uint32_t)MapW, (uint32_t)MapH}}});
+*/
+        // The pipeline for the floor, has also the push contstants
+        Pf.init(this, &VD, "shaders/PosNormUVpc.vert.spv", "shaders/LambertBlinnTexture.frag.spv", {&DSLglobal, &DSLlocalFloor}, {{VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants)}});
 
-		if(charCollides) {
-			// Push the character back to its last valid position
-			Pos   = oldPos;
-			World = glm::translate(glm::mat4(1), Pos) *
-			        glm::rotate(glm::mat4(1.0f), dampedRelDir, glm::vec3(0,1,0));
-			CldChar.setWorldMatrix(World);
-		}
+        // sets the size of the Descriptor Set Pool (we have 3: one global and two local)
+        DPSZs.setsInPool = 5;
+        // sets the number of uniforms : three, that is one per descriptor set
+        DPSZs.uniformBlocksInPool = 5;
+        // sets also the number of textures
+        DPSZs.texturesInPool = 4;
 
-		// Visual feedback: red wireframe on collision, green when free
-		SC.ColShow.setStroke(&CldChar,
-		    charCollides ? glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)
-		                 : glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-		// ────────────────────────────────────────────────────────────────────────
+        // create models
+        M1.vertices = std::vector<unsigned char>(4 * sizeof(Vertex));
+        Vertex *V_vertex = (Vertex *)(&(M1.vertices[0]));
 
-		// Projection
-		glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
-		Prj[1][1] *= -1;
+        V_vertex[0] = {{-1.0, -1.0, 0.0}, {0.0, 0.0, -1.0}, {0.0, 0.0}};	// vertex 0
+        V_vertex[1] = {{ 1.0, -1.0, 0.0}, {0.0, 0.0, -1.0}, {1.0, 0.0}};	// vertex 1
+        V_vertex[2] = {{-1.0,  1.0, 0.0}, {0.0, 0.0, -1.0}, {0.0, 1.0}};	// vertex 2
+        V_vertex[3] = {{ 1.0,  1.0, 0.0}, {0.0, 0.0, -1.0}, {1.0, 1.0}};	// vertex 3
 
-		// View
-		// Target
-		glm::vec3 target = Pos + glm::vec3(0.0f, camHeight, 0.0f);
+        // Indices
+        // In this case, indice would not be required, but we use them anyway to show how to do it
+        M1.indices = {0, 2, 1,    1, 2, 3};
 
-		// Camera position, depending on Yaw parameter, but not character direction
-		glm::mat4 camWorld = glm::translate(glm::mat4(1), Pos) * glm::rotate(glm::mat4(1.0f), Yaw, glm::vec3(0,1,0));
-		cameraPos = camWorld * glm::vec4(0.0f, camHeight + camDist * sin(Pitch), camDist * cos(Pitch), 1.0);
-		// Damping of camera
-		dampedCamPos = ef * dampedCamPos + (1.0f - ef) * cameraPos;
+        // creates the mesh, using the define vertex format
+        M1.initMesh(this, &VD);
 
-		glm::mat4 View = glm::lookAt(dampedCamPos, target, glm::vec3(0,1,0));
+        auto lineMesh = Labirynth::generateLineMesh();
+        M2.vertices = std::vector<unsigned char>(lineMesh.vertices.size() * sizeof(glm::vec3));
+        memcpy(&M2.vertices[0], &lineMesh.vertices[0], lineMesh.vertices.size() * sizeof(glm::vec3));
+        M2.indices = lineMesh.indices;
+        M2.initMesh(this, &VDmap);
 
-		ViewPrj = Prj * View;
+        // Creates the textures
+        auto wallTexture = ProceduralTextures::generateBrickWallTexture();
+        TWalls.init(this, "assets/textures/granite-tile/granite-tile_albedo.png", VK_FORMAT_R8G8B8A8_SRGB, false);
+        auto *tex_sampler = new TextureSampler();
+        tex_sampler->init(this,
+                             VK_FILTER_NEAREST,
+                             VK_FILTER_NEAREST,
+                             VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                             VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                             VK_SAMPLER_MIPMAP_MODE_NEAREST,
+                             VK_FALSE, 1, 0
+        );
+        TWalls.setSampler(tex_sampler);
 
-		float vel = length(Pos - oldPos) / deltaT;
+        auto floorTexture = ProceduralTextures::generateTileGridTexture();
+        TFloor.initPixels(this, floorTexture.width, floorTexture.height, 4, sizeof(uint8_t), {floorTexture.pixels.data()}, VK_FORMAT_R8G8B8A8_UNORM);
 
-		if(vel < 0.2) {
-			if(currRunState != 1) {
-				currRunState = 1;
-				AB.Start(2, 0.3f); // idle
-			}
-		} else {
-			if(currRunState != 2) {
-				currRunState = 2;
-				AB.Start(1, 0.3f); // running
-			}
-		}
+        submitCommandBuffer("main", 0, populateCommandBufferAccess, this, freeCommandBuffer);
 
-		return deltaT;
-	}
+        // creates the world matrices per instance
+        auto wallMatrices = Labirynth::generateWallTransforms();
+        memcpy(&iubo.mMat[0], &wallMatrices[0], sizeof(glm::mat4) * 674);
+    }
+
+    // Here you create your pipelines and Descriptor Sets!
+    // this function is called whenever the geometry of the screen changes (for example when
+    // the window is resized) to reconstruct the pipelines with the new resources
+    void pipelinesAndDescriptorSetsInit() {
+        // creates the render passes
+        RP.create();
+        RPmap.create();
+
+        // update scissors and viewport
+        PsMap.setScissor({{{(int32_t)(windowWidth - MapW) - Wframe, (int32_t)(windowHeight - MapH) - Wframe},
+                           {(uint32_t)MapW, (uint32_t)MapH}}});
+
+        PsMap.setViewport({{windowWidth - MapW - Wframe,
+                            windowHeight - MapH - Wframe,
+                            MapW, MapH, 0.0f, 1.0f}});
+
+        // This creates the pipelines
+        PwMap.create(&RPmap);
+        PsMap.create(&RP);
+        Pw.create(&RP);
+        Pf.create(&RP);
+
+        // Creates the descriptor sets
+        DSglobal.init(this, &DSLglobal, {});
+        DSlocalMakeMap.init(this, &DSLmMap, {});
+        DSlocalWalls.init(this, &DSLlocalWalls, {TWalls.getViewAndSampler()});
+        DSlocalFloor.init(this, &DSLlocalFloor, {TFloor.getViewAndSampler()});
+        DSlocalShowMap.init(this, &DSLsMap, {RPmap.attachments[0].getViewAndSampler()});
+    }
+
+    // Here you destroy your pipelines and Descriptor Sets!
+    // this function is called whenever the geometry of the screen changes (for example when
+    // the window is resized) to free resources that are no longer valid
+    void pipelinesAndDescriptorSetsCleanup() {
+        PwMap.cleanup();
+        PsMap.cleanup();
+        Pw.cleanup();
+        Pf.cleanup();
+
+        RP.cleanup();
+        RPmap.cleanup();
+
+        DSglobal.cleanup();
+        DSlocalWalls.cleanup();
+        DSlocalFloor.cleanup();
+        DSlocalShowMap.cleanup();
+        DSlocalMakeMap.cleanup();
+    }
+
+    // Here you destroy all the Models, Texture and Desc. Set Layouts you created!
+    // You also have to destroy the pipelines
+    // this is called only once at the end of the application to free all the resources
+    void localCleanup() {
+        PwMap.destroy();
+        PsMap.destroy();
+        Pw.destroy();
+        Pf.destroy();
+
+        RP.destroy();
+        RPmap.destroy();
+
+        M1.cleanup();
+        M2.cleanup();
+        TWalls.cleanup();
+        TFloor.cleanup();
+
+        DSLlocalWalls.cleanup();
+        DSLlocalFloor.cleanup();
+        DSLsMap.cleanup();
+        DSLmMap.cleanup();
+        DSLglobal.cleanup();
+
+    }
+
+    // Here it is the creation of the command buffer:
+    // You send to the GPU all the objects you want to draw,
+    // with their buffers and textures
+    static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
+        // Simple trick to avoid having always 'T->'
+        // in che code that populates the command buffer!
+        Game *Mo = (Game *)Params;
+        Mo->populateCommandBuffer(commandBuffer, currentImage);
+    }
+
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+        // begin standard pass
+        RPmap.begin(commandBuffer, 0);
+        // selects a pipeline
+        PwMap.bind(commandBuffer);
+        //select the global descriptor set (valid for all objects)
+        DSlocalMakeMap.bind(commandBuffer, PwMap, 0, 0);
+        // selects the model
+        M2.bind(commandBuffer);
+        //select the local descriptor set for this object
+//		DSlocalWalls.bind(commandBuffer, PwMap, 1, 0);		
+
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M2.indices.size()), 1, 0, 0, 0);
+
+        RPmap.end(commandBuffer);
+
+
+
+
+        // begin standard pass
+        RP.begin(commandBuffer, currentImage);
+
+        // selects a pipeline
+        Pw.bind(commandBuffer);
+
+        //select the global descriptor set (valid for all objects)
+        DSglobal.bind(commandBuffer, Pw, 0, currentImage);
+
+        // selects the model
+        M1.bind(commandBuffer);
+
+        //select the local descriptor set for this object
+        DSlocalWalls.bind(commandBuffer, Pw, 1, currentImage);
+
+        // draws something. This is a real Vulkan command, not wrapped by the system
+        // note that now we use the "Indexed" version, since we have also the index buffer.
+        // moreover, we can count the number of elements to write, from the size of the index array
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M1.indices.size()), 674, 0, 0, 0);
+
+
+
+
+
+
+        // selects a pipeline
+        Pf.bind(commandBuffer);
+        //select the global descriptor set (valid for all objects)
+        DSglobal.bind(commandBuffer, Pf, 0, currentImage);
+        // selects the model
+        M1.bind(commandBuffer);
+        //select the local descriptor set for this object
+        DSlocalFloor.bind(commandBuffer, Pf, 1, currentImage);
+
+        // Draws the floor
+        // creates and pases the push constants
+        PushConstants constants;
+        constants.mMat  = glm::translate(glm::mat4(1), glm::vec3(0,-1,0)) *
+                          glm::rotate   (glm::mat4(1), glm::radians(90.0f), glm::vec3(1,0,0)) *
+                          glm::scale    (glm::mat4(1), glm::vec3(60));
+        constants.uvMat = glm::scale    (glm::mat4(1), glm::vec3(60));
+        // ---- upload to the GPU via push constants
+        vkCmdPushConstants(commandBuffer, Pf.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants), &constants);
+
+        // draws the model.
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
+
+
+
+        // Draws the map. Note that in this case, one model fits all!
+        PsMap.bind(commandBuffer);
+        DSlocalShowMap.bind(commandBuffer, PsMap, 0, currentImage);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
+
+
+        // Now draws the other model, using the same pipeline.
+/*		M2.bind(commandBuffer);
+        //select the local descriptor set for the other object
+        DSlocal2.bind(commandBuffer, P, 1, currentImage);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(M2.indices.size()), 1, 0, 0, 0);
+*/		
+        // ends the current render pass
+        RP.end(commandBuffer);
+    }
+
+    // if there are resources no longer needed, they are released here.
+    // in this way, if you have for example mesh that are dynamically created, you can free them here
+    // to avoid the memory to grow too much.
+    static void freeCommandBuffer(void *Params) {
+        // here there is no need of freeing anything, since all resources are for the entire application
+    }
+
+    // Here is where you update the uniforms.
+    // Very likely this will be where you will be writing the logic of your application.
+    void updateUniformBuffer(uint32_t currentImage) {
+        // handle the ESC key to exit the app
+        if(glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+
+        // read the input states, to support interaction and animation
+        float deltaT;
+        glm::vec3 m = {0,0,0}, r = {0,0,0};
+        bool fire = false;
+        getSixAxis(deltaT, m, r, fire);
+
+        // creates the global data structure for the uniforms
+        // for the global descriptor set
+        GlobalUniformBufferObject gubo;
+
+        // fills with the relevant data
+        gubo.lightDir = glm::vec3(0.5656854, 0.7071068, 0.4242641);
+        gubo.lightColor = glm::vec3(1.0, 1.0, 1.0);
+        // now the eye position corresponds to the position of the camera
+        gubo.eyePos = CamPos;
+        // now the ambient light color
+        gubo.ambientLight = glm::vec3(0.05);
+
+        // transfers the data to the GPU, by mapping it to its
+        // descriptor set
+        DSglobal.map(currentImage, &gubo, 0);
+
+
+        // creates the local data structure for the uniforms
+        // for the local descriptor sets
+        UniformBufferObject ubo;
+
+        // to support motion, we explicitly add the view and projection matrices.
+        glm::mat4 View, Projection;
+        // Camera FOV-y, Near Plane and Far Plane
+        const float FOVy = glm::radians(90.0f);
+        const float nearPlane = 0.1f;
+        const float farPlane = 100.f;
+        const float M_SPEED = 4.0;
+        const float R_SPEED = 2.0;
+
+        Projection = glm::perspective(FOVy, Ar, nearPlane, farPlane);
+        Projection[1][1] *= -1;
+
+        // update the camera position and direction with the inputs
+        m.y /= 10.0;
+        glm::vec3 newPos = CamPos + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) * glm::vec4(m * deltaT, 1.0)) * M_SPEED;
+        CamPos = resolveCollisions(newPos, 0.5f);
+        Pitch -= r.x * deltaT * R_SPEED;
+        Yaw   -= r.y * deltaT * R_SPEED;
+
+        View = glm::rotate   (glm::mat4(1), -Pitch, glm::vec3(1,0,0)) *
+               glm::rotate   (glm::mat4(1), -Yaw,   glm::vec3(0,1,0)) *
+               glm::translate(glm::mat4(1), -CamPos);
+
+
+        // fills with the relevant data
+        ubo.vpMat = Projection * View;
+        ubo.specular = glm::vec4(1.0, 1.0, 1.0, 160.0);
+        ubo.ambient = glm::vec3(1.0, 1.0, 1.0);
+        // transfers the data to the GPU, by mapping it to its
+        // descriptor set
+        DSlocalWalls.map(currentImage, &ubo, 0);
+        DSlocalFloor.map(currentImage, &ubo, 0);
+
+        // sets the world matrices per instance
+        DSlocalWalls.map(currentImage, &iubo, 2);
+
+        MapMakeUniformBufferObject mmubo;
+        glm::mat4 mTr = glm::mat4(1.0);
+        mTr = glm::translate(glm::mat4(1.0), glm::vec3(-CamPos.x, -CamPos.z, 0.0f)) * mTr;
+        mTr = glm::rotate(glm::mat4(1.0), Yaw, glm::vec3(0,0,1)) * mTr;
+        mTr = glm::scale(glm::mat4(1.0), glm::vec3(0.05f)) * mTr;
+        mmubo.Transform = mTr;
+        mmubo.Color = glm::vec4(1,0,0,1);
+        DSlocalMakeMap.map(currentImage, &mmubo, 0);
+    }
 };
 
 
 // This is the main: probably you do not need to touch this!
-int main(int argc, char *argv[]) {
-    E02 app;
+int main() {
+    Game app;
 
     try {
-        app.run();
+        app.run(false);
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;

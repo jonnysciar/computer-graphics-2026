@@ -2,5 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 
 project(Starter LANGUAGES CXX)
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(${PROJECT_NAME} STATIC "${CMAKE_CURRENT_SOURCE_DIR}/lib.cpp")
+
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DSTARTER_IMPLEMENTATION)
+target_precompile_headers(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/modules/Starter.hpp")
