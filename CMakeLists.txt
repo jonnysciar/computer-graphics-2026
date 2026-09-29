@@ -15,21 +15,8 @@ file(GLOB_RECURSE HDRS "${CMAKE_SOURCE_DIR}/include/*.hpp")
 add_executable(${NAME} ${HDRS} ${SRCS})
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
-# Vulkan
-target_link_libraries(${NAME} PRIVATE Vulkan::Vulkan)
-
-# GLFW
-target_link_libraries(${NAME} PRIVATE glfw)
-
-# GLM
-target_link_libraries(${NAME} PRIVATE glm::glm)
-
-# nlohmann_json
-target_link_libraries(${NAME} PRIVATE nlohmann_json::nlohmann_json)
-
 # Starter
 target_link_libraries(${NAME} PRIVATE Starter)
-target_precompile_headers(${NAME} REUSE_FROM Starter)
 
 # Shaders
 add_dependencies(${NAME} build_shaders)
