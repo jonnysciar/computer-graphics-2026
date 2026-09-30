@@ -1,2 +1,5 @@
-
 #include "modules/Starter.hpp"
+#include "modules/TextMaker.hpp"
+#include "modules/Animations.hpp"
+#include "modules/Scene.hpp"
+#include "modules/Colliders.hpp"
