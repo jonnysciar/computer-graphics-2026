@@ -65,7 +65,7 @@ void Game::localInit() {
     MCube.init(this, &VD, "assets/models/Cube.gltf", GLTF);
     MSoftbal.init(this, &VD, "assets/models/Softball.gltf", GLTF);
     MStatue.init(this, &VD, "assets/models/Statue.gltf", GLTF);
-    Mplane.init(this, &VD, "assets/models/Plane.gltf", GLTF);
+    Mplane.init(this, &VD, "assets/models/Map.gltf", GLTF);
 
     Talbedo[0].init(this, "assets/textures/ice-field/ice_field_albedo.png");
     TNorm[0].init(this, "assets/textures/ice-field/ice_field_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
@@ -192,7 +192,7 @@ float Game::GameLogic() {
     bool fire = false;
     getSixAxis(deltaT, m, r, fire);
 
-    static glm::vec3 camPos = glm::vec3(0.0f, 1.5f, 10.0f);
+    static glm::vec3 camPos = glm::vec3(0.0f, 10.0f, 10.0f);
     static float Yaw = glm::radians(0.0f);
     static float Pitch = 0.0f;
 
@@ -252,7 +252,7 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     // defines the global parameters for the uniform
     static float lightRotationAngle = 0.0f;
-    lightRotationAngle += 10.0f * deltaT;
+    //lightRotationAngle += 10.0f * deltaT;
 
     const glm::mat4 lightView = glm::rotate(glm::mat4(1), glm::radians(lightRotationAngle),
                                             glm::vec3(0.0f, 1.0f, 0.0f)) *
