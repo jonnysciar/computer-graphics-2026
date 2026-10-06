@@ -1,6 +1,7 @@
 // This has been adapted from the Vulkan tutorial
 
 #include "Game.hpp"
+#include "CameraController.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
@@ -179,53 +180,11 @@ void Game::pipelinesAndDescriptorSetsInit() {
     txt.pipelinesAndDescriptorSetsInit();
 }
 
-
-float Game::GameLogic() {
-    const float FOVy = glm::radians(45.0f);
-    const float nearPlane = 0.1f;
-    const float farPlane = 100.0f;
-    const float ROT_SPEED = glm::radians(120.0f);
-    const float MOVE_SPEED = 5.0f;
-
-    float deltaT;
-    glm::vec3 m = glm::vec3(0.0f), r = glm::vec3(0.0f);
-    bool fire = false;
-    getSixAxis(deltaT, m, r, fire);
-
-    static glm::vec3 camPos = glm::vec3(0.0f, 10.0f, 10.0f);
-    static float Yaw = glm::radians(0.0f);
-    static float Pitch = 0.0f;
-
-    Yaw += ROT_SPEED * deltaT * r.y;
-    Pitch += ROT_SPEED * deltaT * r.x;
-    Pitch = glm::clamp(Pitch, glm::radians(-89.0f), glm::radians(89.0f));
-
-    glm::vec3 forward = glm::normalize(glm::vec3(
-        sin(Yaw) * cos(Pitch),
-        -sin(Pitch),
-        -cos(Yaw) * cos(Pitch)));
-    glm::vec3 walkForward = glm::normalize(glm::vec3(sin(Yaw), 0.0f, -cos(Yaw)));
-    glm::vec3 right = glm::normalize(glm::cross(walkForward, glm::vec3(0, 1, 0)));
-
-    camPos += walkForward * MOVE_SPEED * deltaT * (-m.z);
-    camPos += right * MOVE_SPEED * deltaT * m.x;
-
-    cameraPos = camPos;
-
-    glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
-    Prj[1][1] *= -1;
-
-    glm::mat4 View = glm::lookAt(camPos, camPos + forward, glm::vec3(0, 1, 0));
-    ViewPrj = Prj * View;
-
-    return deltaT;
-}
-
-
 // Here is where you update the uniforms.
 void Game::updateUniformBuffer(uint32_t currentImage) {
     static bool debounce = false;
     static int curDebounce = 0;
+    CameraController CC;
 
     // press 3 to change the texture
     if (glfwGetKey(window, GLFW_KEY_3)) {
@@ -248,7 +207,7 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    float deltaT = GameLogic();
+    float deltaT = CC.CameraLogic(Ar, ViewPrj, cameraPos);
 
     // defines the global parameters for the uniform
     static float lightRotationAngle = 0.0f;

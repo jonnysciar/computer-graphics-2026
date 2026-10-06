@@ -67,8 +67,6 @@ protected:
     // Here you create your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsInit() override;
 
-    float GameLogic();
-
     void updateUniformBuffer(uint32_t currentImage) override;
 
     // Here it is the creation of the command buffer:
