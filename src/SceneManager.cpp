@@ -11,35 +11,8 @@ void SceneManager::populateCommandBufferAccess(VkCommandBuffer commandBuffer, in
 }
 
 SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, int h) : bp(bp), w(w), h(h) {
-    DSLlocal = std::make_unique<DescriptorSetLayout>();
-    DSLglobal = std::make_unique<DescriptorSetLayout>();
-    VD = std::make_unique<VertexDescriptor>();
-    RP = std::make_unique<RenderPass>();
-    P = std::make_unique<Pipeline>();
-
-    MSphere = std::make_unique<Model>();
-    Mplane = std::make_unique<Model>();
-    MCube = std::make_unique<Model>();
-    MSoftbal = std::make_unique<Model>();
-    MStatue = std::make_unique<Model>();
-
-    Talbedo = std::make_unique<Texture[]>(textureSize);
-    TNorm = std::make_unique<Texture[]>(textureSize);
-    Tmetal = std::make_unique<Texture[]>(textureSize);
-    Troughness = std::make_unique<Texture[]>(textureSize);
-    Tao = std::make_unique<Texture[]>(textureSize);
-
-    DSglobal = std::make_unique<DescriptorSet>();
-    DSlocalSphere = std::make_unique<DescriptorSet>();
-    DSlocalCube = std::make_unique<DescriptorSet>();
-    DSlocalSoftbal = std::make_unique<DescriptorSet>();
-    DSlocalStatue = std::make_unique<DescriptorSet>();
-    DSlocalPlane = std::make_unique<DescriptorSet>();
-
-    txt = std::make_unique<TextMaker>();
-
     // Descriptor Layouts [what will be passed to the shaders]
-    DSLlocal->init(this->bp, {
+    DSLlocal.init(this->bp, {
                       {
                           0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
                           sizeof(UniformBufferObject), 1
@@ -50,13 +23,13 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, 
                       {4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 12, 4},
                       {5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 16, 4}
                   });
-    DSLglobal->init(this->bp, {
+    DSLglobal.init(this->bp, {
                        {
                            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS,
                            sizeof(GlobalUniformBufferObject), 1
                        }
                    });
-    VD->init(this->bp, {
+    VD.init(this->bp, {
                 {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
             }, {
                 {
@@ -77,19 +50,19 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, 
                 }
             });
     // initializes the render pass
-    RP->init(this->bp);
-    RP->properties[0].clearValue = {0.08f, 0.10f, 0.16f, 1.0f};
+    RP.init(this->bp);
+    RP.properties[0].clearValue = {0.08f, 0.10f, 0.16f, 1.0f};
 
     // Pipelines [Shader couples]
-    P->init(this->bp, VD.get(), "shaders/MeshTBN.vert.spv", "shaders/AdvancedTexturingExercise.frag.spv",
-           {DSLglobal.get(), DSLlocal.get()});
+    P.init(this->bp, &VD, "shaders/MeshTBN.vert.spv", "shaders/AdvancedTexturingExercise.frag.spv",
+           {&DSLglobal, &DSLlocal});
 
     // Models, textures and Descriptors (values assigned to the uniforms)
-    MSphere->init(this->bp, VD.get(), "assets/models/Sphere.gltf", GLTF);
-    MCube->init(this->bp, VD.get(), "assets/models/Cube.gltf", GLTF);
-    MSoftbal->init(this->bp, VD.get(), "assets/models/Softball.gltf", GLTF);
-    MStatue->init(this->bp, VD.get(), "assets/models/Statue.gltf", GLTF);
-    Mplane->init(this->bp, VD.get(), "assets/models/Map.gltf", GLTF);
+    MSphere.init(this->bp, &VD, "assets/models/Sphere.gltf", GLTF);
+    MCube.init(this->bp, &VD, "assets/models/Cube.gltf", GLTF);
+    MSoftbal.init(this->bp, &VD, "assets/models/Softball.gltf", GLTF);
+    MStatue.init(this->bp, &VD, "assets/models/Statue.gltf", GLTF);
+    Mplane.init(this->bp, &VD, "assets/models/Map.gltf", GLTF);
 
     Talbedo[0].init(this->bp, "assets/textures/ice-field/ice_field_albedo.png");
     TNorm[0].init(this->bp, "assets/textures/ice-field/ice_field_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
@@ -122,30 +95,30 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, 
     this->bp->DPSZs.setsInPool = 20;
 
     // initializes the textual output
-    txt->init(this->bp, w, h);
+    txt.init(this->bp, w, h);
 
     // submits the main command buffer
     bp->submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
-    txt->print(1.0f, 1.0f, "FPS:", 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
+    txt.print(1.0f, 1.0f, "FPS:", 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
               {1.0f, 0.0f, 0.0f, 1.0f}, {0.8f, 0.8f, 0.0f, 1.0f});
-    txt->print(-1.0f, -1.0f, "3 - Change texture", 3);
+    txt.print(-1.0f, -1.0f, "3 - Change texture", 3);
 }
 
 void SceneManager::onResize(int w, int h) {
-    RP->width = w;
-    RP->height = h;
-    txt->resizeScreen(w, h);
+    RP.width = w;
+    RP.height = h;
+    txt.resizeScreen(w, h);
 }
 
 void SceneManager::pipelinesAndDescriptorSetsInit() {
-    RP->create();
+    RP.create();
 
-    P->create(RP.get());
+    P.create(&RP);
 
-    DSglobal->init(this->bp, DSLglobal.get(), {});
+    DSglobal.init(this->bp, &DSLglobal, {});
 
-    DSlocalSphere->init(this->bp, DSLlocal.get(), {
+    DSlocalSphere.init(this->bp, &DSLlocal, {
                            Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
                            Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
                            TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
@@ -157,7 +130,7 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
                            Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
                            Tao[3].getViewAndSampler()
                        });
-    DSlocalCube->init(this->bp, DSLlocal.get(), {
+    DSlocalCube.init(this->bp, &DSLlocal, {
                          Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
                          Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
                          TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
@@ -169,7 +142,7 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
                          Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
                          Tao[3].getViewAndSampler()
                      });
-    DSlocalSoftbal->init(this->bp, DSLlocal.get(), {
+    DSlocalSoftbal.init(this->bp, &DSLlocal, {
                             Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
                             Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
                             TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(),
@@ -181,7 +154,7 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
                             Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
                             Tao[3].getViewAndSampler()
                         });
-    DSlocalStatue->init(this->bp, DSLlocal.get(), {
+    DSlocalStatue.init(this->bp, &DSLlocal, {
                            Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
                            Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
                            TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
@@ -193,7 +166,7 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
                            Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
                            Tao[3].getViewAndSampler()
                        });
-    DSlocalPlane->init(this->bp, DSLlocal.get(), {
+    DSlocalPlane.init(this->bp, &DSLlocal, {
                           Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
                           Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
                           TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
@@ -205,36 +178,36 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
                           Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
                           Tao[3].getViewAndSampler()
                       });
-    txt->pipelinesAndDescriptorSetsInit();
+    txt.pipelinesAndDescriptorSetsInit();
 }
 
 void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    RP->begin(commandBuffer, currentImage);
+    RP.begin(commandBuffer, currentImage);
 
-    P->bind(commandBuffer);
-    DSglobal->bind(commandBuffer, *P, 0, currentImage);
+    P.bind(commandBuffer);
+    DSglobal.bind(commandBuffer, P, 0, currentImage);
 
-    MSphere->bind(commandBuffer);
-    DSlocalSphere->bind(commandBuffer, *P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MSphere->indices.size()), 1, 0, 0, 0);
+    MSphere.bind(commandBuffer);
+    DSlocalSphere.bind(commandBuffer, P, 1, currentImage);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MSphere.indices.size()), 1, 0, 0, 0);
 
-    MCube->bind(commandBuffer);
-    DSlocalCube->bind(commandBuffer, *P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MCube->indices.size()), 1, 0, 0, 0);
+    MCube.bind(commandBuffer);
+    DSlocalCube.bind(commandBuffer, P, 1, currentImage);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MCube.indices.size()), 1, 0, 0, 0);
 
-    MSoftbal->bind(commandBuffer);
-    DSlocalSoftbal->bind(commandBuffer, *P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MSoftbal->indices.size()), 1, 0, 0, 0);
+    MSoftbal.bind(commandBuffer);
+    DSlocalSoftbal.bind(commandBuffer, P, 1, currentImage);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MSoftbal.indices.size()), 1, 0, 0, 0);
 
-    MStatue->bind(commandBuffer);
-    DSlocalStatue->bind(commandBuffer, *P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MStatue->indices.size()), 1, 0, 0, 0);
+    MStatue.bind(commandBuffer);
+    DSlocalStatue.bind(commandBuffer, P, 1, currentImage);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MStatue.indices.size()), 1, 0, 0, 0);
 
-    Mplane->bind(commandBuffer);
-    DSlocalPlane->bind(commandBuffer, *P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Mplane->indices.size()), 1, 0, 0, 0);
+    Mplane.bind(commandBuffer);
+    DSlocalPlane.bind(commandBuffer, P, 1, currentImage);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Mplane.indices.size()), 1, 0, 0, 0);
 
-    RP->end(commandBuffer);
+    RP.end(commandBuffer);
 }
 
 // TODO Maybe think a better way to pass dependencies
@@ -256,34 +229,34 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     gubo.ambientLower = glm::vec4(0.2f, 0.15f, 0.1f, 0.0f); // warm ground
     gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // world up
     gubo.debugView = debugView;
-    DSglobal->map(currentImage, &gubo, 0);
+    DSglobal.map(currentImage, &gubo, 0);
 
     UniformBufferObject ubo{};
 
     ubo.mMat = glm::scale(glm::mat4(1), glm::vec3(16.0));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalPlane->map(currentImage, &ubo, 0);
+    DSlocalPlane.map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(-6, 1, 0));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalSphere->map(currentImage, &ubo, 0);
+    DSlocalSphere.map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(6, 1, 0));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalCube->map(currentImage, &ubo, 0);
+    DSlocalCube.map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(-3, 1, -5));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalSoftbal->map(currentImage, &ubo, 0);
+    DSlocalSoftbal.map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(3, 0, -5)) * glm::scale(glm::mat4(1), glm::vec3(2.61));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalStatue->map(currentImage, &ubo, 0);
+    DSlocalStatue.map(currentImage, &ubo, 0);
 
     // updates the FPS counter
     static float elapsedT = 0.0f;
@@ -294,21 +267,21 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
         float Fps = (float) countedFrames / elapsedT;
         std::ostringstream oss;
         oss << "FPS: " << Fps << "\n";
-        txt->print(1.0f, 1.0f, oss.str(), 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
+        txt.print(1.0f, 1.0f, oss.str(), 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
                   {1.0f, 0.0f, 0.0f, 1.0f}, {0.8f, 0.8f, 0.0f, 1.0f});
         elapsedT = 0.0f;
         countedFrames = 0;
     }
 
-    txt->updateCommandBuffer();
+    txt.updateCommandBuffer();
 }
 
 void SceneManager::cleanUp() {
-    MSphere->cleanup();
-    MCube->cleanup();
-    MSoftbal->cleanup();
-    MStatue->cleanup();
-    Mplane->cleanup();
+    MSphere.cleanup();
+    MCube.cleanup();
+    MSoftbal.cleanup();
+    MStatue.cleanup();
+    Mplane.cleanup();
 
     for (int i = 0; i < 4; i++) {
         Talbedo[i].cleanup();
@@ -318,27 +291,27 @@ void SceneManager::cleanUp() {
         Tao[i].cleanup();
     }
 
-    DSLlocal->cleanup();
-    DSLglobal->cleanup();
+    DSLlocal.cleanup();
+    DSLglobal.cleanup();
 
-    P->destroy();
+    P.destroy();
 
-    RP->destroy();
+    RP.destroy();
 
-    txt->localCleanup();
+    txt.localCleanup();
 }
 
 void SceneManager::pipelinesAndDescriptorSetsCleanup() {
-    P->cleanup();
+    P.cleanup();
 
-    RP->cleanup();
+    RP.cleanup();
 
-    DSglobal->cleanup();
-    DSlocalSphere->cleanup();
-    DSlocalCube->cleanup();
-    DSlocalSoftbal->cleanup();
-    DSlocalStatue->cleanup();
-    DSlocalPlane->cleanup();
+    DSglobal.cleanup();
+    DSlocalSphere.cleanup();
+    DSlocalCube.cleanup();
+    DSlocalSoftbal.cleanup();
+    DSlocalStatue.cleanup();
+    DSlocalPlane.cleanup();
 
-    txt->pipelinesAndDescriptorSetsCleanup();
+    txt.pipelinesAndDescriptorSetsCleanup();
 }

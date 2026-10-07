@@ -1,3 +1,25 @@
 {
-
+  "assetfiles": [],
+  "models": [
+    {"id": "plane", "VD": "VD", "model": "assets/models/Plane.gltf",  "format":"GLTF"},
+    {"id": "sphere", "VD": "VD", "model": "assets/models/Sphere.gltf",  "format":"GLTF"},
+    {"id": "cube", "VD": "VD", "model": "assets/models/Cube.gltf",  "format":"GLTF"},
+    {"id": "softball", "VD": "VD", "model": "assets/models/Softball.gltf",  "format":"GLTF"},
+    {"id": "statue", "VD": "VD", "model": "assets/models/Statue.gltf",  "format":"GLTF"}
+  ],
+  "textures": [
+    {"id": "clay",    "texture": "assets/textures/clay-shingles1/clay-shingles1_albedo.png",     "format": "C"},
+    {"id": "granite", "texture": "assets/textures/granite-tile/granite-tile_albedo.png",         "format": "C"},
+    {"id": "ice",     "texture": "assets/textures/ice-field/ice_field_albedo.png",               "format": "C"},
+    {"id": "rock",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png", "format": "C"}
+  ],
+  "instances": [
+    {"technique": "HauntedCastle", "elements": [
+      {"id": "plane",    "model": "plane",    "texture": ["clay", "granite", "ice", "rock"]},
+      {"id": "sphere",   "model": "sphere",   "texture": ["clay", "granite", "ice", "rock"]},
+      {"id": "cube",     "model": "cube",     "texture": ["clay", "granite", "ice", "rock"]},
+      {"id": "softball", "model": "softball", "texture": ["clay", "granite", "ice", "rock"]},
+      {"id": "statue",   "model": "statue",   "texture": ["clay", "granite", "ice", "rock"]}
+    ]}
+  ]
 }
