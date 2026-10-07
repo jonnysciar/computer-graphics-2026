@@ -6,10 +6,10 @@
 
 class SceneManager {
 private:
-    int textureSize = 4;
-    int w, h;
+    const int textureSize = 4;
     BaseProject *bp;
     Scene scene;
+    int w, h;
 
     // Here you list all the Vulkan objects you need:
 
@@ -37,7 +37,7 @@ public:
     void onResize(int w, int h);
     void pipelinesAndDescriptorSetsInit();
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
-    void updateUniformBufferObjects(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT);
+    void updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT);
     void cleanUp();
     void pipelinesAndDescriptorSetsCleanup();
 };

@@ -17,7 +17,6 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 # Starter
 target_link_libraries(${NAME} PRIVATE Starter)
-#target_precompile_headers(${NAME} REUSE_FROM Starter)
 
 # Shaders
 add_dependencies(${NAME} build_shaders)

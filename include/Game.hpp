@@ -1,7 +1,9 @@
 #pragma once
 
+#include "CameraController.hpp"
 #include "SceneManager.hpp"
 #include "InputManager.hpp"
+#include "GameLogicManager.hpp"
 
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
@@ -12,13 +14,7 @@ protected:
     // Other application parameters
     std::unique_ptr<SceneManager> sceneManager;
     std::unique_ptr<InputManager> inputManager;
-
-    float Ar; // Aspect ratio
-
-    glm::mat4 ViewPrj;
-    glm::vec3 cameraPos;
-
-    glm::vec4 debugView = glm::vec4(0.0);
+    std::unique_ptr<GameLogicManager> gameLogicManager;
 
     // What to do when the window changes size
     void onWindowResize(int w, int h) override;

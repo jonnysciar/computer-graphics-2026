@@ -11,7 +11,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
         -DTEXTMAKER_IMPLEMENTATION
         -DANIMATIONS_IMPLEMENTATION)
 
-#target_precompile_headers(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/modules/Starter.hpp")
+target_compile_options(${PROJECT_NAME} PRIVATE -w)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)

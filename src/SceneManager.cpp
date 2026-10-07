@@ -237,8 +237,9 @@ void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int curr
     RP->end(commandBuffer);
 }
 
-void SceneManager::updateUniformBufferObjects(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT) {
-        // defines the global parameters for the uniform
+// TODO Maybe think a better way to pass dependencies
+void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT) {
+    // defines the global parameters for the uniform
     static float lightRotationAngle = 0.0f;
     //lightRotationAngle += 10.0f * deltaT;
 
