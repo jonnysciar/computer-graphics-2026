@@ -181,13 +181,11 @@ void Game::pipelinesAndDescriptorSetsInit() {
 }
 
 float Game::GameLogic(){
-    const float FOV = glm::radians(45.0f);
+    const float FOVy = glm::radians(45.0f);
     const float nearPlane = 0.1f;
     const float farPlane = 100.f;
-    const float moveSpeed = 5.0f;
-    const float rotationSpeed = glm::radians(120.0f);
-
-    CameraController CC;
+    const float MOVE_SPEED = 5.0f;
+    const float ROT_SPEED = glm::radians(120.0f);
 
     float deltaT;
     glm::vec3 m = glm::vec3(0.0f);
@@ -195,38 +193,43 @@ float Game::GameLogic(){
     bool fire = false;
     getSixAxis(deltaT, m, r, fire);
 
-    //deltaT = CC.CameraLogic(FOV, nearPlane, farPlane, Ar, rotationSpeed, moveSpeed, deltaT, m, r, cameraPos, ViewPrj);
+    glm::mat4* ViewPrj_ptr = &ViewPrj;
+    glm::vec3* cameraPos_ptr = &cameraPos;
+    float* mx_ptr = &m.x;
+    float* my_ptr = &m.y;
+    float* mz_ptr = &m.z;
+    float* rx_ptr = &r.x;
+    float* ry_ptr = &r.y;
+    float* rz_ptr = &r.z;
 
     //*
-    float Yaw = glm::radians(0.0f);
-    //angle that express the top-down movement of the camera
-    float Pitch = 0.0f;
-    //angle that express the left-right movement of the camera
-    //static float Roll = 0.0f;
+    CameraController CC;
+    deltaT = CC.CameraLogic(FOVy, nearPlane, farPlane, Ar, ROT_SPEED, MOVE_SPEED, deltaT, mx_ptr, my_ptr, mz_ptr, rx_ptr, ry_ptr, rz_ptr, cameraPos_ptr, ViewPrj_ptr);
+    //*/
 
-    static glm::vec3 camPos = glm::vec3(0.0f, 15.5f, 10.0f);
+    /*
+    static glm::vec3 camPos = glm::vec3(0.0f, 1.5f, 10.0f);
+    static float Yaw   = glm::radians(0.0f);
+    static float Pitch = 0.0f;
+    static float Roll  = 0.0f;
 
-    Yaw   += rotationSpeed * deltaT * r.y;
-    //modification of Yaw given time passed and input (r.y)
-    Pitch += rotationSpeed * deltaT * r.x;
-    //modification of Pitch given time passed and input (r.x)
+    Yaw   += ROT_SPEED * deltaT * r.y;
+    Pitch += ROT_SPEED * deltaT * r.x;
     Pitch  = glm::clamp(Pitch, glm::radians(-89.0f), glm::radians(89.0f));
-    //Yaw is not clamped because the character must be able to turn  up to 360 degrees
 
-    //calculating the normal vector of the direction the character is currently looking to
     glm::vec3 forward = glm::normalize(glm::vec3(
-            sin(Yaw) * cos(Pitch),
-            -sin(Pitch),
-            -cos(Yaw) * cos(Pitch)));
+        sin(Yaw) * cos(Pitch),
+        -sin(Pitch),
+        -cos(Yaw) * cos(Pitch)));
     glm::vec3 walkForward = glm::normalize(glm::vec3(sin(Yaw), 0.0f, -cos(Yaw)));
     glm::vec3 right = glm::normalize(glm::cross(walkForward, glm::vec3(0, 1, 0)));
 
-    camPos += walkForward * moveSpeed * deltaT * (-m.z);
-    camPos += right       * moveSpeed * deltaT *   m.x;
+    camPos += walkForward * MOVE_SPEED * deltaT * (-m.z);
+    camPos += right       * MOVE_SPEED * deltaT *   m.x;
 
     cameraPos = camPos;
 
-    glm::mat4 Prj = glm::perspective(FOV, Ar, nearPlane, farPlane);
+    glm::mat4 Prj = glm::perspective(FOVy, Ar, nearPlane, farPlane);
     Prj[1][1] *= -1;
 
     glm::mat4 View = glm::lookAt(camPos, camPos + forward, glm::vec3(0, 1, 0));
@@ -234,6 +237,7 @@ float Game::GameLogic(){
     //*/
 
     return deltaT;
+
 }
 
 // Here is where you update the uniforms.
