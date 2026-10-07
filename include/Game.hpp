@@ -55,6 +55,7 @@ protected:
     glm::mat4 ViewPrj;
     glm::vec3 cameraPos;
 
+
     glm::vec4 debugView = glm::vec4(0.0);
 
     // What to do when the window changes size

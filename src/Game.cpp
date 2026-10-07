@@ -1,6 +1,7 @@
 // This has been adapted from the Vulkan tutorial
 
 #include "Game.hpp"
+#include "CameraController.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
@@ -186,14 +187,21 @@ float Game::GameLogic(){
     const float moveSpeed = 5.0f;
     const float rotationSpeed = glm::radians(120.0f);
 
+    CameraController CC;
+
     float deltaT;
     glm::vec3 m = glm::vec3(0.0f);
     glm::vec3 r = glm::vec3(0.0f);
     bool fire = false;
     getSixAxis(deltaT, m, r, fire);
 
-    float Yaw = glm::radians(0.0f); //angle that express the top-down movement of the camera
-    float Pitch = 0.0f; //angle that express the left-right movement of the camera
+    //deltaT = CC.CameraLogic(FOV, nearPlane, farPlane, Ar, rotationSpeed, moveSpeed, deltaT, m, r, cameraPos, ViewPrj);
+
+    //*
+    float Yaw = glm::radians(0.0f);
+    //angle that express the top-down movement of the camera
+    float Pitch = 0.0f;
+    //angle that express the left-right movement of the camera
     //static float Roll = 0.0f;
 
     static glm::vec3 camPos = glm::vec3(0.0f, 15.5f, 10.0f);
@@ -223,6 +231,7 @@ float Game::GameLogic(){
 
     glm::mat4 View = glm::lookAt(camPos, camPos + forward, glm::vec3(0, 1, 0));
     ViewPrj = Prj * View;
+    //*/
 
     return deltaT;
 }
