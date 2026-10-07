@@ -15,7 +15,7 @@ void Game::onWindowResize(int w, int h) {
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
-    sceneManager = std::make_unique<SceneManager>(this, "", windowWidth, windowHeight);
+    sceneManager = std::make_unique<SceneManager>(this, "assets/models/scene.json", windowWidth, windowHeight);
     gameLogicManager = std::make_unique<GameLogicManager>();
 
     inputManager->registerKey("change_texture", GLFW_KEY_3);

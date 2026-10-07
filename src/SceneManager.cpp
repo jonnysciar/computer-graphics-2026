@@ -57,42 +57,52 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, 
     P.init(this->bp, &VD, "shaders/MeshTBN.vert.spv", "shaders/AdvancedTexturingExercise.frag.spv",
            {&DSLglobal, &DSLlocal});
 
-    // Models, textures and Descriptors (values assigned to the uniforms)
-    MSphere.init(this->bp, &VD, "assets/models/Sphere.gltf", GLTF);
-    MCube.init(this->bp, &VD, "assets/models/Cube.gltf", GLTF);
-    MSoftbal.init(this->bp, &VD, "assets/models/Softball.gltf", GLTF);
-    MStatue.init(this->bp, &VD, "assets/models/Statue.gltf", GLTF);
-    Mplane.init(this->bp, &VD, "assets/models/Map.gltf", GLTF);
+    vdrs.resize(1);
+    vdrs[0].init("VD", &VD);
 
-    Talbedo[0].init(this->bp, "assets/textures/ice-field/ice_field_albedo.png");
-    TNorm[0].init(this->bp, "assets/textures/ice-field/ice_field_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Tmetal[0].init(this->bp, "assets/textures/ice-field/ice_field_metallic.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Troughness[0].init(this->bp, "assets/textures/ice-field/ice_field_roughness.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Tao[0].init(this->bp, "assets/textures/ice-field/ice_field_ao.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Talbedo[1].init(this->bp, "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png");
-    TNorm[1].init(this->bp, "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png",
-                  VK_FORMAT_R8G8B8A8_UNORM);
-    Tmetal[1].init(this->bp, "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",
-                   VK_FORMAT_R8G8B8A8_UNORM);
-    Troughness[1].init(this->bp, "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",
-                       VK_FORMAT_R8G8B8A8_UNORM);
-    Tao[1].init(this->bp, "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Talbedo[2].init(this->bp, "assets/textures/granite-tile/granite-tile_albedo.png");
-    TNorm[2].init(this->bp, "assets/textures/granite-tile/granite-tile_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Tmetal[2].init(this->bp, "assets/textures/granite-tile/granite-tile_metallic.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Troughness[2].init(this->bp, "assets/textures/granite-tile/granite-tile_roughness.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Tao[2].init(this->bp, "assets/textures/granite-tile/granite-tile_ao.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Talbedo[3].init(this->bp, "assets/textures/clay-shingles1/clay-shingles1_albedo.png");
-    TNorm[3].init(this->bp, "assets/textures/clay-shingles1/clay-shingles1_normal-ogl.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Tmetal[3].init(this->bp, "assets/textures/clay-shingles1/clay-shingles1_metallic.png", VK_FORMAT_R8G8B8A8_UNORM);
-    Troughness[3].init(this->bp, "assets/textures/clay-shingles1/clay-shingles1_roughness.png",
-                       VK_FORMAT_R8G8B8A8_UNORM);
-    Tao[3].init(this->bp, "assets/textures/clay-shingles1/clay-shingles1_ao.png", VK_FORMAT_R8G8B8A8_UNORM);
+    prs.resize(1);
+    prs[0].init("HauntedCastle", {
+                                        {&P, {
+                                            {},
+                                            {
+                                                   //albedo
+                                                {true, 0, {}},
+                                                {true, 1, {}},
+                                                {true, 2, {}},
+                                                {true, 3, {}},
+                                                   //normal
+                                                {true, 4, {}},
+                                                {true, 5, {}},
+                                                {true, 6, {}},
+                                                {true, 7, {}},
+                                                   //metallic
+                                                {true, 8, {}},
+                                                {true, 9, {}},
+                                                {true, 10, {}},
+                                                {true, 11, {}},
+                                                   //roughness
+                                                {true, 12, {}},
+                                                {true, 13, {}},
+                                                {true, 14, {}},
+                                                {true, 15, {}},
+                                                   //ao
+                                                {true, 16, {}},
+                                                {true, 17, {}},
+                                                {true, 18, {}},
+                                                {true, 19, {}},
+                                                }
+                                        }}
+                                        }, 20, &VD);
 
     // sets the size of the Descriptor Set Pool
     this->bp->DPSZs.uniformBlocksInPool = 20;
     this->bp->DPSZs.texturesInPool = 120;
     this->bp->DPSZs.setsInPool = 20;
+
+    if(scene.init(this->bp, 1, vdrs, prs, scene_json.data()) != 0) {
+        std::cout << "ERROR LOADING THE SCENE\n";
+        exit(-1);
+    }
 
     // initializes the textual output
     txt.init(this->bp, w, h);
@@ -118,66 +128,7 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
 
     DSglobal.init(this->bp, &DSLglobal, {});
 
-    DSlocalSphere.init(this->bp, &DSLlocal, {
-                           Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
-                           Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-                           TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
-                           TNorm[3].getViewAndSampler(),
-                           Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(),
-                           Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-                           Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(),
-                           Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-                           Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
-                           Tao[3].getViewAndSampler()
-                       });
-    DSlocalCube.init(this->bp, &DSLlocal, {
-                         Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
-                         Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-                         TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
-                         TNorm[3].getViewAndSampler(),
-                         Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(),
-                         Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-                         Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(),
-                         Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-                         Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
-                         Tao[3].getViewAndSampler()
-                     });
-    DSlocalSoftbal.init(this->bp, &DSLlocal, {
-                            Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
-                            Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-                            TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(),
-                            TNorm[2].getViewAndSampler(), TNorm[3].getViewAndSampler(),
-                            Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(),
-                            Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-                            Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(),
-                            Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-                            Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
-                            Tao[3].getViewAndSampler()
-                        });
-    DSlocalStatue.init(this->bp, &DSLlocal, {
-                           Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
-                           Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-                           TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
-                           TNorm[3].getViewAndSampler(),
-                           Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(),
-                           Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-                           Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(),
-                           Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-                           Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
-                           Tao[3].getViewAndSampler()
-                       });
-    DSlocalPlane.init(this->bp, &DSLlocal, {
-                          Talbedo[0].getViewAndSampler(), Talbedo[1].getViewAndSampler(),
-                          Talbedo[2].getViewAndSampler(), Talbedo[3].getViewAndSampler(),
-                          TNorm[0].getViewAndSampler(), TNorm[1].getViewAndSampler(), TNorm[2].getViewAndSampler(),
-                          TNorm[3].getViewAndSampler(),
-                          Tmetal[0].getViewAndSampler(), Tmetal[1].getViewAndSampler(),
-                          Tmetal[2].getViewAndSampler(), Tmetal[3].getViewAndSampler(),
-                          Troughness[0].getViewAndSampler(), Troughness[1].getViewAndSampler(),
-                          Troughness[2].getViewAndSampler(), Troughness[3].getViewAndSampler(),
-                          Tao[0].getViewAndSampler(), Tao[1].getViewAndSampler(), Tao[2].getViewAndSampler(),
-                          Tao[3].getViewAndSampler()
-                      });
+    scene.pipelinesAndDescriptorSetsInit();
     txt.pipelinesAndDescriptorSetsInit();
 }
 
@@ -187,25 +138,7 @@ void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int curr
     P.bind(commandBuffer);
     DSglobal.bind(commandBuffer, P, 0, currentImage);
 
-    MSphere.bind(commandBuffer);
-    DSlocalSphere.bind(commandBuffer, P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MSphere.indices.size()), 1, 0, 0, 0);
-
-    MCube.bind(commandBuffer);
-    DSlocalCube.bind(commandBuffer, P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MCube.indices.size()), 1, 0, 0, 0);
-
-    MSoftbal.bind(commandBuffer);
-    DSlocalSoftbal.bind(commandBuffer, P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MSoftbal.indices.size()), 1, 0, 0, 0);
-
-    MStatue.bind(commandBuffer);
-    DSlocalStatue.bind(commandBuffer, P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(MStatue.indices.size()), 1, 0, 0, 0);
-
-    Mplane.bind(commandBuffer);
-    DSlocalPlane.bind(commandBuffer, P, 1, currentImage);
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Mplane.indices.size()), 1, 0, 0, 0);
+    scene.populateCommandBuffer(commandBuffer, 0, currentImage);
 
     RP.end(commandBuffer);
 }
@@ -236,27 +169,32 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     ubo.mMat = glm::scale(glm::mat4(1), glm::vec3(16.0));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalPlane.map(currentImage, &ubo, 0);
+    scene.TI[0].I[0].DS[0][0]->map(currentImage, &gubo, 0);
+    scene.TI[0].I[0].DS[0][1]->map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(-6, 1, 0));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalSphere.map(currentImage, &ubo, 0);
+    scene.TI[0].I[1].DS[0][0]->map(currentImage, &gubo, 0);
+    scene.TI[0].I[1].DS[0][1]->map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(6, 1, 0));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalCube.map(currentImage, &ubo, 0);
+    scene.TI[0].I[2].DS[0][0]->map(currentImage, &gubo, 0);
+    scene.TI[0].I[2].DS[0][1]->map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(-3, 1, -5));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalSoftbal.map(currentImage, &ubo, 0);
+    scene.TI[0].I[3].DS[0][0]->map(currentImage, &gubo, 0);
+    scene.TI[0].I[3].DS[0][1]->map(currentImage, &ubo, 0);
 
     ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(3, 0, -5)) * glm::scale(glm::mat4(1), glm::vec3(2.61));
     ubo.mvpMat = viewPrjMat * ubo.mMat;
     ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    DSlocalStatue.map(currentImage, &ubo, 0);
+    scene.TI[0].I[4].DS[0][0]->map(currentImage, &gubo, 0);
+    scene.TI[0].I[4].DS[0][1]->map(currentImage, &ubo, 0);
 
     // updates the FPS counter
     static float elapsedT = 0.0f;
@@ -277,20 +215,6 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
 }
 
 void SceneManager::cleanUp() {
-    MSphere.cleanup();
-    MCube.cleanup();
-    MSoftbal.cleanup();
-    MStatue.cleanup();
-    Mplane.cleanup();
-
-    for (int i = 0; i < 4; i++) {
-        Talbedo[i].cleanup();
-        TNorm[i].cleanup();
-        Tmetal[i].cleanup();
-        Troughness[i].cleanup();
-        Tao[i].cleanup();
-    }
-
     DSLlocal.cleanup();
     DSLglobal.cleanup();
 
@@ -298,6 +222,7 @@ void SceneManager::cleanUp() {
 
     RP.destroy();
 
+    scene.localCleanup();
     txt.localCleanup();
 }
 
@@ -307,11 +232,7 @@ void SceneManager::pipelinesAndDescriptorSetsCleanup() {
     RP.cleanup();
 
     DSglobal.cleanup();
-    DSlocalSphere.cleanup();
-    DSlocalCube.cleanup();
-    DSlocalSoftbal.cleanup();
-    DSlocalStatue.cleanup();
-    DSlocalPlane.cleanup();
 
+    scene.pipelinesAndDescriptorSetsCleanup();
     txt.pipelinesAndDescriptorSetsCleanup();
 }

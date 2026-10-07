@@ -8,18 +8,58 @@
     {"id": "statue", "VD": "VD", "model": "assets/models/Statue.gltf",  "format":"GLTF"}
   ],
   "textures": [
-    {"id": "clay",    "texture": "assets/textures/clay-shingles1/clay-shingles1_albedo.png",     "format": "C"},
-    {"id": "granite", "texture": "assets/textures/granite-tile/granite-tile_albedo.png",         "format": "C"},
-    {"id": "ice",     "texture": "assets/textures/ice-field/ice_field_albedo.png",               "format": "C"},
-    {"id": "rock",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png", "format": "C"}
+    {"id": "clay-albedo",    "texture": "assets/textures/clay-shingles1/clay-shingles1_albedo.png",     "format": "C"},
+    {"id": "granite-albedo", "texture": "assets/textures/granite-tile/granite-tile_albedo.png",         "format": "C"},
+    {"id": "ice-albedo",     "texture": "assets/textures/ice-field/ice_field_albedo.png",               "format": "C"},
+    {"id": "rock-albedo",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png", "format": "C"},
+
+    {"id": "clay-normal-ogl",    "texture": "assets/textures/clay-shingles1/clay-shingles1_normal-ogl.png",     "format": "C"},
+    {"id": "granite-normal-ogl", "texture": "assets/textures/granite-tile/granite-tile_normal-ogl.png",         "format": "C"},
+    {"id": "ice-normal-ogl",     "texture": "assets/textures/ice-field/ice_field_normal-ogl.png",               "format": "C"},
+    {"id": "rock-normal-ogl",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png", "format": "C"},
+
+    {"id": "clay-metallic",    "texture": "assets/textures/clay-shingles1/clay-shingles1_metallic.png",     "format": "C"},
+    {"id": "granite-metallic", "texture": "assets/textures/granite-tile/granite-tile_metallic.png",         "format": "C"},
+    {"id": "ice-metallic",     "texture": "assets/textures/ice-field/ice_field_metallic.png",               "format": "C"},
+    {"id": "rock-metallic",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png", "format": "C"},
+
+    {"id": "clay-roughness",    "texture": "assets/textures/clay-shingles1/clay-shingles1_roughness.png",     "format": "C"},
+    {"id": "granite-roughness", "texture": "assets/textures/granite-tile/granite-tile_roughness.png",         "format": "C"},
+    {"id": "ice-roughness",     "texture": "assets/textures/ice-field/ice_field_roughness.png",               "format": "C"},
+    {"id": "rock-roughness",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png", "format": "C"},
+
+    {"id": "clay-ao",    "texture": "assets/textures/clay-shingles1/clay-shingles1_ao.png",     "format": "C"},
+    {"id": "granite-ao", "texture": "assets/textures/granite-tile/granite-tile_ao.png",         "format": "C"},
+    {"id": "ice-ao",     "texture": "assets/textures/ice-field/ice_field_ao.png",               "format": "C"},
+    {"id": "rock-ao",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png", "format": "C"}
   ],
   "instances": [
     {"technique": "HauntedCastle", "elements": [
-      {"id": "plane",    "model": "plane",    "texture": ["clay", "granite", "ice", "rock"]},
-      {"id": "sphere",   "model": "sphere",   "texture": ["clay", "granite", "ice", "rock"]},
-      {"id": "cube",     "model": "cube",     "texture": ["clay", "granite", "ice", "rock"]},
-      {"id": "softball", "model": "softball", "texture": ["clay", "granite", "ice", "rock"]},
-      {"id": "statue",   "model": "statue",   "texture": ["clay", "granite", "ice", "rock"]}
+      {"id": "plane",    "model": "plane",    "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
+                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
+                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
+                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
+                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
+      {"id": "sphere",   "model": "sphere",   "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
+                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
+                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
+                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
+                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
+      {"id": "cube",     "model": "cube",     "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
+                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
+                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
+                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
+                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
+      {"id": "softball", "model": "softball", "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
+                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
+                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
+                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
+                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
+      {"id": "statue",   "model": "statue",   "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
+                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
+                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
+                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
+                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]}
     ]}
   ]
 }

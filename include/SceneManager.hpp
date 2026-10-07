@@ -25,11 +25,7 @@ private:
     std::vector<TechniqueRef> prs;
 
     // Models, textures and Descriptors (values assigned to the uniforms)
-    Model MSphere, Mplane, MCube, MSoftbal, MStatue;
-    Texture Talbedo[textureSize], TNorm[textureSize], Tmetal[textureSize], Troughness[textureSize], Tao[textureSize];
     DescriptorSet DSglobal;
-    DescriptorSet DSlocalSphere, DSlocalCube, DSlocalSoftbal;
-    DescriptorSet DSlocalStatue, DSlocalPlane;
 
     // to provide textual feedback
     TextMaker txt;
