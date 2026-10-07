@@ -78,6 +78,8 @@ protected:
 
     void localCleanup() override;
 
+    float GameLogic();
+
     // Here you destroy your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsCleanup() override;
 
