@@ -10,11 +10,18 @@ void Game::onWindowResize(int w, int h) {
     RP.width = w;
     RP.height = h;
     txt.resizeScreen(w, h);
+    if (inputManager) {
+        inputManager->updateWindowSize(w, h);
+    }
 }
 
 // Here you load and setup all your Vulkan Models and Texutures.
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
+    inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
+    inputManager->registerKey("change_texture", GLFW_KEY_3);
+    inputManager->registerKey("quit", GLFW_KEY_ESCAPE);
+
     // Descriptor Layouts [what will be passed to the shaders]
     DSLlocal.init(this, {
                       {
@@ -242,31 +249,19 @@ float Game::GameLogic(){
 
 // Here is where you update the uniforms.
 void Game::updateUniformBuffer(uint32_t currentImage) {
-    static bool debounce = false;
-    static int curDebounce = 0;
-
     // press 3 to change the texture
-    if (glfwGetKey(window, GLFW_KEY_3)) {
-        if (!debounce) {
-            debounce = true;
-            curDebounce = GLFW_KEY_3;
-
-            debugView.z += 1.0f;
-            if (debugView.z > 3.5f) {
-                debugView.z = 0.0f;
-            }
-        }
-    } else {
-        if ((curDebounce == GLFW_KEY_3) && debounce) {
-            debounce = false;
-            curDebounce = 0;
+    if (inputManager->isKeyPressed("change_texture")) {
+        debugView.z += 1.0f;
+        if (debugView.z > 3.5f) {
+            debugView.z = 0.0f;
         }
     }
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+    if (inputManager->isKeyDown("quit")) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
     float deltaT = GameLogic();
+    inputManager->update(deltaT);
 
     // defines the global parameters for the uniform
     static float lightRotationAngle = 0.0f;
@@ -417,7 +412,7 @@ void Game::setWindowParameters() {
     // window size, titile and initial background
     windowWidth = 800;
     windowHeight = 600;
-    windowTitle = "E14 - Advanced Texturing";
+    windowTitle = "The Hunted Castle";
     windowResizable = GLFW_TRUE;
 
     // Initial aspect ratio

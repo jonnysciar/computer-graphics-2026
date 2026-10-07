@@ -2,6 +2,8 @@
 
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
+#include "InputManager.hpp"
+#include <memory>
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -48,6 +50,8 @@ protected:
 
     // to provide textual feedback
     TextMaker txt;
+
+    std::unique_ptr<InputManager> inputManager;
 
     // Other application parameters
     float Ar; // Aspect ratio
