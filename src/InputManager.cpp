@@ -1,5 +1,8 @@
 #include "InputManager.hpp"
 
+#include <iostream>
+#include <ostream>
+
 InputManager::InputManager(GLFWwindow *win, int width, int height)
     : window(win),
       windowWidth(width),
@@ -36,7 +39,7 @@ void InputManager::registerKey(const std::string &name, int glfwKey) {
     keyMap.insert({name, Key(glfwKey)});
 }
 
-void InputManager::updateWindowSize(int width, int height) {
+void InputManager::onResize(int width, int height) {
     windowWidth = width;
     windowHeight = height;
 }

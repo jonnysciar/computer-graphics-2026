@@ -57,7 +57,7 @@ public:
     void registerKey(const std::string &name, int glfwKey);
 
     // Needed for NDC conversion, call it when the window is resized
-    void updateWindowSize(int width, int height);
+    void onResize(int width, int height);
 
     // True only on the frame in which the key goes from released to pressed
     bool isKeyPressed(const std::string &name);

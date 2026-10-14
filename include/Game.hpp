@@ -1,20 +1,18 @@
 #pragma once
 
-#include "CameraController.hpp"
 #include "SceneManager.hpp"
 #include "InputManager.hpp"
 #include "GameLogicManager.hpp"
+#include "HUDManager.hpp"
 
 #include "modules/Starter.hpp"
-#include "modules/TextMaker.hpp"
-
 
 class Game : public BaseProject {
 protected:
     // Other application parameters
     std::unique_ptr<SceneManager> sceneManager;
-    std::unique_ptr<InputManager> inputManager;
     std::unique_ptr<GameLogicManager> gameLogicManager;
+    std::unique_ptr<HUDManager> hudManager;
 
     // What to do when the window changes size
     void onWindowResize(int w, int h) override;
@@ -29,8 +27,6 @@ protected:
     void updateUniformBuffer(uint32_t currentImage) override;
 
     void localCleanup() override;
-
-    float GameLogic();
 
     // Here you destroy your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsCleanup() override;

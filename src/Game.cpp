@@ -1,67 +1,42 @@
 // This has been adapted from the Vulkan tutorial
 
 #include "Game.hpp"
-#include "CameraController.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
     std::cout << "Window resized to: " << w << " x " << h << "\n";
     gameLogicManager->onResize(w, h);
     sceneManager->onResize(w, h);
-    inputManager->updateWindowSize(w, h);
+    hudManager->onResize(w, h);
 }
 
 // Here you load and setup all your Vulkan Models and Texutures.
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
-    inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
-    sceneManager = std::make_unique<SceneManager>(this, "assets/models/scene.json", windowWidth, windowHeight);
-    gameLogicManager = std::make_unique<GameLogicManager>();
-
-    inputManager->registerKey("change_texture", GLFW_KEY_3);
-    inputManager->registerKey("quit", GLFW_KEY_ESCAPE);
-    inputManager->registerKey("interact", GLFW_KEY_E);
-    inputManager->registerKey("increase_light", GLFW_KEY_L);
+    sceneManager = std::make_unique<SceneManager>(this, "assets/models/scene.json", "shaders/scene.vert.spv",
+                                                  "shaders/scene.frag.spv", 20, windowWidth, windowHeight);
+    hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
+    gameLogicManager = std::make_unique<GameLogicManager>(
+        window, sceneManager.get(), hudManager.get(),
+        InputManager(window, static_cast<int>(windowWidth), static_cast<int>(windowHeight)));
 }
 
 // Here you create your pipelines and Descriptor Sets!
 void Game::pipelinesAndDescriptorSetsInit() {
     sceneManager->pipelinesAndDescriptorSetsInit();
+    hudManager->pipelinesAndDescriptorSetsInit();
 }
 
-float Game::GameLogic(){
+// Here is where you update the uniforms.
+void Game::updateUniformBuffer(uint32_t currentImage) {
     float deltaT;
     auto m = glm::vec3(0.0f);
     auto r = glm::vec3(0.0f);
     bool fire = false;
     getSixAxis(deltaT, m, r, fire);
 
-    gameLogicManager->gameLogic(m, r, fire, deltaT);
-
-    return deltaT;
-}
-
-// Here is where you update the uniforms.
-void Game::updateUniformBuffer(uint32_t currentImage) {
-    // press 3 to change the texture
-    if (inputManager->isKeyPressed("change_texture")) {
-        gameLogicManager->executeCommand(GameLogicManager::Command::UPDATE_TEXTURE);
-    }
-    // press E to interact with the objects in reach
-    if (inputManager->isKeyPressed("interact")) {
-        gameLogicManager->executeCommand(GameLogicManager::Command::INTERACT);
-    }
-    if (inputManager->isKeyDown("quit")) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
-    }
-    if (inputManager->isKeyPressed("increase_light")) {
-        gameLogicManager->executeCommand(GameLogicManager::Command::INCREASE_LIGHT);
-    }
-
-    float deltaT = GameLogic();
-    inputManager->update(deltaT);
-
-    gameLogicManager->update(currentImage, sceneManager.get(), deltaT);
+    gameLogicManager->gameLogic(currentImage, m, r, fire, deltaT);
+    hudManager->updateUniformBuffer(currentImage, deltaT);
 }
 
 // Here it is the creation of the command buffer:
@@ -72,11 +47,13 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 // You also have to destroy the pipelines
 void Game::localCleanup() {
     sceneManager->cleanUp();
+    hudManager->cleanUp();
 }
 
 // Here you destroy your pipelines and Descriptor Sets!
 void Game::pipelinesAndDescriptorSetsCleanup() {
     sceneManager->pipelinesAndDescriptorSetsCleanup();
+    hudManager->pipelinesAndDescriptorSetsCleanup();
 }
 
 // Here you set the main application parameters

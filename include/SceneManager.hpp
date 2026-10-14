@@ -1,7 +1,6 @@
 #pragma once
 
 #include <modules/Starter.hpp>
-#include <modules/TextMaker.hpp>
 #include <modules/Scene.hpp>
 
 class SceneManager {
@@ -24,13 +23,12 @@ private:
     std::vector<VertexDescriptorRef> vdrs;
     std::vector<TechniqueRef> prs;
 
-    // to provide textual feedback
-    TextMaker txt;
-    std::string currentPrompt;
+    static std::vector<PipelineAndTexturesDefs> generateTextureDef(Pipeline *P, int numTextures);
 public:
     static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params);
 
-    SceneManager(BaseProject *bp, std::string_view scene_json, int w, int h);
+    SceneManager(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
+                 std::string_view frag_shader, int numTextures, int w, int h);
     void onResize(int w, int h);
     void pipelinesAndDescriptorSetsInit();
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
@@ -40,8 +38,7 @@ public:
     Collider *getCollider(const std::string &instanceId);
     // Moves the instance (and its collider) out of the map
     void hideInstance(const std::string &instanceId);
-    // Shows a message at the bottom of the screen (empty string removes it)
-    void setPrompt(const std::string &text);
+
     void cleanUp();
     void pipelinesAndDescriptorSetsCleanup();
 };

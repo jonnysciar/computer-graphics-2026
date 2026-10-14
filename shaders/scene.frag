@@ -18,11 +18,11 @@ layout(location = 0) out vec4 outColor;
 // ------------------------------------------------------------
 //  TEXTURE MAPS
 // ------------------------------------------------------------
-layout(binding = 1, set = 1) uniform sampler2D albedoMap[4];
-layout(binding = 2, set = 1) uniform sampler2D normalMap[4];
+layout(binding = 1, set = 1) uniform sampler2D textureMap[20];
+/*layout(binding = 2, set = 1) uniform sampler2D normalMap[4];
 layout(binding = 3, set = 1) uniform sampler2D metallicMap[4];
 layout(binding = 4, set = 1) uniform sampler2D roughnessMap[4];
-layout(binding = 5, set = 1) uniform sampler2D aoMap[4];
+layout(binding = 5, set = 1) uniform sampler2D aoMap[4];*/
 
 
 // ------------------------------------------------------------
@@ -99,7 +99,7 @@ vec3 getNormalFromMap0(mat3 TBN, int ti) {
 }
 
 vec3 getNormalFromMap(mat3 TBN, int ti) {
-    vec3 n = texture(normalMap[ti], fragUV).rgb;
+    vec3 n = texture(textureMap[ti + 4], fragUV).rgb;
     n = n * 2.0 - 1.0;                  // [0,1] -> [-1,1]
     return normalize(TBN * n);          // tangent space -> world space
 }
@@ -166,10 +166,10 @@ vec3 computeLight(vec3 lPos) {
     //  Albedo: textures are stored in sRGB, but all PBR
     //  math must be performed in linear space. Convert with:
     //  albedo_linear = pow(albedo_sRGB, vec3(2.2))
-    vec3  albedo    = pow(texture(albedoMap[ti], fragUV).rgb, vec3(2.2));
-    float metallic  = texture(metallicMap[ti], fragUV).r;
-    float roughness = texture(roughnessMap[ti], fragUV).r;
-    float ao        = texture(aoMap[ti], fragUV).r;
+    vec3  albedo    = pow(texture(textureMap[ti], fragUV).rgb, vec3(2.2));
+    float metallic  = texture(textureMap[ti + 8], fragUV).r;
+    float roughness = texture(textureMap[ti + 12], fragUV).r;
+    float ao        = texture(textureMap[ti + 16], fragUV).r;
 
     // ---- Build TBN and decode the normal map ------
     mat3 TBN = computeTBN(fragNorm, fragTan.xyz, fragTan.w);
@@ -209,7 +209,7 @@ vec3 computeLight(vec3 lPos) {
     // ---- [TODO 5b] Apply Ambient Occlusion ---------------------
     vec3 ambient = hemisphericAmbient(N, albedo) * ao;   // add AO attenuation
 
-    vec3 color = direct + ambient;
+    vec3 color = direct;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     return color;
@@ -219,20 +219,6 @@ vec3 computeLight(vec3 lPos) {
 //  MAIN
 // ============================================================
 void main() {
-
-
-    // ---- Tone mapping and gamma correction ------------
-    //
-    //  Direct and ambient radiance values can exceed [0,1].
-    //  Two steps are needed before writing to the framebuffer:
-    //
-    //  Step 1 — Reinhard tone mapping (maps HDR → [0,1]):
-    //    color = color / (color + vec3(1.0))
-    //
-    //  Step 2 — Gamma correction (linear → sRGB):
-    //    color = pow(color, vec3(1.0 / 2.2))
-    //
-
     outColor = vec4(computeLight(gubo.eyePos), 1.0);
     //outColor += vec4(computeLight(vec3(3.0, 3.0, 2.0)), 1.0);
 }

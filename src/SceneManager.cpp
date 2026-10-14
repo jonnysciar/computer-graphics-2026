@@ -2,26 +2,39 @@
 
 #include "structs.hpp"
 
-#include "modules/Starter.hpp"
-#include "modules/TextMaker.hpp"
+std::vector<PipelineAndTexturesDefs> SceneManager::generateTextureDef(Pipeline *P, int numTextures) {
+    std::vector<TextureDefs> textDefs;
+    textDefs.reserve(numTextures);
+
+    for (int i = 0; i < numTextures; i++) {
+        textDefs.emplace_back(true, i, VkDescriptorImageInfo{});
+    }
+
+    return {
+        {
+            P, std::vector{
+                std::vector<TextureDefs>{}, std::move(textDefs)
+            }
+        }
+    };
+}
 
 void SceneManager::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
     auto *SM = static_cast<SceneManager *>(Params);
     SM->populateCommandBuffer(commandBuffer, currentImage);
 }
 
-SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, int h) : bp(bp), w(w), h(h) {
-    // Descriptor Layouts [what will be passed to the shaders]
+SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
+                           std::string_view frag_shader, int numTextures, int w, int h) : bp(bp), w(w), h(h) {
     DSLlocal.init(this->bp, {
                       {
                           0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
                           sizeof(UniformBufferObject), 1
                       },
-                      {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, 4},
-                      {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 4, 4},
-                      {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 8, 4},
-                      {4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 12, 4},
-                      {5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 16, 4}
+                      {
+                          1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                          VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures
+                      }
                   });
     DSLglobal.init(this->bp, {
                        {
@@ -54,65 +67,33 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, 
     RP.properties[0].clearValue = {0.08f, 0.10f, 0.16f, 1.0f};
 
     // Pipelines [Shader couples]
-    P.init(this->bp, &VD, "shaders/MeshTBN.vert.spv", "shaders/AdvancedTexturingExercise.frag.spv",
-           {&DSLglobal, &DSLlocal});
+    P.init(this->bp, &VD, vert_shader.data(), frag_shader.data(), {&DSLglobal, &DSLlocal});
+
+    std::ifstream ifs(scene_json.data());
+    nlohmann::json jsonFile = nlohmann::json::parse(ifs);
+
+    std::string vdName = jsonFile.at("models").at(0).at("VD");
+    std::string instName = jsonFile.at("instances").at(0).at("technique");
+    int numElem = jsonFile.at("instances").at(0).at("elements").size();
 
     vdrs.resize(1);
-    vdrs[0].init("VD", &VD);
+    vdrs[0].init(vdName.c_str(), &VD);
 
     prs.resize(1);
-    prs[0].init("HauntedCastle", {
-                                        {&P, {
-                                            {},
-                                            {
-                                                   //albedo
-                                                {true, 0, {}},
-                                                {true, 1, {}},
-                                                {true, 2, {}},
-                                                {true, 3, {}},
-                                                   //normal
-                                                {true, 4, {}},
-                                                {true, 5, {}},
-                                                {true, 6, {}},
-                                                {true, 7, {}},
-                                                   //metallic
-                                                {true, 8, {}},
-                                                {true, 9, {}},
-                                                {true, 10, {}},
-                                                {true, 11, {}},
-                                                   //roughness
-                                                {true, 12, {}},
-                                                {true, 13, {}},
-                                                {true, 14, {}},
-                                                {true, 15, {}},
-                                                   //ao
-                                                {true, 16, {}},
-                                                {true, 17, {}},
-                                                {true, 18, {}},
-                                                {true, 19, {}},
-                                                }
-                                        }}
-                                        }, 20, &VD);
+    prs[0].init(instName.c_str(), generateTextureDef(&P, numTextures), numTextures, &VD);
 
     // sets the size of the Descriptor Set Pool
-    this->bp->DPSZs.uniformBlocksInPool = 20;
-    this->bp->DPSZs.texturesInPool = 120;
-    this->bp->DPSZs.setsInPool = 20;
+    this->bp->DPSZs.uniformBlocksInPool += numElem * 2;
+    this->bp->DPSZs.texturesInPool += numElem * numTextures;
+    this->bp->DPSZs.setsInPool += numElem * 2;
 
-    if(scene.init(this->bp, 1, vdrs, prs, scene_json.data()) != 0) {
+    if (scene.init(this->bp, 1, vdrs, prs, scene_json.data()) != 0) {
         std::cout << "ERROR LOADING THE SCENE\n";
         exit(-1);
     }
 
-    // initializes the textual output
-    txt.init(this->bp, w, h);
-
     // submits the main command buffer
     bp->submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
-
-    txt.print(1.0f, 1.0f, "FPS:", 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
-              {1.0f, 0.0f, 0.0f, 1.0f}, {0.8f, 0.8f, 0.0f, 1.0f});
-    txt.print(-1.0f, -1.0f, "3 - Change texture", 3);
 }
 
 void SceneManager::onResize(int w, int h) {
@@ -120,7 +101,6 @@ void SceneManager::onResize(int w, int h) {
     RP.height = h;
     // the colliders' wireframes are drawn in their own render pass: it must have the same size as the main one
     scene.ColShow.resizeScreen(w, h);
-    txt.resizeScreen(w, h);
 }
 
 void SceneManager::pipelinesAndDescriptorSetsInit() {
@@ -129,7 +109,6 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
     P.create(&RP);
 
     scene.pipelinesAndDescriptorSetsInit();
-    txt.pipelinesAndDescriptorSetsInit();
 }
 
 void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
@@ -143,15 +122,9 @@ void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int curr
 }
 
 // TODO Maybe think a better way to pass dependencies
-void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT) {
+void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat,
+                                       glm::vec3 cameraPos, float deltaT) {
     // defines the global parameters for the uniform
-    static float lightRotationAngle = 0.0f;
-    //lightRotationAngle += 10.0f * deltaT;
-
-    const glm::mat4 lightView = glm::rotate(glm::mat4(1), glm::radians(lightRotationAngle),
-                                            glm::vec3(0.0f, 1.0f, 0.0f)) *
-                                glm::rotate(glm::mat4(1), glm::radians(-45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    const glm::vec3 lightDir = glm::vec3(lightView * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 
     GlobalUniformBufferObject gubo{};
     gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) * 5.0f;
@@ -176,23 +149,6 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
 
     // updates the view-projection matrix used to draw the colliders' wireframes
     scene.updateColliderVisualizer(currentImage, viewPrjMat);
-
-    // updates the FPS counter
-    static float elapsedT = 0.0f;
-    static int countedFrames = 0;
-    countedFrames++;
-    elapsedT += deltaT;
-    if (elapsedT > 1.0f) {
-        float Fps = (float) countedFrames / elapsedT;
-        std::ostringstream oss;
-        oss << "FPS: " << Fps << "\n";
-        txt.print(1.0f, 1.0f, oss.str(), 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
-                  {1.0f, 0.0f, 0.0f, 1.0f}, {0.8f, 0.8f, 0.0f, 1.0f});
-        elapsedT = 0.0f;
-        countedFrames = 0;
-    }
-
-    txt.updateCommandBuffer();
 }
 
 Collider *SceneManager::getCollider(const std::string &instanceId) {
@@ -220,20 +176,6 @@ void SceneManager::hideInstance(const std::string &instanceId) {
     scene.refreshColliderVisualizer();
 }
 
-void SceneManager::setPrompt(const std::string &text) {
-    if (text == currentPrompt) {
-        return;
-    }
-    currentPrompt = text;
-
-    if (text.empty()) {
-        txt.removeText(2);
-    } else {
-        txt.print(0.0f, 0.9f, text, 2, "CO", false, false, true, TAL_CENTER, TRH_CENTER, TRV_BOTTOM,
-                  {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 1.0f});
-    }
-}
-
 void SceneManager::cleanUp() {
     DSLlocal.cleanup();
     DSLglobal.cleanup();
@@ -243,7 +185,6 @@ void SceneManager::cleanUp() {
     RP.destroy();
 
     scene.localCleanup();
-    txt.localCleanup();
 }
 
 void SceneManager::pipelinesAndDescriptorSetsCleanup() {
@@ -252,5 +193,4 @@ void SceneManager::pipelinesAndDescriptorSetsCleanup() {
     RP.cleanup();
 
     scene.pipelinesAndDescriptorSetsCleanup();
-    txt.pipelinesAndDescriptorSetsCleanup();
 }
