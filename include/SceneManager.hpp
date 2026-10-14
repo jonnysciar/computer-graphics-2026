@@ -24,9 +24,6 @@ private:
     std::vector<VertexDescriptorRef> vdrs;
     std::vector<TechniqueRef> prs;
 
-    // Models, textures and Descriptors (values assigned to the uniforms)
-    DescriptorSet DSglobal;
-
     // to provide textual feedback
     TextMaker txt;
     std::string currentPrompt;

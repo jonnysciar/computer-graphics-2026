@@ -128,8 +128,6 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
 
     P.create(&RP);
 
-    DSglobal.init(this->bp, &DSLglobal, {});
-
     scene.pipelinesAndDescriptorSetsInit();
     txt.pipelinesAndDescriptorSetsInit();
 }
@@ -138,7 +136,6 @@ void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int curr
     RP.begin(commandBuffer, currentImage);
 
     P.bind(commandBuffer);
-    DSglobal.bind(commandBuffer, P, 0, currentImage);
 
     scene.populateCommandBuffer(commandBuffer, 0, currentImage);
 
@@ -164,7 +161,6 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f); // warm ground
     gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // world up
     gubo.debugView = debugView;
-    DSglobal.map(currentImage, &gubo, 0);
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
     UniformBufferObject ubo{};
@@ -254,8 +250,6 @@ void SceneManager::pipelinesAndDescriptorSetsCleanup() {
     P.cleanup();
 
     RP.cleanup();
-
-    DSglobal.cleanup();
 
     scene.pipelinesAndDescriptorSetsCleanup();
     txt.pipelinesAndDescriptorSetsCleanup();
