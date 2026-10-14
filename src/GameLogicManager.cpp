@@ -22,6 +22,11 @@ void GameLogicManager::executeCommand(Command command) {
         case Command::INTERACT:
             interactPressed = true;
             break;
+        case Command::INCREASE_LIGHT:
+            debugView.x += 1.0f;
+            if (debugView.x > 10.0f) {
+                debugView.x = 0.0f;
+            }
         default:
             break;
     }

@@ -157,11 +157,11 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     const glm::vec3 lightDir = glm::vec3(lightView * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 
     GlobalUniformBufferObject gubo{};
-    gubo.lightDir = lightDir;
     gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) * 5.0f;
+    gubo.pointParams = glm::vec3(debugView.x, 2.0, 0.0);
     gubo.eyePos = cameraPos;
-    gubo.ambientUpper = glm::vec4(0.5f, 0.65f, 1.0f, 0.0f); // sky blue
-    gubo.ambientLower = glm::vec4(0.2f, 0.15f, 0.1f, 0.0f); // warm ground
+    gubo.ambientUpper = glm::vec4(0.05f, 0.05f, 1.0f, 0.0f); // sky blue
+    gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f); // warm ground
     gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // world up
     gubo.debugView = debugView;
     DSglobal.map(currentImage, &gubo, 0);

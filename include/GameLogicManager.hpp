@@ -25,6 +25,7 @@ public:
     enum class Command {
         UPDATE_TEXTURE,
         INTERACT,
+        INCREASE_LIGHT,
     };
 
     void gameLogic(glm::vec3 m, glm::vec3 r, bool fire, float deltaT);

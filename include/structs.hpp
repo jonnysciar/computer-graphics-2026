@@ -10,8 +10,8 @@ struct UniformBufferObject {
 };
 
 struct GlobalUniformBufferObject {
-    alignas(16) glm::vec3 lightDir;
     alignas(16) glm::vec4 lightColor;
+    alignas(16) glm::vec3 pointParams;
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 ambientUpper; // xyz = sky / upper  color  (lU)
     alignas(16) glm::vec4 ambientLower; // xyz = ground / lower color (lD)

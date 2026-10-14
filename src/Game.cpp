@@ -21,6 +21,7 @@ void Game::localInit() {
     inputManager->registerKey("change_texture", GLFW_KEY_3);
     inputManager->registerKey("quit", GLFW_KEY_ESCAPE);
     inputManager->registerKey("interact", GLFW_KEY_E);
+    inputManager->registerKey("increase_light", GLFW_KEY_L);
 }
 
 // Here you create your pipelines and Descriptor Sets!
@@ -52,6 +53,9 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     }
     if (inputManager->isKeyDown("quit")) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+    if (inputManager->isKeyPressed("increase_light")) {
+        gameLogicManager->executeCommand(GameLogicManager::Command::INCREASE_LIGHT);
     }
 
     float deltaT = GameLogic();
