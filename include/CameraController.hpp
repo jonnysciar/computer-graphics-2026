@@ -2,6 +2,8 @@
 
 #include "modules/Starter.hpp"
 
+class CollisionDetector;
+
 class CameraController {
 private:
     float Yaw   = glm::radians(0.0f);
@@ -16,6 +18,8 @@ private:
     const float MOVE_SPEED = 5.0f;
     const float ROT_SPEED = glm::radians(120.0f);
 public:
-    void update(glm::mat4 &viewPrjMatrix, glm::vec3 &cameraPos, glm::vec3 m, glm::vec3 r, float deltaT);
+    // If collisionDetector is given, the movement is stopped by the solid colliders
+    void update(glm::mat4 &viewPrjMatrix, glm::vec3 &cameraPos, glm::vec3 m, glm::vec3 r, float deltaT,
+                CollisionDetector *collisionDetector = nullptr);
     void onResize(int w, int h);
 };

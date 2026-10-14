@@ -20,6 +20,7 @@ void Game::localInit() {
 
     inputManager->registerKey("change_texture", GLFW_KEY_3);
     inputManager->registerKey("quit", GLFW_KEY_ESCAPE);
+    inputManager->registerKey("interact", GLFW_KEY_E);
 }
 
 // Here you create your pipelines and Descriptor Sets!
@@ -44,6 +45,10 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     // press 3 to change the texture
     if (inputManager->isKeyPressed("change_texture")) {
         gameLogicManager->executeCommand(GameLogicManager::Command::UPDATE_TEXTURE);
+    }
+    // press E to interact with the objects in reach
+    if (inputManager->isKeyPressed("interact")) {
+        gameLogicManager->executeCommand(GameLogicManager::Command::INTERACT);
     }
     if (inputManager->isKeyDown("quit")) {
         glfwSetWindowShouldClose(window, GL_TRUE);

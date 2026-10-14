@@ -118,6 +118,8 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, int w, 
 void SceneManager::onResize(int w, int h) {
     RP.width = w;
     RP.height = h;
+    // the colliders' wireframes are drawn in their own render pass: it must have the same size as the main one
+    scene.ColShow.resizeScreen(w, h);
     txt.resizeScreen(w, h);
 }
 
@@ -164,37 +166,20 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     gubo.debugView = debugView;
     DSglobal.map(currentImage, &gubo, 0);
 
+    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
     UniformBufferObject ubo{};
+    for (int i = 0; i < scene.TI[0].InstanceCount; i++) {
+        Instance &inst = scene.TI[0].I[i];
 
-    ubo.mMat = glm::scale(glm::mat4(1), glm::vec3(16.0));
-    ubo.mvpMat = viewPrjMat * ubo.mMat;
-    ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    scene.TI[0].I[0].DS[0][0]->map(currentImage, &gubo, 0);
-    scene.TI[0].I[0].DS[0][1]->map(currentImage, &ubo, 0);
+        ubo.mMat = inst.Wm;
+        ubo.mvpMat = viewPrjMat * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        inst.DS[0][0]->map(currentImage, &gubo, 0);
+        inst.DS[0][1]->map(currentImage, &ubo, 0);
+    }
 
-    ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(-6, 1, 0));
-    ubo.mvpMat = viewPrjMat * ubo.mMat;
-    ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    scene.TI[0].I[1].DS[0][0]->map(currentImage, &gubo, 0);
-    scene.TI[0].I[1].DS[0][1]->map(currentImage, &ubo, 0);
-
-    ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(6, 1, 0));
-    ubo.mvpMat = viewPrjMat * ubo.mMat;
-    ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    scene.TI[0].I[2].DS[0][0]->map(currentImage, &gubo, 0);
-    scene.TI[0].I[2].DS[0][1]->map(currentImage, &ubo, 0);
-
-    ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(-3, 1, -5));
-    ubo.mvpMat = viewPrjMat * ubo.mMat;
-    ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    scene.TI[0].I[3].DS[0][0]->map(currentImage, &gubo, 0);
-    scene.TI[0].I[3].DS[0][1]->map(currentImage, &ubo, 0);
-
-    ubo.mMat = glm::translate(glm::mat4(1), glm::vec3(3, 0, -5)) * glm::scale(glm::mat4(1), glm::vec3(2.61));
-    ubo.mvpMat = viewPrjMat * ubo.mMat;
-    ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-    scene.TI[0].I[4].DS[0][0]->map(currentImage, &gubo, 0);
-    scene.TI[0].I[4].DS[0][1]->map(currentImage, &ubo, 0);
+    // updates the view-projection matrix used to draw the colliders' wireframes
+    scene.updateColliderVisualizer(currentImage, viewPrjMat);
 
     // updates the FPS counter
     static float elapsedT = 0.0f;
@@ -212,6 +197,45 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     }
 
     txt.updateCommandBuffer();
+}
+
+Collider *SceneManager::getCollider(const std::string &instanceId) {
+    auto it = scene.InstanceIds.find(instanceId);
+    if (it == scene.InstanceIds.end()) {
+        return nullptr;
+    }
+    return scene.I[it->second]->C;
+}
+
+void SceneManager::hideInstance(const std::string &instanceId) {
+    auto it = scene.InstanceIds.find(instanceId);
+    if (it == scene.InstanceIds.end()) {
+        return;
+    }
+
+    // The command buffer is recorded once, so the instance is "hidden" by moving it far away
+    Instance *inst = scene.I[it->second];
+    inst->Wm = glm::translate(glm::mat4(1), glm::vec3(0.0f, -1000.0f, 0.0f));
+    if (inst->C != nullptr) {
+        inst->C->setWorldMatrix(inst->Wm);
+    }
+
+    // The wireframes' geometry is built in world space: rebuild it
+    scene.refreshColliderVisualizer();
+}
+
+void SceneManager::setPrompt(const std::string &text) {
+    if (text == currentPrompt) {
+        return;
+    }
+    currentPrompt = text;
+
+    if (text.empty()) {
+        txt.removeText(2);
+    } else {
+        txt.print(0.0f, 0.9f, text, 2, "CO", false, false, true, TAL_CENTER, TRH_CENTER, TRV_BOTTOM,
+                  {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 1.0f});
+    }
 }
 
 void SceneManager::cleanUp() {

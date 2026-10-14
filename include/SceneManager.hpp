@@ -29,6 +29,7 @@ private:
 
     // to provide textual feedback
     TextMaker txt;
+    std::string currentPrompt;
 public:
     static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params);
 
@@ -37,6 +38,13 @@ public:
     void pipelinesAndDescriptorSetsInit();
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
     void updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT);
+
+    // Returns the collider of the instance with the given id (nullptr if there is none)
+    Collider *getCollider(const std::string &instanceId);
+    // Moves the instance (and its collider) out of the map
+    void hideInstance(const std::string &instanceId);
+    // Shows a message at the bottom of the screen (empty string removes it)
+    void setPrompt(const std::string &text);
     void cleanUp();
     void pipelinesAndDescriptorSetsCleanup();
 };
