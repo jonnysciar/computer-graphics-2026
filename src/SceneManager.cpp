@@ -151,6 +151,18 @@ void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugVie
     scene.updateColliderVisualizer(currentImage, viewPrjMat);
 }
 
+std::vector<Instance *> SceneManager::getInstances() const {
+    std::vector<Instance *> instances;
+    instances.resize(scene.TI[0].InstanceCount);
+
+
+    for (int i = 0; i < scene.TI[0].InstanceCount; i++) {
+        instances[i] = &scene.TI[0].I[i];
+    }
+
+    return instances;
+}
+
 Collider *SceneManager::getCollider(const std::string &instanceId) {
     auto it = scene.InstanceIds.find(instanceId);
     if (it == scene.InstanceIds.end()) {
@@ -194,3 +206,4 @@ void SceneManager::pipelinesAndDescriptorSetsCleanup() {
 
     scene.pipelinesAndDescriptorSetsCleanup();
 }
+

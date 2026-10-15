@@ -34,6 +34,8 @@ public:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
     void updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT);
 
+    std::vector<Instance *> getInstances() const;
+
     // Returns the collider of the instance with the given id (nullptr if there is none)
     Collider *getCollider(const std::string &instanceId);
     // Moves the instance (and its collider) out of the map
