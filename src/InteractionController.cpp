@@ -1,34 +1,30 @@
 #include "InteractionController.hpp"
 
-void InteractionController::add(const std::string &id, Collider *collider) {
-    if (collider == nullptr) {
-        return;
-    }
-    items.push_back({id, collider, false});
-}
+#include "SceneHandler.hpp"
 
-bool InteractionController::update(CollisionDetector &detector, bool interactPressed, std::string &pickedId) {
-    focusedId.clear();
+#include <modules/Scene.hpp>
 
-    // The first object in reach is the one the player is interacting with
-    Interactable *focused = nullptr;
-    for (auto &item : items) {
-        if (!item.taken && detector.inReach(*item.collider)) {
-            focused = &item;
-            break;
+InteractionController::InteractionController(CollisionDetector *collisionDetector,
+                                             std::vector<Interactable> interactables)
+    : collisionDetector(collisionDetector), interactables(std::move(interactables)) {}
+
+void InteractionController::checkInteractionReach(SceneHandler *sceneHandler, Player &player) {
+    for (auto &interactable : interactables) {
+        auto isCol = player.reachCollider.collidesWith(*interactable.instance->C);
+        if (isCol && !interactable.reachable) {
+            sceneHandler->onInteractionReach(*interactable.instance->id, player);
+            interactable.reachable = true;
+        } else if (!isCol && interactable.reachable) {
+            sceneHandler->offInteractionReach(*interactable.instance->id, player);
+            interactable.reachable = false;
         }
     }
+}
 
-    if (focused == nullptr) {
-        return false;
+void InteractionController::interact(Player &p) {
+    for (auto &in : interactables) {
+        if (!in.reachable) continue;
+
+        in.callback(in, p);
     }
-
-    if (interactPressed) {
-        focused->taken = true;
-        pickedId = focused->id;
-        return true;
-    }
-
-    focusedId = focused->id;
-    return false;
 }

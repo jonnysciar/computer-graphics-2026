@@ -10,7 +10,7 @@ InputManager::InputManager(GLFWwindow *win, int width, int height)
       prevMouseLeftPressed(false) {
 }
 
-void InputManager::updateMouseInput() {
+void InputManager::updateMouseInput(Player &p) {
     // Get mouse position in pixels
     glfwGetCursorPos(window, &mouseState.pixelX, &mouseState.pixelY);
 
@@ -29,47 +29,26 @@ void InputManager::updateMouseInput() {
 
     // Store for next frame
     prevMouseLeftPressed = currPressed;
+
+    Listenable<MouseState>::update(p, mouseState);
 }
 
-void InputManager::update(float deltaT) {
-    updateMouseInput();
+void InputManager::updatePressedKeys(Player &p) {
+    std::ranges::for_each(keys, [this, &p](Key &k) {
+        bool down = glfwGetKey(window, k.glfw_key);
+        if (k.isDown && !down) {
+            Listenable<Key>::update(p, k);
+        }
+        k.isDown = down;
+    });
 }
 
-void InputManager::registerKey(const std::string &name, int glfwKey) {
-    keyMap.insert({name, Key(glfwKey)});
+void InputManager::update(Player &p, float deltaT) {
+    updateMouseInput(p);
+    updatePressedKeys(p);
 }
 
 void InputManager::onResize(int width, int height) {
     windowWidth = width;
     windowHeight = height;
-}
-
-bool InputManager::isKeyPressed(const std::string &name) {
-    auto it = keyMap.find(name);
-    if (it == keyMap.end()) return false;
-
-    Key &k = it->second;
-    if (glfwGetKey(window, k.glfw_key)) {
-        if (!k.debounce) {
-            k.debounce = true;
-            return true;
-        }
-    } else {
-        k.debounce = false;
-    }
-    return false;
-}
-
-bool InputManager::isKeyDown(const std::string &name) {
-    auto it = keyMap.find(name);
-    if (it == keyMap.end()) return false;
-
-    return glfwGetKey(window, it->second.glfw_key);
-}
-
-bool InputManager::isKeyUp(const std::string &name) {
-    auto it = keyMap.find(name);
-    if (it == keyMap.end()) return true;
-
-    return !glfwGetKey(window, it->second.glfw_key);
 }
