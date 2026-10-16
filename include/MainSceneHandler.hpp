@@ -2,40 +2,103 @@
 
 #include <modules/Scene.hpp>
 
+#include "InputManager.hpp"
 #include "SceneHandler.hpp"
 #include "structs.hpp"
 
-class MainSceneHandler : public SceneHandler {
-public:
-    struct params {
-        glm::mat4 viewPrjMat;
-        glm::vec3 cameraPos;
-        glm::vec4 debugView;
-    };
+inline void hideInstance(Instance *instance) {
+    instance->Wm = glm::translate(glm::mat4(1), glm::vec3(0.0f, -1000.0f, 0.0f));
+    instance->C->setWorldMatrix(instance->Wm);
+}
 
-    explicit MainSceneHandler(std::vector<Instance *> instances) : SceneHandler(std::move(instances)) {}
+class MainSceneHandler : public SceneHandler {
+  private:
+    static std::map<std::string_view, Interactable> interMap;
+
+    HUDManager *hudManager;
+    GlobalUniformBufferObject gubo{};
+    UniformBufferObject ubo{};
+
+    glm::vec4 debugView = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+  public:
+    explicit MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
+        : SceneHandler(sceneLoader), hudManager(hudManager) {
+
+        std::vector<Interactable> interactables;
+        interactables.reserve(interMap.size());
+        for (const auto &instance : instances) {
+            auto it = interMap.find(*instance->id);
+            if (it == interMap.end()) continue;
+
+            collisionDetector->removeCollider(instance->C);
+
+            auto inter = it->second;
+            inter.instance = instance;
+            interactables.push_back(std::move(inter));
+        }
+
+        interactionController =
+            std::make_unique<InteractionController>(collisionDetector.get(), std::move(interactables));
+    }
     ~MainSceneHandler() override = default;
-    void updateUniformBuffers(uint32_t currentImage, void *data) override {
-        auto *params = static_cast<MainSceneHandler::params *>(data);
+    void updateUniformBuffers(uint32_t currentImage, glm::vec3 pos, glm::mat4 viewPrjMat, void *data) override {
         // defines the global parameters for the uniform
-        GlobalUniformBufferObject gubo{};
         gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) * 5.0f;
-        gubo.pointParams = glm::vec3(params->debugView.x, 2.0, 0.0);
-        gubo.eyePos = params->cameraPos;
+        gubo.pointParams = glm::vec3(debugView.x, 2.0, 0.0);
+        gubo.eyePos = pos;
         gubo.ambientUpper = glm::vec4(0.05f, 0.05f, 1.0f, 0.0f); // sky blue
-        gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f); // warm ground
-        gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // world up
-        gubo.debugView = params->debugView;
+        gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f);  // warm ground
+        gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);     // world up
+        gubo.debugView = debugView;
 
         // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
-        UniformBufferObject ubo{};
-        for (auto *instance: instances) {
-
+        for (auto *instance : instances) {
             ubo.mMat = instance->Wm;
-            ubo.mvpMat = params->viewPrjMat * ubo.mMat;
+            ubo.mvpMat = viewPrjMat * ubo.mMat;
             ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
             instance->DS[0][0]->map(currentImage, &gubo, 0);
             instance->DS[0][1]->map(currentImage, &ubo, 0);
         }
     }
+
+    void onInteractionReach(std::string_view id, Player &p) override {
+        if (!interMap.contains(id)) return;
+
+        hudManager->setPrompt("Press E to pick up");
+    }
+
+    void offInteractionReach(std::string_view id, Player &p) override {
+        if (!interMap.contains(id)) return;
+
+        hudManager->setPrompt("");
+    }
+
+    void onEvent(Player &p, Key k) override {
+        switch (k.glfw_key) {
+        case GLFW_KEY_3:
+            debugView.z += 1.0f;
+            if (debugView.z > 3.5f) {
+                debugView.z = 0.0f;
+            }
+            break;
+        case GLFW_KEY_E:
+            interactionController->interact(p);
+            sceneLoader->refreshColliders();
+            break;
+        case GLFW_KEY_L:
+            debugView.x += 1.0f;
+            if (debugView.x > 10.0f) {
+                debugView.x = 0.0f;
+            }
+        default:
+            break;
+        }
+    }
+};
+
+std::map<std::string_view, Interactable> MainSceneHandler::interMap = {
+    {"softball", Interactable{.instance = nullptr,
+                              .solid = true,
+                              .callback = [](Interactable &i, Player &p) { hideInstance(i.instance); }}},
 };

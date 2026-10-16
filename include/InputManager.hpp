@@ -2,8 +2,8 @@
 
 #include <GLFW/glfw3.h>
 
-#include <map>
-#include <string>
+#include "Player.hpp"
+#include "Listener/Listenable.hpp"
 
 struct MouseState {
     double pixelX, pixelY; // Position in pixels (window coordinates)
@@ -19,15 +19,13 @@ struct MouseState {
 };
 
 struct Key {
-    bool debounce;
     int glfw_key;
+    bool isDown;
 
-    explicit Key(int k) : debounce(false), glfw_key(k) {
-    }
+    explicit Key(int k) : glfw_key(k), isDown(false) {}
 };
 
-class InputManager {
-
+class InputManager : public Listenable<Key>, public Listenable<MouseState> {
 private:
     GLFWwindow *window;
     int windowWidth;
@@ -39,32 +37,22 @@ private:
     // Current states (updated every frame)
     MouseState mouseState;
 
-    std::map<std::string, Key> keyMap;
+    std::vector<Key> keys = {Key{GLFW_KEY_3}, Key{GLFW_KEY_E}, Key{GLFW_KEY_ESCAPE}, Key{GLFW_KEY_L}};
 
     // Updates mouse position and button states
-    void updateMouseInput();
+    void updateMouseInput(Player &p);
+
+    // True only on the frame in which the key goes from released to pressed
+    void updatePressedKeys(Player &p);
 
 public:
-
     InputManager(GLFWwindow *win, int width, int height);
 
     // To be called once per frame
-    void update(float deltaT);
+    void update(Player &p, float deltaT);
 
     const MouseState &getMouseState() const { return mouseState; }
 
-    // Associates a name to a GLFW key
-    void registerKey(const std::string &name, int glfwKey);
-
     // Needed for NDC conversion, call it when the window is resized
     void onResize(int width, int height);
-
-    // True only on the frame in which the key goes from released to pressed
-    bool isKeyPressed(const std::string &name);
-
-    // True while the key is held down
-    bool isKeyDown(const std::string &name);
-
-    // True while the key is not held down (also for unregistered names)
-    bool isKeyUp(const std::string &name);
 };

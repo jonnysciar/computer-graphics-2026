@@ -1,18 +1,26 @@
 #pragma once
 
-#include "SceneLoader.hpp"
-#include "InputManager.hpp"
-#include "GameLogicManager.hpp"
+#include "CameraController.hpp"
 #include "HUDManager.hpp"
-
-#include "modules/Starter.hpp"
+#include "InputManager.hpp"
+#include "Player.hpp"
+#include "SceneHandler.hpp"
+#include "SceneLoader.hpp"
 
 class Game : public BaseProject {
 protected:
     // Other application parameters
     std::unique_ptr<SceneLoader> sceneLoader;
-    std::unique_ptr<GameLogicManager> gameLogicManager;
+    std::unique_ptr<SceneHandler> sceneHandler;
+
     std::unique_ptr<HUDManager> hudManager;
+    std::unique_ptr<InputManager> inputManager;
+
+    CameraController cameraController;
+
+    glm::mat4 viewPrjMat = glm::mat4(0.0f);
+
+    Player player{};
 
     // What to do when the window changes size
     void onWindowResize(int w, int h) override;
@@ -34,4 +42,7 @@ protected:
 public:
     // Here you set the main application parameters
     void setWindowParameters() override;
+    virtual ~Game() = default;
+private:
+    float handleMovement();
 };

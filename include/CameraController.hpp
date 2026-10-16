@@ -1,6 +1,6 @@
 #pragma once
 
-#include "modules/Starter.hpp"
+#include <modules/Starter.hpp>
 
 class CollisionDetector;
 
@@ -19,7 +19,7 @@ private:
     const float ROT_SPEED = glm::radians(120.0f);
 public:
     // If collisionDetector is given, the movement is stopped by the solid colliders
-    void update(glm::mat4 &viewPrjMatrix, glm::vec3 &cameraPos, glm::vec3 m, glm::vec3 r, float deltaT,
-                CollisionDetector *collisionDetector = nullptr);
+    glm::vec3 computePos(glm::vec3 pos, glm::vec3 m, glm::vec3 r, float deltaT);
+    glm::mat4 computeViewPrjMat(glm::vec3 pos) const;
     void onResize(int w, int h);
 };
