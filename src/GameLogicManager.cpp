@@ -3,16 +3,27 @@
 #include <utility>
 
 #include "HUDManager.hpp"
-#include "SceneManager.hpp"
+#include "SceneLoader.hpp"
+#include "MainSceneHandler.hpp"
 
-GameLogicManager::GameLogicManager(GLFWwindow *window, SceneManager *sceneManager, HUDManager *hudManager,
-                                   InputManager inputManager) : window(window), sceneManager(sceneManager),
-                                                                hudManager(hudManager),
-                                                                inputManager(std::move(inputManager)) {
+GameLogicManager::GameLogicManager(GLFWwindow *window, SceneLoader *sceneLoader, HUDManager *hudManager,
+                                   InputManager inputManager)
+    : window(window), sceneLoader(sceneLoader), hudManager(hudManager), inputManager(std::move(inputManager)) {
     this->inputManager.registerKey("change_texture", GLFW_KEY_3);
     this->inputManager.registerKey("quit", GLFW_KEY_ESCAPE);
     this->inputManager.registerKey("interact", GLFW_KEY_E);
     this->inputManager.registerKey("increase_light", GLFW_KEY_L);
+
+    auto instances = this->sceneLoader->getInstances();
+    sceneHandler = std::make_unique<MainSceneHandler>(instances);
+
+    auto c = instances | std::views::transform([](auto *inst) { return inst->C; });
+    collisionDetector = std::make_unique<CollisionDetector>(std::vector<Collider *>{c.begin(), c.end()});
+
+    auto c_i = std::ranges::find_if(instances, [](auto *inst) { return *inst->id == "softball"; });
+    if (c_i != instances.end()) {
+        interactionController.add("softball", (*c_i)->C);
+    }
 }
 
 void GameLogicManager::gameLogic(uint32_t currentImage, glm::vec3 m, glm::vec3 r, bool fire, float deltaT) {
@@ -30,30 +41,22 @@ void GameLogicManager::gameLogic(uint32_t currentImage, glm::vec3 m, glm::vec3 r
         executeCommand(Command::INCREASE_LIGHT);
     }
 
-    // The scene is available only here: register the colliders (once)
-    // da vedere meglio!!
-    if (!collidersRegistered) {
-        // objects the player cannot walk through
-        for (const char *id : {"sphere", "cube", "statue"}) {
-            collisionDetector.addSolid(sceneManager->getCollider(id));
-        }
-        // objects the player can pick up
-        interactionController.add("softball", sceneManager->getCollider("softball"));
-        collidersRegistered = true;
-    }
-
     std::string pickedId;
-    if (interactionController.update(collisionDetector, interactPressed, pickedId)) {
-        sceneManager->hideInstance(pickedId);
+    if (interactionController.update(*collisionDetector, interactPressed, pickedId)) {
+        hideInstance(pickedId);
     }
     interactPressed = false;
 
     hudManager->setPrompt(interactionController.focused().empty() ? "" : "Press E to pick up");
 
-    cameraController.update(viewPrjMatrix ,cameraPos, m, r, deltaT, &collisionDetector);
-    collisionDetector.update(cameraPos);
+    cameraController.update(viewPrjMatrix ,cameraPos, m, r, deltaT, collisionDetector.get());
+    collisionDetector->update(cameraPos);
     inputManager.update(deltaT);
-    sceneManager->updateUniformBuffer(currentImage, debugView, viewPrjMatrix, cameraPos, deltaT);
+
+    MainSceneHandler::params p {viewPrjMatrix, cameraPos, debugView};
+    sceneHandler->updateUniformBuffers(currentImage, &p);
+
+    sceneLoader->updateUniformBuffer(currentImage, viewPrjMatrix);
 }
 
 void GameLogicManager::onResize(int w, int h) {
@@ -80,4 +83,15 @@ void GameLogicManager::executeCommand(Command command) {
         default:
             break;
     }
+}
+
+void GameLogicManager::hideInstance(std::string_view id) {
+    auto instances = sceneLoader->getInstances();
+    auto it = std::ranges::find_if(instances, [id](auto *inst) { return *inst->id == id; });
+    if (it != instances.end()) {
+        (*it)->Wm = glm::translate(glm::mat4(1), glm::vec3(0.0f, -1000.0f, 0.0f));
+        (*it)->C->setWorldMatrix((*it)->Wm);
+    }
+
+    sceneLoader->refreshColliders();
 }

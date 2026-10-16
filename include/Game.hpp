@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SceneManager.hpp"
+#include "SceneLoader.hpp"
 #include "InputManager.hpp"
 #include "GameLogicManager.hpp"
 #include "HUDManager.hpp"
@@ -10,7 +10,7 @@
 class Game : public BaseProject {
 protected:
     // Other application parameters
-    std::unique_ptr<SceneManager> sceneManager;
+    std::unique_ptr<SceneLoader> sceneLoader;
     std::unique_ptr<GameLogicManager> gameLogicManager;
     std::unique_ptr<HUDManager> hudManager;
 

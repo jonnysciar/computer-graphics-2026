@@ -8,6 +8,11 @@ CollisionDetector::CollisionDetector() {
     playerReach.initSphere(0.0f, 0.0f, 0.0f, REACH_RADIUS);
 }
 
+CollisionDetector::CollisionDetector(std::vector<Collider *> solids) : solids(std::move(solids)) {
+    playerBody.initSphere(0.0f, 0.0f, 0.0f, BODY_RADIUS);
+    playerReach.initSphere(0.0f, 0.0f, 0.0f, REACH_RADIUS);
+}
+
 void CollisionDetector::addSolid(Collider *collider) {
     if (collider != nullptr) {
         solids.push_back(collider);
