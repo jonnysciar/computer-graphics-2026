@@ -22,6 +22,7 @@ private:
 
 public:
     CollisionDetector();
+    CollisionDetector(std::vector<Collider *> solids);
 
     // Registers a collider the player cannot walk through
     void addSolid(Collider *collider);

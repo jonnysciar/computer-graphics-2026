@@ -1,8 +1,8 @@
-#include "SceneManager.hpp"
+#include "SceneLoader.hpp"
 
 #include "structs.hpp"
 
-std::vector<PipelineAndTexturesDefs> SceneManager::generateTextureDef(Pipeline *P, int numTextures) {
+std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(Pipeline *P, int numTextures) {
     std::vector<TextureDefs> textDefs;
     textDefs.reserve(numTextures);
 
@@ -19,17 +19,18 @@ std::vector<PipelineAndTexturesDefs> SceneManager::generateTextureDef(Pipeline *
     };
 }
 
-void SceneManager::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
-    auto *SM = static_cast<SceneManager *>(Params);
+void SceneLoader::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
+    auto *SM = static_cast<SceneLoader *>(Params);
     SM->populateCommandBuffer(commandBuffer, currentImage);
 }
 
-SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
-                           std::string_view frag_shader, int numTextures, int w, int h) : bp(bp), w(w), h(h) {
+SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
+                         std::string_view frag_shader, int numTextures, int w, int h, int guboSize,
+                         int uboSize) : bp(bp), w(w), h(h) {
     DSLlocal.init(this->bp, {
                       {
                           0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
-                          sizeof(UniformBufferObject), 1
+                          uboSize, 1
                       },
                       {
                           1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -39,7 +40,7 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, std::st
     DSLglobal.init(this->bp, {
                        {
                            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS,
-                           sizeof(GlobalUniformBufferObject), 1
+                           guboSize, 1
                        }
                    });
     VD.init(this->bp, {
@@ -96,14 +97,14 @@ SceneManager::SceneManager(BaseProject *bp, std::string_view scene_json, std::st
     bp->submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 }
 
-void SceneManager::onResize(int w, int h) {
-    RP.width = w;
-    RP.height = h;
+void SceneLoader::onResize(int newW, int newH) {
+    RP.width = newW;
+    RP.height = newH;
     // the colliders' wireframes are drawn in their own render pass: it must have the same size as the main one
-    scene.ColShow.resizeScreen(w, h);
+    scene.ColShow.resizeScreen(newW, newH);
 }
 
-void SceneManager::pipelinesAndDescriptorSetsInit() {
+void SceneLoader::pipelinesAndDescriptorSetsInit() {
     RP.create();
 
     P.create(&RP);
@@ -111,7 +112,7 @@ void SceneManager::pipelinesAndDescriptorSetsInit() {
     scene.pipelinesAndDescriptorSetsInit();
 }
 
-void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     RP.begin(commandBuffer, currentImage);
 
     P.bind(commandBuffer);
@@ -121,40 +122,13 @@ void SceneManager::populateCommandBuffer(VkCommandBuffer commandBuffer, int curr
     RP.end(commandBuffer);
 }
 
-// TODO Maybe think a better way to pass dependencies
-void SceneManager::updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat,
-                                       glm::vec3 cameraPos, float deltaT) {
-    // defines the global parameters for the uniform
-
-    GlobalUniformBufferObject gubo{};
-    gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) * 5.0f;
-    gubo.pointParams = glm::vec3(debugView.x, 2.0, 0.0);
-    gubo.eyePos = cameraPos;
-    gubo.ambientUpper = glm::vec4(0.05f, 0.05f, 1.0f, 0.0f); // sky blue
-    gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f); // warm ground
-    gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // world up
-    gubo.debugView = debugView;
-
-    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
-    UniformBufferObject ubo{};
-    for (int i = 0; i < scene.TI[0].InstanceCount; i++) {
-        Instance &inst = scene.TI[0].I[i];
-
-        ubo.mMat = inst.Wm;
-        ubo.mvpMat = viewPrjMat * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-        inst.DS[0][0]->map(currentImage, &gubo, 0);
-        inst.DS[0][1]->map(currentImage, &ubo, 0);
-    }
-
+void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat) {
     // updates the view-projection matrix used to draw the colliders' wireframes
     scene.updateColliderVisualizer(currentImage, viewPrjMat);
 }
 
-std::vector<Instance *> SceneManager::getInstances() const {
-    std::vector<Instance *> instances;
-    instances.resize(scene.TI[0].InstanceCount);
-
+std::vector<Instance *> SceneLoader::getInstances() const {
+    std::vector<Instance *> instances(scene.TI[0].InstanceCount);
 
     for (int i = 0; i < scene.TI[0].InstanceCount; i++) {
         instances[i] = &scene.TI[0].I[i];
@@ -163,32 +137,11 @@ std::vector<Instance *> SceneManager::getInstances() const {
     return instances;
 }
 
-Collider *SceneManager::getCollider(const std::string &instanceId) {
-    auto it = scene.InstanceIds.find(instanceId);
-    if (it == scene.InstanceIds.end()) {
-        return nullptr;
-    }
-    return scene.I[it->second]->C;
-}
-
-void SceneManager::hideInstance(const std::string &instanceId) {
-    auto it = scene.InstanceIds.find(instanceId);
-    if (it == scene.InstanceIds.end()) {
-        return;
-    }
-
-    // The command buffer is recorded once, so the instance is "hidden" by moving it far away
-    Instance *inst = scene.I[it->second];
-    inst->Wm = glm::translate(glm::mat4(1), glm::vec3(0.0f, -1000.0f, 0.0f));
-    if (inst->C != nullptr) {
-        inst->C->setWorldMatrix(inst->Wm);
-    }
-
-    // The wireframes' geometry is built in world space: rebuild it
+void SceneLoader::refreshColliders() {
     scene.refreshColliderVisualizer();
 }
 
-void SceneManager::cleanUp() {
+void SceneLoader::cleanUp() {
     DSLlocal.cleanup();
     DSLglobal.cleanup();
 
@@ -199,7 +152,7 @@ void SceneManager::cleanUp() {
     scene.localCleanup();
 }
 
-void SceneManager::pipelinesAndDescriptorSetsCleanup() {
+void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
     P.cleanup();
 
     RP.cleanup();

@@ -3,7 +3,9 @@
 #include <modules/Starter.hpp>
 #include <modules/Scene.hpp>
 
-class SceneManager {
+#include  "structs.hpp"
+
+class SceneLoader {
 private:
     static constexpr int textureSize = 4;
     BaseProject *bp;
@@ -24,23 +26,26 @@ private:
     std::vector<TechniqueRef> prs;
 
     static std::vector<PipelineAndTexturesDefs> generateTextureDef(Pipeline *P, int numTextures);
+
 public:
     static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params);
 
-    SceneManager(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
-                 std::string_view frag_shader, int numTextures, int w, int h);
-    void onResize(int w, int h);
+    SceneLoader(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
+                std::string_view frag_shader, int numTextures, int w, int h, int guboSize, int uboSize);
+
+    void onResize(int newW, int newH);
+
     void pipelinesAndDescriptorSetsInit();
+
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
-    void updateUniformBuffer(uint32_t currentImage, glm::vec4 debugView, glm::mat4 viewPrjMat, glm::vec3 cameraPos, float deltaT);
+
+    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat);
 
     std::vector<Instance *> getInstances() const;
 
-    // Returns the collider of the instance with the given id (nullptr if there is none)
-    Collider *getCollider(const std::string &instanceId);
-    // Moves the instance (and its collider) out of the map
-    void hideInstance(const std::string &instanceId);
+    void refreshColliders();
 
     void cleanUp();
+
     void pipelinesAndDescriptorSetsCleanup();
 };
