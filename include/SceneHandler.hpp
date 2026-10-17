@@ -27,7 +27,8 @@ class SceneHandler : public Listener<Key>, Listener<MouseState> {
     }
     ~SceneHandler() override = default;
 
-    virtual void updateUniformBuffers(uint32_t currentImage, glm::vec3 pos, glm::mat4 viewPrjMat, void *data) = 0;
+    virtual void updateUniformBuffers(uint32_t currentImage, Player &p, glm::mat4 viewPrjMat, float deltaT,
+                                      void *data) = 0;
     virtual void onInteractionReach(std::string_view id, Player &p) = 0;
     virtual void offInteractionReach(std::string_view id, Player &p) = 0;
 

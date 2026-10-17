@@ -5,7 +5,6 @@ HUDManager::HUDManager(BaseProject *bp, int w, int h) {
 
     txt.print(1.0f, 1.0f, "FPS:", 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
               {1.0f, 0.0f, 0.0f, 1.0f}, {0.8f, 0.8f, 0.0f, 1.0f});
-    txt.print(-1.0f, -1.0f, "3 - Change texture", 3);
 }
 
 void HUDManager::onResize(int w, int h) {
