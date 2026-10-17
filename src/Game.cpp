@@ -1,7 +1,7 @@
 // This has been adapted from the Vulkan tutorial
 
 #include "Game.hpp"
-#include "MainSceneHandler.hpp"
+#include "Scene/MainSceneHandler.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {

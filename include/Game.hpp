@@ -4,8 +4,8 @@
 #include "HUDManager.hpp"
 #include "InputManager.hpp"
 #include "Player.hpp"
-#include "SceneHandler.hpp"
-#include "SceneLoader.hpp"
+#include "Scene/SceneLoader.hpp"
+#include "Scene/SceneHandler.hpp"
 
 class Game : public BaseProject {
 protected:
