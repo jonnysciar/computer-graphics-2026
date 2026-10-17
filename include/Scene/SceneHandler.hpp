@@ -1,10 +1,10 @@
 #pragma once
 
 #include "CollisionDetector.hpp"
-#include "InteractionController.hpp"
-#include "SceneLoader.hpp"
-#include "Listener/Listener.hpp"
 #include "InputManager.hpp"
+#include "InteractionController.hpp"
+#include "Listener/Listener.hpp"
+#include "SceneLoader.hpp"
 
 #include <cstdint>
 #include <vector>

@@ -1,6 +1,6 @@
 #include "InteractionController.hpp"
 
-#include "SceneHandler.hpp"
+#include "Scene/SceneHandler.hpp"
 
 #include <modules/Scene.hpp>
 

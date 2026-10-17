@@ -3,7 +3,7 @@
 #include <modules/Starter.hpp>
 #include <modules/Scene.hpp>
 
-#include  "structs.hpp"
+#include "structs.hpp"
 
 class SceneLoader {
 private:

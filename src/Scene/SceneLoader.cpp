@@ -1,4 +1,4 @@
-#include "SceneLoader.hpp"
+#include "Scene/SceneLoader.hpp"
 
 #include "structs.hpp"
 
@@ -115,6 +115,15 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
     for (auto &rp : rps) {
         rp.init(this->bp);
     }
+
+    int numElem = 0;
+    for (const auto &tech : jsonFile.at("instances")) {
+        numElem += tech.at("elements").size();
+    }
+
+    this->bp->DPSZs.uniformBlocksInPool += numElem * 2;
+    this->bp->DPSZs.texturesInPool += numElem * 5;
+    this->bp->DPSZs.setsInPool += numElem;
 
     if (scene.init(this->bp, nPasses, vdrs, prs, scene_json.data()) != 0) {
         std::cout << "ERROR LOADING THE SCENE\n";
