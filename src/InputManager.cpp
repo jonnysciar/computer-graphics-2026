@@ -4,11 +4,7 @@
 #include <ostream>
 
 InputManager::InputManager(GLFWwindow *win, int width, int height)
-    : window(win),
-      windowWidth(width),
-      windowHeight(height),
-      prevMouseLeftPressed(false) {
-}
+    : window(win), windowWidth(width), windowHeight(height), prevMouseLeftPressed(false) {}
 
 void InputManager::updateMouseInput(Player &p) {
     // Get mouse position in pixels

@@ -2,8 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-CollisionDetector::CollisionDetector(std::vector<Collider *> solids) : colliders(std::move(solids)) {
-}
+CollisionDetector::CollisionDetector(std::vector<Collider *> solids) : colliders(std::move(solids)) {}
 
 bool CollisionDetector::collidesWithSolids(Collider &body, const glm::vec3 &pos) {
     body.setWorldMatrix(glm::translate(glm::mat4(1.0f), pos));
@@ -11,7 +10,8 @@ bool CollisionDetector::collidesWithSolids(Collider &body, const glm::vec3 &pos)
 }
 
 glm::vec3 CollisionDetector::resolveCollision(Player &player, const glm::vec3 &to) {
-    glm::vec3 result = player.pos;;
+    glm::vec3 result = player.pos;
+    ;
 
     // One axis at a time: if an axis is blocked, the movement on the others is kept (sliding)
     for (int axis = 0; axis < 3; axis++) {

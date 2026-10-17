@@ -8,7 +8,7 @@
 #include "Scene/SceneHandler.hpp"
 
 class Game : public BaseProject {
-protected:
+  protected:
     // Other application parameters
     std::unique_ptr<SceneLoader> sceneLoader;
     std::unique_ptr<SceneHandler> sceneHandler;
@@ -39,10 +39,11 @@ protected:
     // Here you destroy your pipelines and Descriptor Sets!
     void pipelinesAndDescriptorSetsCleanup() override;
 
-public:
+  public:
     // Here you set the main application parameters
     void setWindowParameters() override;
     virtual ~Game() = default;
-private:
+
+  private:
     float handleMovement();
 };

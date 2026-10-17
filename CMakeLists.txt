@@ -6,6 +6,7 @@ include(cmake/settings.cmake)
 include(cmake/dependencies.cmake)
 include(cmake/shaders.cmake)
 include(cmake/assets.cmake)
+include(cmake/ClangFormat.cmake)
 
 set(NAME main)
 
@@ -23,3 +24,6 @@ add_dependencies(${NAME} build_shaders)
 
 # Assets
 add_dependencies(${NAME} copy_assets)
+
+# Clang-format
+target_clangformat_setup(${NAME})

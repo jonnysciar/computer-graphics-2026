@@ -23,7 +23,8 @@ void InteractionController::checkInteractionReach(SceneHandler *sceneHandler, Pl
 
 void InteractionController::interact(Player &p) {
     for (auto &in : interactables) {
-        if (!in.reachable) continue;
+        if (!in.reachable)
+            continue;
 
         in.callback(in, p);
     }

@@ -4,12 +4,12 @@
 #include <modules/TextMaker.hpp>
 
 class HUDManager {
-private:
+  private:
     // to provide textual feedback
     TextMaker txt;
     std::string currentPrompt;
 
-public:
+  public:
     HUDManager(BaseProject *bp, int w, int h);
 
     void onResize(int w, int h);
@@ -20,4 +20,3 @@ public:
     void cleanUp();
     void pipelinesAndDescriptorSetsCleanup();
 };
-
