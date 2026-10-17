@@ -18,8 +18,7 @@ void Game::onWindowResize(int w, int h) {
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
-    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", "shaders/scene.vert.spv",
-                                                "shaders/scene.frag.spv", 20, windowWidth, windowHeight,
+    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight,
                                                 sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
     sceneHandler = std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get());
@@ -42,7 +41,7 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     sceneHandler->checkInteractionReach(player);
 
-    sceneHandler->updateUniformBuffers(currentImage, player.pos, viewPrjMat, nullptr);
+    sceneHandler->updateUniformBuffers(currentImage, player, viewPrjMat, deltaT, nullptr);
     sceneLoader->updateUniformBuffer(currentImage, viewPrjMat);
     hudManager->updateUniformBuffer(currentImage, deltaT);
 }

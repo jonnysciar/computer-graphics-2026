@@ -2,7 +2,7 @@
 
 #include "structs.hpp"
 
-std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(Pipeline *P, int numTextures) {
+std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector<Pipeline> &pipelines, int numTextures) {
     std::vector<TextureDefs> textDefs;
     textDefs.reserve(numTextures);
 
@@ -10,13 +10,90 @@ std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(Pipeline *P
         textDefs.emplace_back(true, i, VkDescriptorImageInfo{});
     }
 
-    return {
-        {
-            P, std::vector{
-                std::vector<TextureDefs>{}, std::move(textDefs)
+    std::vector<PipelineAndTexturesDefs> pts;
+    pts.reserve(pipelines.size());
+    for (auto &pipeline : pipelines) {
+        pts.emplace_back(&pipeline, std::vector<std::vector<TextureDefs>>{textDefs});
+    }
+
+    return pts;
+}
+
+void SceneLoader::generateVertexDescriptors(nlohmann::json &jsonFile) {
+    for (auto &model : jsonFile.at("models")) {
+        std::string vd_name = model.at("VD");
+
+        if (vdMap.contains(vd_name))
+            continue;
+
+        VertexDescriptor vd{};
+        vd.init(this->bp, {{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}},
+                {{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos), sizeof(glm::vec3), POSITION},
+                 {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm), sizeof(glm::vec3), NORMAL},
+                 {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV), sizeof(glm::vec2), UV},
+                 {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tan), sizeof(glm::vec4), TANGENT}});
+        vdMap.insert({vd_name, std::move(vd)});
+        VertexDescriptorRef vdr{};
+        vdr.init(vd_name.c_str(), &vdMap.at(vd_name));
+        vdrs.push_back(vdr);
+    }
+}
+
+void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int guboSize, int uboSize, int numTextures) {
+    std::string tech_name = technique.at("technique");
+
+    if (dslMap.contains(tech_name))
+        return;
+
+    DescriptorSetLayout dsl{};
+    dsl.init(this->bp, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, uboSize, 1},
+                        {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, guboSize, 1},
+                        {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
+    dslMap.insert({std::move(tech_name), std::move(dsl)});
+}
+
+void SceneLoader::generatePipelines(nlohmann::json &jsonFile, int guboSize, int uboSize) {
+    for (auto &technique : jsonFile.at("instances")) {
+        std::string tech_name = technique.at("technique");
+        int numTextures = technique.at("elements")[0].at("texture").size();;
+
+        if (dslMap.contains(tech_name))
+            continue;
+
+        generateDescriptorSetLayout(technique, guboSize, uboSize, numTextures);
+
+        std::string model_name = technique.at("elements")[0].at("model");
+        std::string vd_name;
+
+        for (const auto &model : jsonFile.at("models")) {
+            if (model.at("id") == model_name) {
+                vd_name = model.at("VD");
+                break;
             }
         }
-    };
+
+        if (vd_name.empty()) {
+            std::cout << "ERROR FINDING VD\n";
+            std::exit(EXIT_FAILURE);
+        }
+
+        auto &vd = vdMap.at(vd_name);
+
+        std::vector<Pipeline> pipelines;
+        for (auto &pipeline :  technique.at("pipelines")) {
+            std::string vert_shader = pipeline.at("vertex");
+            std::string frag_shader = pipeline.at("fragment");
+            Pipeline P{};
+            P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)});
+
+            pipelines.push_back(std::move(P));
+        }
+
+        pMap.insert({tech_name, std::move(pipelines)});
+        TechniqueRef pr{};
+        pr.init(tech_name.c_str(), generateTextureDef(pMap.at(tech_name), numTextures), numTextures, &vd);
+        prs.push_back(pr);
+    }
 }
 
 void SceneLoader::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
@@ -24,102 +101,71 @@ void SceneLoader::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int
     SM->populateCommandBuffer(commandBuffer, currentImage);
 }
 
-SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, std::string_view vert_shader,
-                         std::string_view frag_shader, int numTextures, int w, int h, int guboSize,
-                         int uboSize) : bp(bp), w(w), h(h) {
-    DSLlocal.init(this->bp, {
-                      {
-                          0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
-                          uboSize, 1
-                      },
-                      {
-                          1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                          VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures
-                      }
-                  });
-    DSLglobal.init(this->bp, {
-                       {
-                           0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS,
-                           guboSize, 1
-                       }
-                   });
-    VD.init(this->bp, {
-                {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
-            }, {
-                {
-                    0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
-                    sizeof(glm::vec3), POSITION
-                },
-                {
-                    0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
-                    sizeof(glm::vec3), NORMAL
-                },
-                {
-                    0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
-                    sizeof(glm::vec2), UV
-                },
-                {
-                    0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tan),
-                    sizeof(glm::vec4), TANGENT
-                }
-            });
-    // initializes the render pass
-    RP.init(this->bp);
-    RP.properties[0].clearValue = {0.08f, 0.10f, 0.16f, 1.0f};
-
-    // Pipelines [Shader couples]
-    P.init(this->bp, &VD, vert_shader.data(), frag_shader.data(), {&DSLglobal, &DSLlocal});
-
+SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, int guboSize, int uboSize)
+    : bp(bp), w(w), h(h) {
     std::ifstream ifs(scene_json.data());
     nlohmann::json jsonFile = nlohmann::json::parse(ifs);
 
-    std::string vdName = jsonFile.at("models").at(0).at("VD");
-    std::string instName = jsonFile.at("instances").at(0).at("technique");
-    int numElem = jsonFile.at("instances").at(0).at("elements").size();
+    generateVertexDescriptors(jsonFile);
+    generatePipelines(jsonFile, guboSize, uboSize);
 
-    vdrs.resize(1);
-    vdrs[0].init(vdName.c_str(), &VD);
+    int nPasses = pMap.begin()->second.size();
 
-    prs.resize(1);
-    prs[0].init(instName.c_str(), generateTextureDef(&P, numTextures), numTextures, &VD);
+    rps.resize(nPasses);
+    for (auto &rp : rps) {
+        rp.init(this->bp);
+    }
 
-    // sets the size of the Descriptor Set Pool
-    this->bp->DPSZs.uniformBlocksInPool += numElem * 2;
-    this->bp->DPSZs.texturesInPool += numElem * numTextures;
-    this->bp->DPSZs.setsInPool += numElem * 2;
-
-    if (scene.init(this->bp, 1, vdrs, prs, scene_json.data()) != 0) {
+    if (scene.init(this->bp, nPasses, vdrs, prs, scene_json.data()) != 0) {
         std::cout << "ERROR LOADING THE SCENE\n";
         exit(-1);
     }
 
     // submits the main command buffer
-    bp->submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
+    this->bp->submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 }
 
 void SceneLoader::onResize(int newW, int newH) {
-    RP.width = newW;
-    RP.height = newH;
+    for (auto &rp : rps) {
+        rp.width = newW;
+        rp.height = newH;
+    }
     // the colliders' wireframes are drawn in their own render pass: it must have the same size as the main one
     scene.ColShow.resizeScreen(newW, newH);
 }
 
 void SceneLoader::pipelinesAndDescriptorSetsInit() {
-    RP.create();
+    for (auto &rp : rps) {
+        rp.create();
+    }
 
-    P.create(&RP);
+    for (auto &[key, ps] : pMap) {
+        int i = 0;
+        for (auto &p : ps) {
+            p.create(&rps[i]);
+            i++;
+        }
+    }
 
     scene.pipelinesAndDescriptorSetsInit();
 }
 
 void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    RP.begin(commandBuffer, currentImage);
+    for (auto &rp : rps) {
+        rp.begin(commandBuffer, currentImage);
+    }
 
-    P.bind(commandBuffer);
+    for (auto &[key, ps] : pMap) {
+        for (auto &p : ps) {
+            p.bind(commandBuffer);
+        }
+    }
 
     scene.populateCommandBuffer(commandBuffer, 0, currentImage);
 
-    RP.end(commandBuffer);
+    for (auto &rp : rps) {
+        rp.end(commandBuffer);
+    }
 }
 
 void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat) {
@@ -127,11 +173,13 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
     scene.updateColliderVisualizer(currentImage, viewPrjMat);
 }
 
-std::vector<Instance *> SceneLoader::getInstances() const {
-    std::vector<Instance *> instances(scene.TI[0].InstanceCount);
+const std::vector<Instance *> &SceneLoader::getInstances() {
+    if (!instances.empty()) return instances;
 
-    for (int i = 0; i < scene.TI[0].InstanceCount; i++) {
-        instances[i] = &scene.TI[0].I[i];
+    for (int ti = 0; ti < scene.TechniqueInstanceCount; ti++) {
+        for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
+            instances.push_back(&scene.TI[ti].I[i]);
+        }
     }
 
     return instances;
@@ -142,20 +190,33 @@ void SceneLoader::refreshColliders() {
 }
 
 void SceneLoader::cleanUp() {
-    DSLlocal.cleanup();
-    DSLglobal.cleanup();
+    for (auto &dsl : dslMap | std::views::values) {
+        dsl.cleanup();
+    }
 
-    P.destroy();
+    for (auto &[key, ps] : pMap) {
+        for (auto &p : ps) {
+            p.destroy();
+        }
+    }
 
-    RP.destroy();
+    for (auto &rp : rps) {
+        rp.destroy();
+    }
 
     scene.localCleanup();
 }
 
 void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
-    P.cleanup();
+    for (auto &[key, ps] : pMap) {
+        for (auto &p : ps) {
+            p.cleanup();
+        }
+    }
 
-    RP.cleanup();
+    for (auto &rp : rps) {
+        rp.cleanup();
+    }
 
     scene.pipelinesAndDescriptorSetsCleanup();
 }

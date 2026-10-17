@@ -16,19 +16,9 @@ layout(location = 3) in vec4 fragTan;
 layout(location = 0) out vec4 outColor;
 
 // ------------------------------------------------------------
-//  TEXTURE MAPS
-// ------------------------------------------------------------
-layout(binding = 1, set = 1) uniform sampler2D textureMap[20];
-/*layout(binding = 2, set = 1) uniform sampler2D normalMap[4];
-layout(binding = 3, set = 1) uniform sampler2D metallicMap[4];
-layout(binding = 4, set = 1) uniform sampler2D roughnessMap[4];
-layout(binding = 5, set = 1) uniform sampler2D aoMap[4];*/
-
-
-// ------------------------------------------------------------
 //  UNIFORMS
 // ------------------------------------------------------------
-layout(binding = 0, set = 0) uniform GlobalUniformBufferObject {
+layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
 
     // --- Directional light ---
     vec4 lightColor;
@@ -47,26 +37,13 @@ layout(binding = 0, set = 0) uniform GlobalUniformBufferObject {
 
 } gubo;
 
+// ------------------------------------------------------------
+//  TEXTURE MAPS
+// ------------------------------------------------------------
+layout(binding = 2, set = 0) uniform sampler2D textureMap[5];
+
 
 const float PI = 3.14159265359;
-
-/*vec3 spotLightColor(vec3 fragPosition, out vec3 L) {
-    vec3  toLight = gubo.eyePos - fragPosition;   // light sits at the camera
-    float dist    = max(length(toLight), 0.0001);
-    L = toLight / dist;
-
-    float cosOut = gubo.spotParams.x;
-    float cosIn  = gubo.spotParams.y;
-    float beta   = gubo.spotParams.z;
-    float g      = gubo.spotParams.w;
-
-    // Angle between the look direction and the direction to the fragment
-    float cosAlpha = dot(L, -normalize(gubo.lightDir));
-    float cone  = clamp((cosAlpha - cosOut) / max(cosIn - cosOut, 0.0001), 0.0, 1.0);
-    float decay = pow(g / dist, beta);
-
-    return gubo.lightColor.rgb * decay * cone;
-}*/
 
 vec3 pointLightColor(vec3 lPos, vec3 fragPosition, out vec3 L) {
     vec3  toLight = lPos - fragPosition;
@@ -99,7 +76,7 @@ vec3 getNormalFromMap0(mat3 TBN, int ti) {
 }
 
 vec3 getNormalFromMap(mat3 TBN, int ti) {
-    vec3 n = texture(textureMap[ti + 4], fragUV).rgb;
+    vec3 n = texture(textureMap[ti + 1], fragUV).rgb;
     n = n * 2.0 - 1.0;                  // [0,1] -> [-1,1]
     return normalize(TBN * n);          // tangent space -> world space
 }
@@ -160,16 +137,16 @@ vec3 hemisphericAmbient(vec3 N, vec3 mA) {
 }
 
 vec3 computeLight(vec3 lPos) {
-    int ti = int(gubo.debugView.z);
+    int ti = 0;
 
     // ---- Sample PBR textures -----------------------------------
     //  Albedo: textures are stored in sRGB, but all PBR
     //  math must be performed in linear space. Convert with:
     //  albedo_linear = pow(albedo_sRGB, vec3(2.2))
     vec3  albedo    = pow(texture(textureMap[ti], fragUV).rgb, vec3(2.2));
-    float metallic  = texture(textureMap[ti + 8], fragUV).r;
-    float roughness = texture(textureMap[ti + 12], fragUV).r;
-    float ao        = texture(textureMap[ti + 16], fragUV).r;
+    float metallic  = texture(textureMap[ti + 2], fragUV).r;
+    float roughness = texture(textureMap[ti + 3], fragUV).r;
+    float ao        = texture(textureMap[ti + 4], fragUV).r;
 
     // ---- Build TBN and decode the normal map ------
     mat3 TBN = computeTBN(fragNorm, fragTan.xyz, fragTan.w);

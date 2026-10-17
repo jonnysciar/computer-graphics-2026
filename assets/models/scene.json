@@ -39,32 +39,19 @@
     {"id": "rock-ao",    "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png", "format": "C"}
   ],
   "instances": [
-    {"technique": "HauntedCastle", "elements": [
-      {"id": "plane",    "model": "plane",    "scale": [16, 16, 16], "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
-                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
-                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
-                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
-                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
-      {"id": "sphere",   "model": "sphere",   "translate": [-6, 1, 0], "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
-                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
-                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
-                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
-                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
-      {"id": "cube",     "model": "cube",     "translate": [6, 1, 0], "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
-                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
-                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
-                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
-                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
-      {"id": "softball", "model": "softball", "translate": [-3, 1, -5], "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
-                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
-                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
-                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
-                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]},
-      {"id": "statue",   "model": "statue",   "translate": [3, 0, -5], "scale": [2.61, 2.61, 2.61], "texture": ["clay-albedo", "granite-albedo", "ice-albedo", "rock-albedo",
-                                                          "clay-normal", "granite-normal", "ice-normal", "rock-normal",
-                                                          "clay-metallic", "granite-metallic", "ice-metallic", "rock-metallic",
-                                                          "clay-roughness", "granite-roughness", "ice-roughness", "rock-roughness",
-                                                          "clay-ao", "granite-ao", "ice-ao", "rock-ao"]}
+    {"technique": "HauntedCastle",
+      "pipelines":  [{"vertex": "shaders/scene.vert.spv", "fragment": "shaders/scene.frag.spv"}],
+      "elements": [
+      {"id": "plane",    "model": "plane",    "scale": [16, 16, 16], "texture":
+                            ["granite-albedo", "granite-normal", "granite-metallic", "granite-roughness", "granite-ao"]},
+      {"id": "sphere",   "model": "sphere",   "translate": [-6, 1, 0], "texture":
+                                                ["ice-albedo", "ice-normal", "ice-metallic", "ice-roughness", "ice-ao"]},
+      {"id": "cube",     "model": "cube",     "translate": [6, 1, 0], "texture":
+                                          ["rock-albedo", "rock-normal", "rock-metallic", "rock-roughness", "rock-ao"]},
+      {"id": "softball", "model": "softball", "translate": [-3, 1, -5], "texture":
+                                          ["clay-albedo", "clay-normal", "clay-metallic", "clay-roughness", "clay-ao"]},
+      {"id": "statue",   "model": "statue",   "translate": [3, 0, -5], "scale": [2.61, 2.61, 2.61], "texture":
+                                                ["ice-albedo", "ice-normal", "ice-metallic", "ice-roughness", "ice-ao"]}
     ]}
   ]
 }
