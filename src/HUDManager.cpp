@@ -7,13 +7,9 @@ HUDManager::HUDManager(BaseProject *bp, int w, int h) {
               {1.0f, 0.0f, 0.0f, 1.0f}, {0.8f, 0.8f, 0.0f, 1.0f});
 }
 
-void HUDManager::onResize(int w, int h) {
-    txt.resizeScreen(w, h);
-}
+void HUDManager::onResize(int w, int h) { txt.resizeScreen(w, h); }
 
-void HUDManager::pipelinesAndDescriptorSetsInit() {
-    txt.pipelinesAndDescriptorSetsInit();
-}
+void HUDManager::pipelinesAndDescriptorSetsInit() { txt.pipelinesAndDescriptorSetsInit(); }
 
 void HUDManager::updateUniformBuffer(uint32_t currentImage, float deltaT) {
     // updates the FPS counter
@@ -22,7 +18,7 @@ void HUDManager::updateUniformBuffer(uint32_t currentImage, float deltaT) {
     countedFrames++;
     elapsedT += deltaT;
     if (elapsedT > 1.0f) {
-        float Fps = (float) countedFrames / elapsedT;
+        float Fps = (float)countedFrames / elapsedT;
         std::ostringstream oss;
         oss << "FPS: " << Fps << "\n";
         txt.print(1.0f, 1.0f, oss.str(), 1, "CO", false, false, true, TAL_RIGHT, TRH_RIGHT, TRV_BOTTOM,
@@ -48,10 +44,6 @@ void HUDManager::setPrompt(std::string_view text) {
     }
 }
 
-void HUDManager::cleanUp() {
-    txt.localCleanup();
-}
+void HUDManager::cleanUp() { txt.localCleanup(); }
 
-void HUDManager::pipelinesAndDescriptorSetsCleanup() {
-    txt.pipelinesAndDescriptorSetsCleanup();
-}
+void HUDManager::pipelinesAndDescriptorSetsCleanup() { txt.pipelinesAndDescriptorSetsCleanup(); }

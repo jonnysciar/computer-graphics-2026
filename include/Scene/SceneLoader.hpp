@@ -6,7 +6,7 @@
 #include "structs.hpp"
 
 class SceneLoader {
-private:
+  private:
     BaseProject *bp;
     int w, h;
 
@@ -27,7 +27,7 @@ private:
     void generateDescriptorSetLayout(nlohmann::json &technique, int guboSize, int uboSize, int numTextures);
     void generatePipelines(nlohmann::json &jsonFile, int guboSize, int uboSize);
 
-public:
+  public:
     static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params);
 
     SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, int guboSize, int uboSize);

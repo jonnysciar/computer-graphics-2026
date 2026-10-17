@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 #include <modules/Starter.hpp>
-#include  <modules/Colliders.hpp>
+#include <modules/Colliders.hpp>
 
 struct Player {
     static constexpr float BODY_RADIUS = 0.4f;

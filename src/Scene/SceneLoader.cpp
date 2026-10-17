@@ -2,7 +2,8 @@
 
 #include "structs.hpp"
 
-std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector<Pipeline> &pipelines, int numTextures) {
+std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector<Pipeline> &pipelines,
+                                                                     int numTextures) {
     std::vector<TextureDefs> textDefs;
     textDefs.reserve(numTextures);
 
@@ -55,7 +56,8 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int gub
 void SceneLoader::generatePipelines(nlohmann::json &jsonFile, int guboSize, int uboSize) {
     for (auto &technique : jsonFile.at("instances")) {
         std::string tech_name = technique.at("technique");
-        int numTextures = technique.at("elements")[0].at("texture").size();;
+        int numTextures = technique.at("elements")[0].at("texture").size();
+        ;
 
         if (dslMap.contains(tech_name))
             continue;
@@ -80,7 +82,7 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, int guboSize, int 
         auto &vd = vdMap.at(vd_name);
 
         std::vector<Pipeline> pipelines;
-        for (auto &pipeline :  technique.at("pipelines")) {
+        for (auto &pipeline : technique.at("pipelines")) {
             std::string vert_shader = pipeline.at("vertex");
             std::string frag_shader = pipeline.at("fragment");
             Pipeline P{};
@@ -183,7 +185,8 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
 }
 
 const std::vector<Instance *> &SceneLoader::getInstances() {
-    if (!instances.empty()) return instances;
+    if (!instances.empty())
+        return instances;
 
     for (int ti = 0; ti < scene.TechniqueInstanceCount; ti++) {
         for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
@@ -194,9 +197,7 @@ const std::vector<Instance *> &SceneLoader::getInstances() {
     return instances;
 }
 
-void SceneLoader::refreshColliders() {
-    scene.refreshColliderVisualizer();
-}
+void SceneLoader::refreshColliders() { scene.refreshColliderVisualizer(); }
 
 void SceneLoader::cleanUp() {
     for (auto &dsl : dslMap | std::views::values) {
@@ -229,4 +230,3 @@ void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
 
     scene.pipelinesAndDescriptorSetsCleanup();
 }
-

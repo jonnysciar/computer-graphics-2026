@@ -33,7 +33,8 @@ class SceneHandler : public Listener<Key>, Listener<MouseState> {
     virtual void offInteractionReach(std::string_view id, Player &p) = 0;
 
     void checkInteractionReach(Player &p) {
-        if (!interactionController) return;
+        if (!interactionController)
+            return;
 
         interactionController->checkInteractionReach(this, p);
     }

@@ -18,11 +18,11 @@ struct Interactable {
 // Decides which interactable object is in reach and when it gets picked up.
 // It does not know the scene: the caller applies the effect of the interaction.
 class InteractionController {
-private:
+  private:
     CollisionDetector *collisionDetector;
     std::vector<Interactable> interactables;
 
-public:
+  public:
     explicit InteractionController(CollisionDetector *collisionDetector, std::vector<Interactable> interactables);
 
     void checkInteractionReach(SceneHandler *sceneHandler, Player &player);

@@ -7,15 +7,12 @@
 
 struct MouseState {
     double pixelX, pixelY; // Position in pixels (window coordinates)
-    float ndcX, ndcY; // Position in NDC (-1 to +1)
+    float ndcX, ndcY;      // Position in NDC (-1 to +1)
 
-    bool leftJustClicked; // True only on the frame when pressed
+    bool leftJustClicked;  // True only on the frame when pressed
     bool leftJustReleased; // True only on the frame when released
 
-    MouseState()
-        : pixelX(0.0), pixelY(0.0), ndcX(0.0f), ndcY(0.0f),
-          leftJustClicked(false), leftJustReleased(false) {
-    }
+    MouseState() : pixelX(0.0), pixelY(0.0), ndcX(0.0f), ndcY(0.0f), leftJustClicked(false), leftJustReleased(false) {}
 };
 
 struct Key {
@@ -26,7 +23,7 @@ struct Key {
 };
 
 class InputManager : public Listenable<Key>, public Listenable<MouseState> {
-private:
+  private:
     GLFWwindow *window;
     int windowWidth;
     int windowHeight;
@@ -45,7 +42,7 @@ private:
     // True only on the frame in which the key goes from released to pressed
     void updatePressedKeys(Player &p);
 
-public:
+  public:
     InputManager(GLFWwindow *win, int width, int height);
 
     // To be called once per frame
