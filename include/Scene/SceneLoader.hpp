@@ -4,6 +4,7 @@
 #include <modules/Scene.hpp>
 
 #include "structs.hpp"
+#include "CollisionDetector.hpp"
 
 class SceneLoader {
   private:
@@ -20,6 +21,8 @@ class SceneLoader {
     std::vector<VertexDescriptorRef> vdrs;
     std::vector<TechniqueRef> prs;
     std::vector<Instance *> instances;
+
+    std::unique_ptr<CollisionDetector> collisionDetector;
 
     static std::vector<PipelineAndTexturesDefs> generateTextureDef(std::vector<Pipeline> &pipelines, int numTextures);
 
@@ -41,6 +44,8 @@ class SceneLoader {
     void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat);
 
     const std::vector<Instance *> &getInstances();
+
+    CollisionDetector *getCollisionDetector() const;
 
     void refreshColliders();
 

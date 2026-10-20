@@ -15,16 +15,13 @@ class SceneHandler : public Listener<Key>, Listener<MouseState> {
   protected:
     SceneLoader *sceneLoader;
     std::vector<Instance *> instances;
-    std::unique_ptr<CollisionDetector> collisionDetector;
+    CollisionDetector *collisionDetector;
     std::unique_ptr<InteractionController> interactionController;
 
   public:
     explicit SceneHandler(SceneLoader *sceneLoader)
-        : sceneLoader(sceneLoader), instances(this->sceneLoader->getInstances()) {
-        auto colliders = instances | std::views::transform([](auto *inst) { return inst->C; });
-        collisionDetector =
-            std::make_unique<CollisionDetector>(std::vector<Collider *>{colliders.begin(), colliders.end()});
-    }
+        : sceneLoader(sceneLoader), instances(this->sceneLoader->getInstances()),
+          collisionDetector(this->sceneLoader->getCollisionDetector()) {}
     ~SceneHandler() override = default;
 
     virtual void updateUniformBuffers(uint32_t currentImage, Player &p, glm::mat4 viewPrjMat, float deltaT,

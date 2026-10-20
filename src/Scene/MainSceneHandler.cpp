@@ -7,11 +7,12 @@ static void hideInstance(Instance *instance) {
     instance->C->setWorldMatrix(instance->Wm);
 }
 
-std::map<std::string_view, Interactable> MainSceneHandler::interMap = {
-    {"softball", Interactable{.instance = nullptr,
-                              .solid = false,
-                              .callback = [](Interactable &i, Player &p) { hideInstance(i.instance); }}},
-};
+const std::map<std::string_view, Interactable> MainSceneHandler::interMap = {
+    {"softball",
+     Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { hideInstance(i.instance); }}},
+
+    {"walls1",
+     Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { p.pos.y += 1.0f; }}},};
 
 MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
     : SceneHandler(sceneLoader), hudManager(hudManager) {
@@ -24,14 +25,11 @@ MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudMana
             continue;
 
         auto inter = it->second;
-        if (!inter.solid)
-            collisionDetector->removeCollider(instance->C);
-
         inter.instance = instance;
         interactables.push_back(std::move(inter));
     }
 
-    interactionController = std::make_unique<InteractionController>(collisionDetector.get(), std::move(interactables));
+    interactionController = std::make_unique<InteractionController>(collisionDetector, std::move(interactables));
 }
 
 void MainSceneHandler::updateUniformBuffers(uint32_t currentImage, Player &p, glm::mat4 viewPrjMat, float deltaT,
@@ -92,6 +90,14 @@ void MainSceneHandler::onEvent(Player &p, Key k) {
     case GLFW_KEY_L:
         debugView.x = 0.5f;
         increase = true;
+        break;
+    case GLFW_KEY_M: {
+        auto ins = instances | std::views::filter([](auto *inst) { return *inst->id == "softball"; });
+        solid = !solid;
+        std::ranges::for_each(ins, [this](auto &inst) {
+            collisionDetector->addCollider(inst->C, solid);
+        });
+    } break;
     default:
         break;
     }

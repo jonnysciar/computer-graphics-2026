@@ -10,7 +10,6 @@ class SceneHandler;
 // An object the player can interact with (e.g. pick up)
 struct Interactable {
     Instance *instance;
-    bool solid;
     bool reachable{false};
     std::function<void(Interactable &, Player &)> callback;
 };

@@ -2,6 +2,8 @@
 
 #include "structs.hpp"
 
+#include <unordered_set>
+
 std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector<Pipeline> &pipelines,
                                                                      int numTextures) {
     std::vector<TextureDefs> textDefs;
@@ -118,9 +120,17 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
         rp.init(this->bp);
     }
 
+
     int numElem = 0;
+    std::unordered_set<std::string> unsolid;
     for (const auto &tech : jsonFile.at("instances")) {
-        numElem += tech.at("elements").size();
+        auto &elements = tech.at("elements");
+        numElem += elements.size();
+        for (const auto &elem : elements) {
+            if (elem.contains("solid") && !elem.at("solid")) {
+                unsolid.insert(elem.at("id"));
+            }
+        }
     }
 
     this->bp->DPSZs.uniformBlocksInPool += numElem * 2;
@@ -130,6 +140,15 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
     if (scene.init(this->bp, nPasses, vdrs, prs, scene_json.data()) != 0) {
         std::cout << "ERROR LOADING THE SCENE\n";
         exit(-1);
+    }
+
+    collisionDetector = std::make_unique<CollisionDetector>();
+    for (int ti = 0; ti < scene.TechniqueInstanceCount; ti++) {
+        for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
+            auto *inst = &scene.TI[ti].I[i];
+            instances.push_back(inst);
+            collisionDetector->addCollider(inst->C, !unsolid.contains(*inst->id));
+        }
     }
 
     // submits the main command buffer
@@ -184,17 +203,10 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
     scene.updateColliderVisualizer(currentImage, viewPrjMat);
 }
 
-const std::vector<Instance *> &SceneLoader::getInstances() {
-    if (!instances.empty())
-        return instances;
+const std::vector<Instance *> &SceneLoader::getInstances() { return instances; }
 
-    for (int ti = 0; ti < scene.TechniqueInstanceCount; ti++) {
-        for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
-            instances.push_back(&scene.TI[ti].I[i]);
-        }
-    }
-
-    return instances;
+CollisionDetector *SceneLoader::getCollisionDetector() const {
+    return collisionDetector.get();
 }
 
 void SceneLoader::refreshColliders() { scene.refreshColliderVisualizer(); }

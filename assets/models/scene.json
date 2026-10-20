@@ -1,7 +1,9 @@
 {
   "assetfiles": [],
   "models": [
-    {"id": "plane", "VD": "VD", "model": "assets/models/Plane.gltf",  "format":"GLTF",
+    {"id": "floor", "VD": "VD", "model": "assets/models/floor.gltf",  "format":"GLTF",
+      "collider": {"type": "AABB", "visible": true}},
+    {"id": "walls1", "VD": "VD", "model": "assets/models/walls1.gltf",  "format":"GLTF",
       "collider": {"type": "AABB", "visible": true}},
     {"id": "sphere", "VD": "VD", "model": "assets/models/Sphere.gltf",  "format":"GLTF",
       "collider": {"type": "Sphere", "params": [0, 0, 0, 1], "visible": true}},
@@ -42,13 +44,25 @@
     {"technique": "HauntedCastle",
       "pipelines":  [{"vertex": "shaders/scene.vert.spv", "fragment": "shaders/scene.frag.spv"}],
       "elements": [
-      {"id": "plane",    "model": "plane",    "scale": [16, 16, 16], "texture":
-                            ["granite-albedo", "granite-normal", "granite-metallic", "granite-roughness", "granite-ao"]},
+      {"id": "floor",
+        "solid": true,
+        "model": "floor",
+        "scale": [16, 16, 4],
+        "translate": [32, 0, 0],
+        "texture": ["granite-albedo", "granite-normal", "granite-metallic", "granite-roughness", "granite-ao"]
+      },
+      {"id": "walls1",
+        "solid": false,
+        "model": "walls1",
+        "scale": [6, 1, 3],
+        "quaternion":  [0.5, 0.5, -0.5, 0.5],
+        "texture": ["granite-albedo", "granite-normal", "granite-metallic", "granite-roughness", "granite-ao"]
+      },
       {"id": "sphere",   "model": "sphere",   "translate": [-6, 1, 0], "texture":
                                                 ["ice-albedo", "ice-normal", "ice-metallic", "ice-roughness", "ice-ao"]},
       {"id": "cube",     "model": "cube",     "translate": [6, 1, 0], "texture":
                                           ["rock-albedo", "rock-normal", "rock-metallic", "rock-roughness", "rock-ao"]},
-      {"id": "softball", "model": "softball", "translate": [-3, 1, -5], "texture":
+      {"id": "softball", "solid": false, "model": "softball", "translate": [-3, 1, -5], "texture":
                                           ["clay-albedo", "clay-normal", "clay-metallic", "clay-roughness", "clay-ao"]},
       {"id": "statue",   "model": "statue",   "translate": [3, 0, -5], "scale": [2.61, 2.61, 2.61], "texture":
                                                 ["ice-albedo", "ice-normal", "ice-metallic", "ice-roughness", "ice-ao"]}
