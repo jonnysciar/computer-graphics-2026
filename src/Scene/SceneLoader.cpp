@@ -120,7 +120,6 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
         rp.init(this->bp);
     }
 
-
     int numElem = 0;
     std::unordered_set<std::string> unsolid;
     for (const auto &tech : jsonFile.at("instances")) {
@@ -205,9 +204,7 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
 
 const std::vector<Instance *> &SceneLoader::getInstances() { return instances; }
 
-CollisionDetector *SceneLoader::getCollisionDetector() const {
-    return collisionDetector.get();
-}
+CollisionDetector *SceneLoader::getCollisionDetector() const { return collisionDetector.get(); }
 
 void SceneLoader::refreshColliders() { scene.refreshColliderVisualizer(); }
 

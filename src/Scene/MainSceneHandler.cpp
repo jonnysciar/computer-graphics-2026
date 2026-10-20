@@ -11,8 +11,8 @@ const std::map<std::string_view, Interactable> MainSceneHandler::interMap = {
     {"softball",
      Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { hideInstance(i.instance); }}},
 
-    {"walls1",
-     Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { p.pos.y += 1.0f; }}},};
+    {"walls1", Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { p.pos.y += 1.0f; }}},
+};
 
 MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
     : SceneHandler(sceneLoader), hudManager(hudManager) {
@@ -94,9 +94,7 @@ void MainSceneHandler::onEvent(Player &p, Key k) {
     case GLFW_KEY_M: {
         auto ins = instances | std::views::filter([](auto *inst) { return *inst->id == "softball"; });
         solid = !solid;
-        std::ranges::for_each(ins, [this](auto &inst) {
-            collisionDetector->addCollider(inst->C, solid);
-        });
+        std::ranges::for_each(ins, [this](auto &inst) { collisionDetector->addCollider(inst->C, solid); });
     } break;
     default:
         break;

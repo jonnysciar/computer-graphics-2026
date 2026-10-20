@@ -25,10 +25,6 @@ glm::vec3 CollisionDetector::resolveCollision(Player &player, const glm::vec3 &t
     return result;
 }
 
-void CollisionDetector::addCollider(Collider *c, bool isSolid) {
-    colliders[c] = isSolid;
-}
+void CollisionDetector::addCollider(Collider *c, bool isSolid) { colliders[c] = isSolid; }
 
-void CollisionDetector::removeCollider(Collider *c) {
-    colliders.erase(c);
-}
+void CollisionDetector::removeCollider(Collider *c) { colliders.erase(c); }
