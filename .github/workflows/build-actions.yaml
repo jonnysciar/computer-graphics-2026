@@ -1,13 +1,19 @@
 name: build-actions
-run-name: ${{ github.actor }} is learning GitHub Actions
-on: [push]
+run-name: Build
+on: [ push ]
 jobs:
-  check-bats-version:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-26.04
+    env:
+      TZ: "Europe/Rome"
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-      - run: npm install -g bats
-      - run: bats -v
+      - name: Update
+        run: sudo apt update
+      - name: Install dependencies
+        run: sudo apt install -y cmake ninja-build build-essential clang-format git pkg-config libvulkan-dev glslang-dev
+             libglfw3-dev libglm-dev glslang-tools glslc
+      - name: Configure
+        run: cmake -B build
+      - name: Build
+        run: cmake --build build
