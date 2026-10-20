@@ -1,5 +1,5 @@
-name: build-actions
-run-name: Build
+name: check-and-build
+run-name: Check & Build
 on: [ push ]
 jobs:
   build:
@@ -13,6 +13,8 @@ jobs:
       - name: Install dependencies
         run: sudo apt install -y cmake ninja-build build-essential clang-format git pkg-config libvulkan-dev glslang-dev
              libglfw3-dev libglm-dev glslang-tools glslc
+      - name: Check style
+        run: ./scripts/check-style.sh
       - name: Configure
         run: cmake -B build
       - name: Build
