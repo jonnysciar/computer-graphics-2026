@@ -28,6 +28,12 @@
 			]
 		}
 	],
+	"materials":[
+		{
+			"doubleSided":true,
+			"name":"Material.001"
+		}
+	],
 	"meshes":[
 		{
 			"name":"Plane.001",
@@ -38,7 +44,8 @@
 						"NORMAL":1,
 						"TEXCOORD_0":2
 					},
-					"indices":3
+					"indices":3,
+					"material":0
 				}
 			]
 		}
@@ -108,7 +115,7 @@
 	"buffers":[
 		{
 			"byteLength":980,
-			"uri":"Map.bin"
+			"uri":"floor.bin"
 		}
 	]
 }

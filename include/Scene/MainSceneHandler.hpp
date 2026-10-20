@@ -6,7 +6,7 @@ class HUDManager;
 
 class MainSceneHandler : public SceneHandler {
   private:
-    static std::map<std::string_view, Interactable> interMap;
+    static const std::map<std::string_view, Interactable> interMap;
 
     HUDManager *hudManager;
     GlobalUniformBufferObject gubo{};
@@ -15,6 +15,7 @@ class MainSceneHandler : public SceneHandler {
     glm::vec4 debugView = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     float elapsedT = 0.0f;
     bool increase = true;
+    bool solid = false;
 
   public:
     MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager);

@@ -34,7 +34,7 @@ class InputManager : public Listenable<Key>, public Listenable<MouseState> {
     // Current states (updated every frame)
     MouseState mouseState;
 
-    std::vector<Key> keys = {Key{GLFW_KEY_E}, Key{GLFW_KEY_ESCAPE}, Key{GLFW_KEY_L}};
+    std::vector<Key> keys = {Key{GLFW_KEY_E}, Key{GLFW_KEY_M}, Key{GLFW_KEY_L}};
 
     // Updates mouse position and button states
     void updateMouseInput(Player &p);
