@@ -1,4 +1,5 @@
 #include "InputManager.hpp"
+#include "Player.hpp"
 
 #include <iostream>
 #include <ostream>
@@ -26,14 +27,14 @@ void InputManager::updateMouseInput(Player &p) {
     // Store for next frame
     prevMouseLeftPressed = currPressed;
 
-    Listenable<MouseState>::update(p, mouseState);
+    Listenable<Player &, MouseState>::update(p, mouseState);
 }
 
 void InputManager::updatePressedKeys(Player &p) {
     std::ranges::for_each(keys, [this, &p](Key &k) {
         bool down = glfwGetKey(window, k.glfw_key);
         if (k.isDown && !down) {
-            Listenable<Key>::update(p, k);
+            Listenable<Player &, Key>::update(p, k);
         }
         k.isDown = down;
     });

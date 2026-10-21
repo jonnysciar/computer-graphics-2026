@@ -1,9 +1,10 @@
 #pragma once
 
+#include "Listener/Listenable.hpp"
+
 #include <GLFW/glfw3.h>
 
-#include "Player.hpp"
-#include "Listener/Listenable.hpp"
+class Player;
 
 struct MouseState {
     double pixelX, pixelY; // Position in pixels (window coordinates)
@@ -22,7 +23,7 @@ struct Key {
     explicit Key(int k) : glfw_key(k), isDown(false) {}
 };
 
-class InputManager : public Listenable<Key>, public Listenable<MouseState> {
+class InputManager : public Listenable<Player &, Key>, public Listenable<Player &, MouseState> {
   private:
     GLFWwindow *window;
     int windowWidth;
@@ -34,7 +35,7 @@ class InputManager : public Listenable<Key>, public Listenable<MouseState> {
     // Current states (updated every frame)
     MouseState mouseState;
 
-    std::vector<Key> keys = {Key{GLFW_KEY_E}, Key{GLFW_KEY_M}, Key{GLFW_KEY_L}};
+    std::vector<Key> keys = {Key{GLFW_KEY_E}, Key{GLFW_KEY_M}, Key{GLFW_KEY_Q}, Key{GLFW_KEY_Z}, Key{GLFW_KEY_L}};
 
     // Updates mouse position and button states
     void updateMouseInput(Player &p);

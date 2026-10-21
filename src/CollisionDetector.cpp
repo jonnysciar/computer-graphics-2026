@@ -1,4 +1,5 @@
 #include "CollisionDetector.hpp"
+#include "Player.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 

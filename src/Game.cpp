@@ -24,7 +24,8 @@ void Game::localInit() {
     sceneHandler = std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
-    inputManager->Listenable<Key>::addListener(sceneHandler.get());
+    inputManager->Listenable<Player &, Key>::addListener(sceneHandler->Listener<Player &, Key>::getPtr());
+    inputManager->Listenable<Player&, Key>::addListener(player.getPtr());
 }
 
 // Here you create your pipelines and Descriptor Sets!

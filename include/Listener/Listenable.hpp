@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <vector>
 
-template <typename Event> class Listenable {
+template <typename... Event> class Listenable {
   private:
-    std::vector<Listener<Event> *> listeners;
+    std::vector<Listener<Event...> *> listeners;
 
   public:
     virtual ~Listenable() = default;
-    bool addListener(Listener<Event> *listener) {
+    bool addListener(Listener<Event...> *listener) {
         if (std::ranges::find(listeners, listener) != listeners.end()) {
             return false;
         }
@@ -20,7 +20,7 @@ template <typename Event> class Listenable {
         return true;
     }
 
-    void update(Player &p, Event event) {
-        std::ranges::for_each(listeners, [&](Listener<Event> *listener) { listener->onEvent(p, event); });
+    void update(Event... event) {
+        std::ranges::for_each(listeners, [&](Listener<Event...> *listener) { listener->onEvent(event...); });
     }
 };

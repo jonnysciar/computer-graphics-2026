@@ -11,7 +11,7 @@
 
 struct Instance;
 
-class SceneHandler : public Listener<Key>, Listener<MouseState> {
+class SceneHandler : public Listener<Player &, Key>, Listener<Player &, MouseState> {
   protected:
     SceneLoader *sceneLoader;
     std::vector<Instance *> instances;

@@ -1,7 +1,9 @@
 #pragma once
 
-template <typename Event> class Listener {
+template <typename... Event> class Listener {
   public:
     virtual ~Listener() = default;
-    virtual void onEvent(Player &p, Event event) = 0;
+    virtual void onEvent(Event... e) = 0;
+
+    Listener *getPtr() { return this; }
 };
