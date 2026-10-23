@@ -1,6 +1,6 @@
 {
 	"asset":{
-		"generator":"Khronos glTF Blender I/O v4.1.63",
+		"generator":"Khronos glTF Blender I/O v5.1.19",
 		"version":"2.0"
 	},
 	"scene":0,
@@ -15,17 +15,12 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Sphere",
-			"translation":[
-				0,
-				1,
-				-6
-			]
+			"name":"Wall_1_E_top"
 		}
 	],
 	"meshes":[
 		{
-			"name":"Sphere",
+			"name":"Plane.004",
 			"primitives":[
 				{
 					"attributes":{
@@ -43,80 +38,80 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":559,
+			"count":8,
 			"max":[
-				0.9999997019767761,
-				1,
-				0.9999993443489075
+				-15.999999046325684,
+				12.000000953674316,
+				16
 			],
 			"min":[
-				-0.9999990463256836,
-				-1,
-				-1
+				-16.200000762939453,
+				6,
+				-15.999999046325684
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":559,
+			"count":8,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":559,
+			"count":8,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":559,
+			"count":8,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":2880,
+			"count":12,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":6708,
+			"byteLength":96,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6708,
-			"byteOffset":6708,
+			"byteLength":96,
+			"byteOffset":96,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":4472,
-			"byteOffset":13416,
+			"byteLength":64,
+			"byteOffset":192,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":8944,
-			"byteOffset":17888,
+			"byteLength":128,
+			"byteOffset":256,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5760,
-			"byteOffset":26832,
+			"byteLength":24,
+			"byteOffset":384,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":32592,
-			"uri":"Sphere.bin"
+			"byteLength":408,
+			"uri":"Wall_1_E_top.bin"
 		}
 	]
 }

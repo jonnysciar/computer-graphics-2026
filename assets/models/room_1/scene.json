@@ -1,0 +1,312 @@
+{
+  "assetfiles": [],
+  "models": [
+    {
+      "id": "Roof_1",
+      "VD": "VD",
+      "model": "assets/models/room_1/Roof_1.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_N",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_N.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_W_dx",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_W_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_W_sx",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_W_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_W_top",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_W_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_E_dx",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_E_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_E_sx",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_E_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_E_top",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_E_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_S_dx",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_S_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_S_sx",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_S_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    },
+    {
+      "id": "Wall_1_S_top",
+      "VD": "VD",
+      "model": "assets/models/room_1/Wall_1_S_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": true
+      }
+    }
+  ],
+  "textures": [
+    {
+      "id": "wooden-panels-albedo",
+      "texture": "assets/textures/wooden-panels/wooden_panels_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-albedo",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-normal-ogl",
+      "texture": "assets/textures/wooden-panels/wooden_panels_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-normal-ogl",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-metallic",
+      "texture": "assets/textures/wooden-panels/wooden_panels_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-metallic",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-roughness",
+      "texture": "assets/textures/wooden-panels/wooden_panels_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-roughness",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-ao",
+      "texture": "assets/textures/wooden-panels/wooden_panels_ao.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-ao",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png",
+      "format": "C"
+    }
+  ],
+  "instances": [
+    {
+      "technique": "HauntedCastle",
+      "pipelines": [
+        {
+          "vertex": "shaders/scene.vert.spv",
+          "fragment": "shaders/scene.frag.spv"
+        }
+      ],
+      "elements": [
+        {
+          "id": "Roof_1",
+          "solid": true,
+          "model": "Roof_1",
+          "texture": [
+            "wooden-panels-albedo",
+            "wooden-panels-normal",
+            "wooden-panels-metallic",
+            "wooden-panels-roughness",
+            "wooden-panels-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_N",
+          "solid": true,
+          "model": "Wall_1_N",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_W_dx",
+          "solid": true,
+          "model": "Wall_1_W_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_W_sx",
+          "solid": true,
+          "model": "Wall_1_W_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_W_top",
+          "solid": true,
+          "model": "Wall_1_W_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_E_dx",
+          "solid": true,
+          "model": "Wall_1_E_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_E_sx",
+          "solid": true,
+          "model": "Wall_1_E_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_E_top",
+          "solid": true,
+          "model": "Wall_1_E_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_S_dx",
+          "solid": true,
+          "model": "Wall_1_S_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_S_sx",
+          "solid": true,
+          "model": "Wall_1_S_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_1_S_top",
+          "solid": true,
+          "model": "Wall_1_S_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        }
+      ]
+    }
+  ]
+}

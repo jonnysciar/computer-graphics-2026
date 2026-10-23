@@ -1,6 +1,6 @@
 {
 	"asset":{
-		"generator":"Khronos glTF Blender I/O v4.1.63",
+		"generator":"Khronos glTF Blender I/O v5.1.19",
 		"version":"2.0"
 	},
 	"scene":0,
@@ -15,22 +15,12 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Cylinder",
-			"scale":[
-				2.609621047973633,
-				2.609621047973633,
-				2.609621047973633
-			],
-			"translation":[
-				6,
-				0,
-				3
-			]
+			"name":"Wall_1_S_top"
 		}
 	],
 	"meshes":[
 		{
-			"name":"Cylinder",
+			"name":"Plane.051",
 			"primitives":[
 				{
 					"attributes":{
@@ -48,80 +38,80 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":21557,
+			"count":8,
 			"max":[
-				0.20297864079475403,
-				0.7669193744659424,
-				0.17852304875850677
+				15.999999046325684,
+				12.000000953674316,
+				-15.999999046325684
 			],
 			"min":[
-				-0.14024271070957184,
-				0.0007562041282653809,
-				-0.1646982729434967
+				-16,
+				6,
+				-16.200000762939453
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":21557,
+			"count":8,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":21557,
+			"count":8,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":21557,
+			"count":8,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":109080,
+			"count":12,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":258684,
+			"byteLength":96,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":258684,
-			"byteOffset":258684,
+			"byteLength":96,
+			"byteOffset":96,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":172456,
-			"byteOffset":517368,
+			"byteLength":64,
+			"byteOffset":192,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":344912,
-			"byteOffset":689824,
+			"byteLength":128,
+			"byteOffset":256,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":218160,
-			"byteOffset":1034736,
+			"byteLength":24,
+			"byteOffset":384,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":1252896,
-			"uri":"Statue.bin"
+			"byteLength":408,
+			"uri":"Wall_1_S_top.bin"
 		}
 	]
 }
