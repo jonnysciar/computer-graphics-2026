@@ -10,8 +10,8 @@
 class Game : public BaseProject {
   protected:
     // Other application parameters
-    std::unique_ptr<SceneLoader> sceneLoader;
-    std::unique_ptr<SceneHandler> sceneHandler;
+    std::vector<std::unique_ptr<SceneLoader>> sceneLoaders;
+    std::vector<std::unique_ptr<SceneHandler>> sceneHandlers;
 
     std::unique_ptr<HUDManager> hudManager;
     std::unique_ptr<InputManager> inputManager;

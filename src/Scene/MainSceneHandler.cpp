@@ -8,10 +8,10 @@ static void hideInstance(Instance *instance) {
 }
 
 const std::map<std::string_view, Interactable> MainSceneHandler::interMap = {
-    {"softball",
+    /*{"softball",
      Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { hideInstance(i.instance); }}},
 
-    {"walls1", Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { p.pos.y += 1.0f; }}},
+    {"walls1", Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { p.pos.y += 1.0f; }}},*/
 };
 
 MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
@@ -34,19 +34,8 @@ MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudMana
 
 void MainSceneHandler::updateUniformBuffers(uint32_t currentImage, Player &p, glm::mat4 viewPrjMat, float deltaT,
                                             void *data) {
-    elapsedT += deltaT;
-    if (elapsedT > 0.01f) {
-        if (increase)
-            debugView.x += 0.01f;
-        else
-            debugView.x -= 0.01f;
-
-        if (debugView.x < 0.5f || debugView.x > 2.0f)
-            increase = !increase;
-        elapsedT = 0.0f;
-    }
-
-    debugView.y = deltaT;
+    UniformBufferObject ubo{};
+    GlobalUniformBufferObject gubo{};
 
     // defines the global parameters for the uniform
     gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
@@ -57,7 +46,7 @@ void MainSceneHandler::updateUniformBuffers(uint32_t currentImage, Player &p, gl
     gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);     // world up
     gubo.debugView = debugView;
 
-    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
+    // Each instance is drawn with its own world matrix (from general_scene.json), the same one used by its collider
     for (auto *instance : instances) {
         ubo.mMat = instance->Wm;
         ubo.mvpMat = viewPrjMat * ubo.mMat;

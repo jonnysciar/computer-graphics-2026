@@ -27,13 +27,15 @@ class SceneLoader {
     static std::vector<PipelineAndTexturesDefs> generateTextureDef(std::vector<Pipeline> &pipelines, int numTextures);
 
     void generateVertexDescriptors(nlohmann::json &jsonFile);
-    void generateDescriptorSetLayout(nlohmann::json &technique, int guboSize, int uboSize, int numTextures);
-    void generatePipelines(nlohmann::json &jsonFile, int guboSize, int uboSize);
+    void generateDescriptorSetLayout(nlohmann::json &technique, std::size_t guboSize, std::size_t uboSize,
+                                     int numTextures);
+    void generatePipelines(nlohmann::json &jsonFile, std::size_t guboSize, std::size_t uboSize);
 
   public:
     static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params);
 
-    SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, int guboSize, int uboSize);
+    SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize, std::size_t uboSize,
+                bool clearScreen = false);
 
     void onResize(int newW, int newH);
 

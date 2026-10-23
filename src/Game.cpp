@@ -6,7 +6,7 @@
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
     std::cout << "Window resized to: " << w << " x " << h << "\n";
-    sceneLoader->onResize(w, h);
+    std::ranges::for_each(sceneLoaders, [w, h](auto &loader) { loader->onResize(w, h); });
     hudManager->onResize(w, h);
     inputManager->onResize(w, h);
 
@@ -18,19 +18,34 @@ void Game::onWindowResize(int w, int h) {
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
-    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight,
-                                                sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoaders.resize(2);
+    sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
+                                        sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject), true);
+    sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
+                                       sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
-    sceneHandler = std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get());
+    submitCommandBuffer(
+        "main", 0,
+        [](VkCommandBuffer commandBuffer, int currentImage, void *params) {
+            auto *loaders = static_cast<std::vector<std::unique_ptr<SceneLoader>> *>(params);
+            for (auto &loader : *loaders) {
+                loader->populateCommandBuffer(commandBuffer, currentImage);
+            }
+        },
+        &sceneLoaders);
+
+    sceneHandlers.resize(2);
+    sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
+    sceneHandlers[1] = std::make_unique<MainSceneHandler>(sceneLoaders[1].get(), hudManager.get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
-    inputManager->Listenable<Player &, Key>::addListener(sceneHandler->Listener<Player &, Key>::getPtr());
+    inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
     inputManager->Listenable<Player&, Key>::addListener(player.getPtr());
 }
 
 // Here you create your pipelines and Descriptor Sets!
 void Game::pipelinesAndDescriptorSetsInit() {
-    sceneLoader->pipelinesAndDescriptorSetsInit();
+    std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->pipelinesAndDescriptorSetsInit(); });
     hudManager->pipelinesAndDescriptorSetsInit();
 }
 
@@ -40,20 +55,21 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     inputManager->update(player, deltaT);
 
-    sceneHandler->checkInteractionReach(player);
-
-    sceneHandler->updateUniformBuffers(currentImage, player, viewPrjMat, deltaT, nullptr);
-    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat);
+    std::ranges::for_each(sceneHandlers, [&](auto &handler) {
+        handler->checkInteractionReach(player);
+        handler->updateUniformBuffers(currentImage, player, viewPrjMat, deltaT, nullptr);
+    });
+    std::ranges::for_each(sceneLoaders, [this, currentImage](auto &loader) { loader->updateUniformBuffer(currentImage, viewPrjMat);; });
     hudManager->updateUniformBuffer(currentImage, deltaT);
 }
 
 void Game::localCleanup() {
-    sceneLoader->cleanUp();
+    std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->cleanUp();});
     hudManager->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
-    sceneLoader->pipelinesAndDescriptorSetsCleanup();
+    std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->pipelinesAndDescriptorSetsCleanup(); });
     hudManager->pipelinesAndDescriptorSetsCleanup();
 }
 
@@ -73,7 +89,8 @@ float Game::handleMovement() {
     getSixAxis(deltaT, m, r, fire);
 
     glm::vec3 newPos = cameraController.computePos(player.pos, m, r, deltaT);
-    player.pos = sceneHandler->resolveCollision(player, newPos);
+    std::ranges::for_each(sceneHandlers, [&](auto &handler) { newPos = handler->resolveCollision(player, newPos); });
+    player.pos = newPos;
     viewPrjMat = cameraController.computeViewPrjMat(player.pos);
     player.updateColliders();
 

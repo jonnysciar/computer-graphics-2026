@@ -9,10 +9,8 @@ class MainSceneHandler : public SceneHandler {
     static const std::map<std::string_view, Interactable> interMap;
 
     HUDManager *hudManager;
-    GlobalUniformBufferObject gubo{};
-    UniformBufferObject ubo{};
 
-    glm::vec4 debugView = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    glm::vec4 debugView = glm::vec4(5.0f, 1.0f, 1.0f, 1.0f);
     float elapsedT = 0.0f;
     bool increase = true;
     bool solid = false;

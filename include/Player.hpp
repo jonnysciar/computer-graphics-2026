@@ -12,7 +12,7 @@ class Player : public Listener<Player &, Key> {
     static constexpr float REACH_RADIUS = 2.0f;
 
   public:
-    glm::vec3 pos = glm::vec3(0.0f, 1.5f, 10.0f);
+    glm::vec3 pos = glm::vec3(0.0f, 3.5f, 10.0f);
     Collider bodyCollider;
     Collider reachCollider;
 

@@ -42,20 +42,22 @@ void SceneLoader::generateVertexDescriptors(nlohmann::json &jsonFile) {
     }
 }
 
-void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int guboSize, int uboSize, int numTextures) {
+void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, std::size_t guboSize, std::size_t uboSize,
+                                              int numTextures) {
     std::string tech_name = technique.at("technique");
 
     if (dslMap.contains(tech_name))
         return;
 
     DescriptorSetLayout dsl{};
-    dsl.init(this->bp, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, uboSize, 1},
-                        {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, guboSize, 1},
-                        {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
+    dsl.init(this->bp,
+             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, static_cast<int>(uboSize), 1},
+              {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<int>(guboSize), 1},
+              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
     dslMap.insert({std::move(tech_name), std::move(dsl)});
 }
 
-void SceneLoader::generatePipelines(nlohmann::json &jsonFile, int guboSize, int uboSize) {
+void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSize, std::size_t uboSize) {
     for (auto &technique : jsonFile.at("instances")) {
         std::string tech_name = technique.at("technique");
         int numTextures = technique.at("elements")[0].at("texture").size();
@@ -101,11 +103,12 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, int guboSize, int 
 }
 
 void SceneLoader::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
-    auto *SM = static_cast<SceneLoader *>(Params);
-    SM->populateCommandBuffer(commandBuffer, currentImage);
+    auto *loader = static_cast<SceneLoader *>(Params);
+    loader->populateCommandBuffer(commandBuffer, currentImage);
 }
 
-SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, int guboSize, int uboSize)
+SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize,
+                         std::size_t uboSize, bool clearScreen)
     : bp(bp), w(w), h(h) {
     std::ifstream ifs(scene_json.data());
     nlohmann::json jsonFile = nlohmann::json::parse(ifs);
@@ -116,8 +119,15 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
     int nPasses = pMap.begin()->second.size();
 
     rps.resize(nPasses);
+    bool first = clearScreen;
     for (auto &rp : rps) {
-        rp.init(this->bp);
+        rp.init(this->bp, -1, -1, -1, RenderPass::getStandardAttchmentsProperties(AT_SURFACE_NOAA_DEPTH, this->bp),
+                RenderPass::getStandardDependencies(ATDEP_DEPTH_TRANS));
+        if (!first) {
+            rp.properties[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+            rp.properties[0].initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        }
+        first = false;
     }
 
     int numElem = 0;
@@ -146,12 +156,9 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
         for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
             auto *inst = &scene.TI[ti].I[i];
             instances.push_back(inst);
-            collisionDetector->addCollider(inst->C, !unsolid.contains(*inst->id));
+            collisionDetector->addCollider(inst->C, true);
         }
     }
-
-    // submits the main command buffer
-    this->bp->submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 }
 
 void SceneLoader::onResize(int newW, int newH) {
@@ -180,20 +187,12 @@ void SceneLoader::pipelinesAndDescriptorSetsInit() {
 }
 
 void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+    int pass = 0;
     for (auto &rp : rps) {
         rp.begin(commandBuffer, currentImage);
-    }
-
-    for (auto &[key, ps] : pMap) {
-        for (auto &p : ps) {
-            p.bind(commandBuffer);
-        }
-    }
-
-    scene.populateCommandBuffer(commandBuffer, 0, currentImage);
-
-    for (auto &rp : rps) {
+        scene.populateCommandBuffer(commandBuffer, pass, currentImage);
         rp.end(commandBuffer);
+        pass++;
     }
 }
 
