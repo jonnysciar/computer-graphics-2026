@@ -102,11 +102,6 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSi
     }
 }
 
-void SceneLoader::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params) {
-    auto *loader = static_cast<SceneLoader *>(Params);
-    loader->populateCommandBuffer(commandBuffer, currentImage);
-}
-
 SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize,
                          std::size_t uboSize, bool clearScreen)
     : bp(bp), w(w), h(h) {
@@ -115,20 +110,6 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
 
     generateVertexDescriptors(jsonFile);
     generatePipelines(jsonFile, guboSize, uboSize);
-
-    int nPasses = pMap.begin()->second.size();
-
-    rps.resize(nPasses);
-    bool first = clearScreen;
-    for (auto &rp : rps) {
-        rp.init(this->bp, -1, -1, -1, RenderPass::getStandardAttchmentsProperties(AT_SURFACE_NOAA_DEPTH, this->bp),
-                RenderPass::getStandardDependencies(ATDEP_DEPTH_TRANS));
-        if (!first) {
-            rp.properties[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-            rp.properties[0].initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        }
-        first = false;
-    }
 
     int numElem = 0;
     std::unordered_set<std::string> unsolid;
@@ -146,6 +127,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
     this->bp->DPSZs.texturesInPool += numElem * 5;
     this->bp->DPSZs.setsInPool += numElem;
 
+    int nPasses = pMap.begin()->second.size();
     if (scene.init(this->bp, nPasses, vdrs, prs, scene_json.data()) != 0) {
         std::cout << "ERROR LOADING THE SCENE\n";
         exit(-1);
@@ -162,23 +144,15 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
 }
 
 void SceneLoader::onResize(int newW, int newH) {
-    for (auto &rp : rps) {
-        rp.width = newW;
-        rp.height = newH;
-    }
     // the colliders' wireframes are drawn in their own render pass: it must have the same size as the main one
     scene.ColShow.resizeScreen(newW, newH);
 }
 
-void SceneLoader::pipelinesAndDescriptorSetsInit() {
-    for (auto &rp : rps) {
-        rp.create();
-    }
-
+void SceneLoader::pipelinesAndDescriptorSetsInit(RenderPass &rp) {
     for (auto &[key, ps] : pMap) {
         int i = 0;
         for (auto &p : ps) {
-            p.create(&rps[i]);
+            p.create(&rp);
             i++;
         }
     }
@@ -187,12 +161,9 @@ void SceneLoader::pipelinesAndDescriptorSetsInit() {
 }
 
 void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    int pass = 0;
-    for (auto &rp : rps) {
-        rp.begin(commandBuffer, currentImage);
-        scene.populateCommandBuffer(commandBuffer, pass, currentImage);
-        rp.end(commandBuffer);
-        pass++;
+    // TODO if shadow mapping probably rework
+    for (int i = 0; i < pMap.begin()->second.size(); i++) {
+        scene.populateCommandBuffer(commandBuffer, i, currentImage);
     }
 }
 
@@ -218,10 +189,6 @@ void SceneLoader::cleanUp() {
         }
     }
 
-    for (auto &rp : rps) {
-        rp.destroy();
-    }
-
     scene.localCleanup();
 }
 
@@ -230,10 +197,6 @@ void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
         for (auto &p : ps) {
             p.cleanup();
         }
-    }
-
-    for (auto &rp : rps) {
-        rp.cleanup();
     }
 
     scene.pipelinesAndDescriptorSetsCleanup();

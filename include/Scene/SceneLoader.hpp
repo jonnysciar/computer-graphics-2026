@@ -15,7 +15,6 @@ class SceneLoader {
     std::map<std::string, VertexDescriptor> vdMap;
     std::map<std::string, std::vector<Pipeline>> pMap;
 
-    std::vector<RenderPass> rps;
     Scene scene;
 
     std::vector<VertexDescriptorRef> vdrs;
@@ -32,14 +31,12 @@ class SceneLoader {
     void generatePipelines(nlohmann::json &jsonFile, std::size_t guboSize, std::size_t uboSize);
 
   public:
-    static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *Params);
-
     SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize, std::size_t uboSize,
                 bool clearScreen = false);
 
     void onResize(int newW, int newH);
 
-    void pipelinesAndDescriptorSetsInit();
+    void pipelinesAndDescriptorSetsInit(RenderPass &rp);
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 

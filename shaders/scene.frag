@@ -31,10 +31,6 @@ layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 ambientUpper;  // xyz = sky / upper  color  (lU)
     vec4 ambientLower;  // xyz = ground / lower color (lD)
     vec4 ambientDir;    // xyz = "up" direction for blending (d)
-
-    // --- Debug ---
-    vec4 debugView;     // z = texture index (0–3)
-
 } gubo;
 
 // ------------------------------------------------------------

@@ -44,7 +44,6 @@ void MainSceneHandler::updateUniformBuffers(uint32_t currentImage, Player &p, gl
     gubo.ambientUpper = glm::vec4(0.05f, 0.05f, 1.0f, 0.0f); // sky blue
     gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f);  // warm ground
     gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);     // world up
-    gubo.debugView = debugView;
 
     // Each instance is drawn with its own world matrix (from general_scene.json), the same one used by its collider
     for (auto *instance : instances) {

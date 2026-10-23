@@ -9,7 +9,7 @@
 
 class Game : public BaseProject {
   protected:
-    // Other application parameters
+    RenderPass renderPass;
     std::vector<std::unique_ptr<SceneLoader>> sceneLoaders;
     std::vector<std::unique_ptr<SceneHandler>> sceneHandlers;
 
@@ -40,10 +40,13 @@ class Game : public BaseProject {
     void pipelinesAndDescriptorSetsCleanup() override;
 
   public:
+    static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params);
+
     // Here you set the main application parameters
     void setWindowParameters() override;
     virtual ~Game() = default;
 
   private:
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
     float handleMovement();
 };

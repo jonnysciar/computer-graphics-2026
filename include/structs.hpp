@@ -16,7 +16,6 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 ambientUpper; // xyz = sky / upper  color  (lU)
     alignas(16) glm::vec4 ambientLower; // xyz = ground / lower color (lD)
     alignas(16) glm::vec4 ambientDir;   // xyz = "up" direction for blending (d)
-    alignas(16) glm::vec4 debugView;
 };
 
 struct Vertex {

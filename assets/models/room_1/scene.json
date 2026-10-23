@@ -8,7 +8,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -18,7 +18,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -28,7 +28,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -38,7 +38,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -48,7 +48,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -58,7 +58,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -68,7 +68,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -78,7 +78,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -88,7 +88,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -98,7 +98,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     },
     {
@@ -108,7 +108,7 @@
       "format": "GLTF",
       "collider": {
         "type": "AABB",
-        "visible": true
+        "visible": false
       }
     }
   ],

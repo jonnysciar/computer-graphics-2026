@@ -2,10 +2,15 @@
 
 #include "Game.hpp"
 #include "Scene/MainSceneHandler.hpp"
+#include "Scene/Room1Handler.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
     std::cout << "Window resized to: " << w << " x " << h << "\n";
+
+    renderPass.width = w;
+    renderPass.height = h;
+
     std::ranges::for_each(sceneLoaders, [w, h](auto &loader) { loader->onResize(w, h); });
     hudManager->onResize(w, h);
     inputManager->onResize(w, h);
@@ -18,25 +23,21 @@ void Game::onWindowResize(int w, int h) {
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
-    sceneLoaders.resize(2);
-    sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
+    sceneLoaders.resize(3);
+    sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/room_2/scene.json", windowWidth, windowHeight,
                                         sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject), true);
     sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
                                        sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoaders[2] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
+                                   sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
-    submitCommandBuffer(
-        "main", 0,
-        [](VkCommandBuffer commandBuffer, int currentImage, void *params) {
-            auto *loaders = static_cast<std::vector<std::unique_ptr<SceneLoader>> *>(params);
-            for (auto &loader : *loaders) {
-                loader->populateCommandBuffer(commandBuffer, currentImage);
-            }
-        },
-        &sceneLoaders);
+    renderPass.init(this);
+    submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
-    sceneHandlers.resize(2);
+    sceneHandlers.resize(3);
     sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
-    sceneHandlers[1] = std::make_unique<MainSceneHandler>(sceneLoaders[1].get(), hudManager.get());
+    sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoaders[1].get());
+    sceneHandlers[2] = std::make_unique<MainSceneHandler>(sceneLoaders[2].get(), hudManager.get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
@@ -45,7 +46,8 @@ void Game::localInit() {
 
 // Here you create your pipelines and Descriptor Sets!
 void Game::pipelinesAndDescriptorSetsInit() {
-    std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->pipelinesAndDescriptorSetsInit(); });
+    renderPass.create();
+    std::ranges::for_each(sceneLoaders, [this](auto &loader) { loader->pipelinesAndDescriptorSetsInit(renderPass); });
     hudManager->pipelinesAndDescriptorSetsInit();
 }
 
@@ -64,13 +66,20 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 }
 
 void Game::localCleanup() {
+    renderPass.destroy();
     std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->cleanUp();});
     hudManager->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
+    renderPass.cleanup();
     std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->pipelinesAndDescriptorSetsCleanup(); });
     hudManager->pipelinesAndDescriptorSetsCleanup();
+}
+
+void Game::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params) {
+    auto *game = static_cast<Game *>(params);
+    game->populateCommandBuffer(commandBuffer, currentImage);
 }
 
 void Game::setWindowParameters() {
@@ -79,6 +88,14 @@ void Game::setWindowParameters() {
     windowHeight = 600;
     windowTitle = "The Hunted Castle";
     windowResizable = GLFW_TRUE;
+}
+
+void Game::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+    renderPass.begin(commandBuffer, currentImage);
+    std::ranges::for_each(sceneLoaders, [commandBuffer, currentImage](auto &loader) {
+        loader->populateCommandBuffer(commandBuffer, currentImage);
+    });
+    renderPass.end(commandBuffer);
 }
 
 float Game::handleMovement() {
