@@ -2,11 +2,6 @@
 
 #include "HUDManager.hpp"
 
-static void hideInstance(Instance *instance) {
-    instance->Wm = glm::translate(glm::mat4(1), glm::vec3(0.0f, -1000.0f, 0.0f));
-    instance->C->setWorldMatrix(instance->Wm);
-}
-
 const std::map<std::string_view, Interactable> MainSceneHandler::interMap = {
     /*{"softball",
      Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) { hideInstance(i.instance); }}},

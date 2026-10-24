@@ -3,6 +3,7 @@
 #include "Game.hpp"
 #include "Scene/MainSceneHandler.hpp"
 #include "Scene/Room1Handler.hpp"
+#include "Scene/Room2Handler.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
@@ -24,12 +25,12 @@ void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
     sceneLoaders.resize(3);
-    sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/room_2/scene.json", windowWidth, windowHeight,
-                                        sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject), true);
+    sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
+                                   sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject), true);
     sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
                                        sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[2] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
-                                   sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoaders[2] = std::make_unique<SceneLoader>(this, "assets/models/room_2/scene.json", windowWidth, windowHeight,
+                                        sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
@@ -37,7 +38,7 @@ void Game::localInit() {
     sceneHandlers.resize(3);
     sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
     sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoaders[1].get());
-    sceneHandlers[2] = std::make_unique<MainSceneHandler>(sceneLoaders[2].get(), hudManager.get());
+    sceneHandlers[2] = std::make_unique<Room2Handler>(sceneLoaders[2].get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
@@ -66,14 +67,14 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 }
 
 void Game::localCleanup() {
-    renderPass.destroy();
     std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->cleanUp();});
+    renderPass.destroy();
     hudManager->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
-    renderPass.cleanup();
     std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->pipelinesAndDescriptorSetsCleanup(); });
+    renderPass.cleanup();
     hudManager->pipelinesAndDescriptorSetsCleanup();
 }
 
