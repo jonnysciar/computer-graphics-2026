@@ -15,7 +15,7 @@ class CameraController {
     const float FOVy = glm::radians(45.0f);
     const float nearPlane = 0.1f;
     const float farPlane = 100.f;
-    const float MOVE_SPEED = 5.0f;
+    const float MOVE_SPEED = 10.0f;
     const float ROT_SPEED = glm::radians(120.0f);
 
   public:

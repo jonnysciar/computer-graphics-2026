@@ -14,28 +14,28 @@
   ],
   "textures": [
     {
-      "id": "ice-albedo",
-      "texture": "assets/textures/ice-field/ice_field_albedo.png",
+      "id": "cobblestone-albedo",
+      "texture": "assets/textures/cobblestone-floor/cobblestone_floor_albedo.png",
       "format": "C"
     },
     {
-      "id": "ice-normal-ogl",
-      "texture": "assets/textures/ice-field/ice_field_normal-ogl.png",
+      "id": "cobblestone-normal-ogl",
+      "texture": "assets/textures/cobblestone-floor/cobblestone_floor_normal-ogl.png",
       "format": "C"
     },
     {
-      "id": "ice-metallic",
-      "texture": "assets/textures/ice-field/ice_field_metallic.png",
+      "id": "cobblestone-metallic",
+      "texture": "assets/textures/cobblestone-floor/cobblestone_floor_metallic.png",
       "format": "C"
     },
     {
-      "id": "ice-roughness",
-      "texture": "assets/textures/ice-field/ice_field_roughness.png",
+      "id": "cobblestone-roughness",
+      "texture": "assets/textures/cobblestone-floor/cobblestone_floor_roughness.png",
       "format": "C"
     },
     {
-      "id": "ice-ao",
-      "texture": "assets/textures/ice-field/ice_field_ao.png",
+      "id": "cobblestone-ao",
+      "texture": "assets/textures/cobblestone-floor/cobblestone_floor_ao.png",
       "format": "C"
     }
   ],
@@ -54,11 +54,11 @@
           "solid": true,
           "model": "floor",
           "texture": [
-            "ice-albedo",
-            "ice-normal",
-            "ice-metallic",
-            "ice-roughness",
-            "ice-ao"
+            "cobblestone-albedo",
+            "cobblestone-normal",
+            "cobblestone-metallic",
+            "cobblestone-roughness",
+            "cobblestone-ao"
           ]
         }
       ]

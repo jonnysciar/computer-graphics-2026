@@ -103,7 +103,7 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSi
 }
 
 SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize,
-                         std::size_t uboSize, bool clearScreen)
+                         std::size_t uboSize)
     : bp(bp), w(w), h(h) {
     std::ifstream ifs(scene_json.data());
     nlohmann::json jsonFile = nlohmann::json::parse(ifs);

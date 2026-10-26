@@ -24,21 +24,24 @@ void Game::onWindowResize(int w, int h) {
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
-    sceneLoaders.resize(3);
+    sceneLoaders.resize(4);
     sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
-                                   sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject), true);
+                                   sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
     sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
                                        sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
     sceneLoaders[2] = std::make_unique<SceneLoader>(this, "assets/models/room_2/scene.json", windowWidth, windowHeight,
                                         sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoaders[3] = std::make_unique<SceneLoader>(this, "assets/models/room_3/scene.json", windowWidth, windowHeight,
+                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
-    sceneHandlers.resize(3);
+    sceneHandlers.resize(4);
     sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
     sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoaders[1].get());
     sceneHandlers[2] = std::make_unique<Room2Handler>(sceneLoaders[2].get());
+    sceneHandlers[3] = std::make_unique<Room2Handler>(sceneLoaders[3].get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
@@ -53,8 +56,7 @@ void Game::pipelinesAndDescriptorSetsInit() {
 }
 
 // Here is where you update the uniforms.
-void Game::updateUniformBuffer(uint32_t currentImage) {
-    float deltaT = handleMovement();
+void Game::updateUniformBuffer(uint32_t currentImage) {float deltaT = handleMovement();
 
     inputManager->update(player, deltaT);
 

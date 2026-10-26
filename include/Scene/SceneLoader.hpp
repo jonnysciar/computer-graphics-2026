@@ -31,8 +31,7 @@ class SceneLoader {
     void generatePipelines(nlohmann::json &jsonFile, std::size_t guboSize, std::size_t uboSize);
 
   public:
-    SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize, std::size_t uboSize,
-                bool clearScreen = false);
+    SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize, std::size_t uboSize);
 
     void onResize(int newW, int newH);
 
