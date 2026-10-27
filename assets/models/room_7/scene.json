@@ -1,0 +1,136 @@
+{
+  "assetfiles": [],
+  "models": [
+    {
+      "id": "Roof_7",
+      "VD": "VD",
+      "model": "assets/models/room_7/Roof_7.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_7_N",
+      "VD": "VD",
+      "model": "assets/models/room_7/Wall_7_N.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_7_S",
+      "VD": "VD",
+      "model": "assets/models/room_7/Wall_7_S.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    }
+  ],
+  "textures": [
+    {
+      "id": "clay-albedo",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-albedo",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-normal-ogl",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-normal-ogl",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-metallic",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-metallic",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-roughness",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-roughness",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-ao",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_ao.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-ao",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png",
+      "format": "C"
+    }
+  ],
+  "instances": [
+    {
+      "technique": "HauntedCastle",
+      "pipelines": [
+        {
+          "vertex": "shaders/scene.vert.spv",
+          "fragment": "shaders/scene.frag.spv"
+        }
+      ],
+      "elements": [
+        {
+          "id": "Roof_7",
+          "solid": true,
+          "model": "Roof_7",
+          "texture": [
+            "clay-albedo",
+            "clay-normal",
+            "clay-metallic",
+            "clay-roughness",
+            "clay-ao"
+          ]
+        },
+        {
+          "id": "Wall_7_N",
+          "solid": true,
+          "model": "Wall_7_N",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_7_S",
+          "solid": true,
+          "model": "Wall_7_S",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        }
+      ]
+    }
+  ]
+}

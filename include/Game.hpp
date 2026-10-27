@@ -8,8 +8,9 @@
 #include "Scene/SceneHandler.hpp"
 
 class Game : public BaseProject {
+    constexpr static int nScenes = 8;
   protected:
-    RenderPass renderPass;
+    RenderPass renderPass{};
     std::vector<std::unique_ptr<SceneLoader>> sceneLoaders;
     std::vector<std::unique_ptr<SceneHandler>> sceneHandlers;
 

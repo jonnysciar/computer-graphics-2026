@@ -24,7 +24,7 @@ void Game::onWindowResize(int w, int h) {
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
-    sceneLoaders.resize(7);
+    sceneLoaders.resize(nScenes);
     sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
     sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
@@ -39,11 +39,13 @@ void Game::localInit() {
                             sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
     sceneLoaders[6] = std::make_unique<SceneLoader>(this, "assets/models/room_6/scene.json", windowWidth, windowHeight,
                         sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoaders[7] = std::make_unique<SceneLoader>(this, "assets/models/room_7/scene.json", windowWidth, windowHeight,
+                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
-    sceneHandlers.resize(7);
+    sceneHandlers.resize(nScenes);
     sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
     sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoaders[1].get());
     sceneHandlers[2] = std::make_unique<Room2Handler>(sceneLoaders[2].get());
@@ -51,6 +53,7 @@ void Game::localInit() {
     sceneHandlers[4] = std::make_unique<Room2Handler>(sceneLoaders[4].get());
     sceneHandlers[5] = std::make_unique<Room2Handler>(sceneLoaders[5].get());
     sceneHandlers[6] = std::make_unique<Room2Handler>(sceneLoaders[6].get());
+    sceneHandlers[7] = std::make_unique<Room2Handler>(sceneLoaders[7].get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
