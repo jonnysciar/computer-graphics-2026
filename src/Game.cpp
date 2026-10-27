@@ -24,7 +24,7 @@ void Game::onWindowResize(int w, int h) {
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
 
-    sceneLoaders.resize(5);
+    sceneLoaders.resize(6);
     sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
     sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
@@ -35,16 +35,19 @@ void Game::localInit() {
                                     sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
     sceneLoaders[4] = std::make_unique<SceneLoader>(this, "assets/models/room_4/scene.json", windowWidth, windowHeight,
                                 sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoaders[5] = std::make_unique<SceneLoader>(this, "assets/models/room_5/scene.json", windowWidth, windowHeight,
+                            sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
-    sceneHandlers.resize(5);
+    sceneHandlers.resize(6);
     sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
     sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoaders[1].get());
     sceneHandlers[2] = std::make_unique<Room2Handler>(sceneLoaders[2].get());
     sceneHandlers[3] = std::make_unique<Room2Handler>(sceneLoaders[3].get());
     sceneHandlers[4] = std::make_unique<Room2Handler>(sceneLoaders[4].get());
+    sceneHandlers[5] = std::make_unique<Room2Handler>(sceneLoaders[5].get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());

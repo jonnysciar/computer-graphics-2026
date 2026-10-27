@@ -1,0 +1,268 @@
+{
+  "assetfiles": [],
+  "models": [
+    {
+      "id": "Roof_5",
+      "VD": "VD",
+      "model": "assets/models/room_5/Roof_5.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_W",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_W.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_E",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_E.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_S_dx",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_S_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_S_sx",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_S_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_S_top",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_S_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_N_dx",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_N_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_N_sx",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_N_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_5_N_top",
+      "VD": "VD",
+      "model": "assets/models/room_5/Wall_5_N_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    }
+  ],
+  "textures": [
+    {
+      "id": "wooden-panels-albedo",
+      "texture": "assets/textures/wooden-panels/wooden_panels_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-albedo",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-normal-ogl",
+      "texture": "assets/textures/wooden-panels/wooden_panels_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-normal-ogl",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-metallic",
+      "texture": "assets/textures/wooden-panels/wooden_panels_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-metallic",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-roughness",
+      "texture": "assets/textures/wooden-panels/wooden_panels_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-roughness",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "wooden-panels-ao",
+      "texture": "assets/textures/wooden-panels/wooden_panels_ao.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-ao",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png",
+      "format": "C"
+    }
+  ],
+  "instances": [
+    {
+      "technique": "HauntedCastle",
+      "pipelines": [
+        {
+          "vertex": "shaders/scene.vert.spv",
+          "fragment": "shaders/scene.frag.spv"
+        }
+      ],
+      "elements": [
+        {
+          "id": "Roof_5",
+          "solid": true,
+          "model": "Roof_5",
+          "texture": [
+            "wooden-panels-albedo",
+            "wooden-panels-normal",
+            "wooden-panels-metallic",
+            "wooden-panels-roughness",
+            "wooden-panels-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_W",
+          "solid": true,
+          "model": "Wall_5_W",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_E",
+          "solid": true,
+          "model": "Wall_5_E",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_S_top",
+          "solid": true,
+          "model": "Wall_5_S_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_S_dx",
+          "solid": true,
+          "model": "Wall_5_S_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_S_sx",
+          "solid": true,
+          "model": "Wall_5_S_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_N_top",
+          "solid": true,
+          "model": "Wall_5_N_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_N_dx",
+          "solid": true,
+          "model": "Wall_5_N_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_5_N_sx",
+          "solid": true,
+          "model": "Wall_5_N_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        }
+      ]
+    }
+  ]
+}
