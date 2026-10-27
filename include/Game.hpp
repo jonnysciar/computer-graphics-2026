@@ -9,6 +9,7 @@
 
 class Game : public BaseProject {
     constexpr static int nScenes = 8;
+
   protected:
     RenderPass renderPass{};
     std::vector<std::unique_ptr<SceneLoader>> sceneLoaders;

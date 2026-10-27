@@ -17,6 +17,12 @@ help()
 }
 
 ############################################################
+# files to check                                              #
+############################################################
+FILES='include/*.hpp include/**/*.hpp src/*.cpp src/**/*.cpp'
+
+
+############################################################
 ############################################################
 # Main program                                             #
 ############################################################
@@ -26,10 +32,10 @@ help()
 while getopts ":ach" option; do
    case $option in
       a) #apply style
-        clang-format include/**/*.hpp src/**/*.cpp -i
+        clang-format $FILES -i
         exit;;
       c) # check style
-        clang-format include/**/*.hpp src/**/*.cpp --dry-run --Werror
+        clang-format $FILES --dry-run --Werror
         exit;;
       h) # display help
          help
@@ -40,4 +46,4 @@ while getopts ":ach" option; do
    esac
 done
 
-clang-format include/**/*.hpp src/**/*.cpp --dry-run --Werror
+clang-format $FILES --dry-run --Werror
