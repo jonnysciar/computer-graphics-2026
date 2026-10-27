@@ -1,0 +1,268 @@
+{
+  "assetfiles": [],
+  "models": [
+    {
+      "id": "Roof_6",
+      "VD": "VD",
+      "model": "assets/models/room_6/Roof_6.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_W",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_W.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_S",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_S.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_E_dx",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_E_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_E_sx",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_E_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_E_top",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_E_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_N_dx",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_N_dx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_N_sx",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_N_sx.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "Wall_6_N_top",
+      "VD": "VD",
+      "model": "assets/models/room_6/Wall_6_N_top.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    }
+  ],
+  "textures": [
+    {
+      "id": "clay-albedo",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-albedo",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-normal-ogl",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-normal-ogl",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-metallic",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-metallic",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-roughness",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-roughness",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",
+      "format": "C"
+    },
+    {
+      "id": "clay-ao",
+      "texture": "assets/textures/clay-shingles1/clay-shingles1_ao.png",
+      "format": "C"
+    },
+    {
+      "id": "rock-ao",
+      "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png",
+      "format": "C"
+    }
+  ],
+  "instances": [
+    {
+      "technique": "HauntedCastle",
+      "pipelines": [
+        {
+          "vertex": "shaders/scene.vert.spv",
+          "fragment": "shaders/scene.frag.spv"
+        }
+      ],
+      "elements": [
+        {
+          "id": "Roof_6",
+          "solid": true,
+          "model": "Roof_6",
+          "texture": [
+            "clay-albedo",
+            "clay-normal",
+            "clay-metallic",
+            "clay-roughness",
+            "clay-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_W",
+          "solid": true,
+          "model": "Wall_6_W",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_S",
+          "solid": true,
+          "model": "Wall_6_S",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_E_top",
+          "solid": true,
+          "model": "Wall_6_E_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_E_dx",
+          "solid": true,
+          "model": "Wall_6_E_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_E_sx",
+          "solid": true,
+          "model": "Wall_6_E_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_N_top",
+          "solid": true,
+          "model": "Wall_6_N_top",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_N_dx",
+          "solid": true,
+          "model": "Wall_6_N_dx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        },
+        {
+          "id": "Wall_6_N_sx",
+          "solid": true,
+          "model": "Wall_6_N_sx",
+          "texture": [
+            "rock-albedo",
+            "rock-normal",
+            "rock-metallic",
+            "rock-roughness",
+            "rock-ao"
+          ]
+        }
+      ]
+    }
+  ]
+}
