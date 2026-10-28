@@ -12,7 +12,7 @@ void Game::onWindowResize(int w, int h) {
     renderPass.width = w;
     renderPass.height = h;
 
-    std::ranges::for_each(sceneLoaders, [w, h](auto &loader) { loader->onResize(w, h); });
+    sceneLoader->onResize(w, h);
     hudManager->onResize(w, h);
     inputManager->onResize(w, h);
 
@@ -23,37 +23,14 @@ void Game::onWindowResize(int w, int h) {
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
-
-    sceneLoaders.resize(nScenes);
-    sceneLoaders[0] = std::make_unique<SceneLoader>(this, "assets/models/general_scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[1] = std::make_unique<SceneLoader>(this, "assets/models/room_1/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[2] = std::make_unique<SceneLoader>(this, "assets/models/room_2/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[3] = std::make_unique<SceneLoader>(this, "assets/models/room_3/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[4] = std::make_unique<SceneLoader>(this, "assets/models/room_4/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[5] = std::make_unique<SceneLoader>(this, "assets/models/room_5/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[6] = std::make_unique<SceneLoader>(this, "assets/models/room_6/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
-    sceneLoaders[7] = std::make_unique<SceneLoader>(this, "assets/models/room_7/scene.json", windowWidth, windowHeight,
-                                                    sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight,
+                                                sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
     sceneHandlers.resize(nScenes);
-    sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoaders[0].get(), hudManager.get());
-    sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoaders[1].get());
-    sceneHandlers[2] = std::make_unique<Room2Handler>(sceneLoaders[2].get());
-    sceneHandlers[3] = std::make_unique<Room2Handler>(sceneLoaders[3].get());
-    sceneHandlers[4] = std::make_unique<Room2Handler>(sceneLoaders[4].get());
-    sceneHandlers[5] = std::make_unique<Room2Handler>(sceneLoaders[5].get());
-    sceneHandlers[6] = std::make_unique<Room2Handler>(sceneLoaders[6].get());
-    sceneHandlers[7] = std::make_unique<Room2Handler>(sceneLoaders[7].get());
+    sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
@@ -63,7 +40,7 @@ void Game::localInit() {
 // Here you create your pipelines and Descriptor Sets!
 void Game::pipelinesAndDescriptorSetsInit() {
     renderPass.create();
-    std::ranges::for_each(sceneLoaders, [this](auto &loader) { loader->pipelinesAndDescriptorSetsInit(renderPass); });
+    sceneLoader->pipelinesAndDescriptorSetsInit(renderPass);
     hudManager->pipelinesAndDescriptorSetsInit();
 }
 
@@ -73,25 +50,39 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     inputManager->update(player, deltaT);
 
-    std::ranges::for_each(sceneHandlers, [&](auto &handler) {
-        handler->checkInteractionReach(player);
-        handler->updateUniformBuffers(currentImage, player, viewPrjMat, deltaT, nullptr);
-    });
-    std::ranges::for_each(sceneLoaders, [this, currentImage](auto &loader) {
-        loader->updateUniformBuffer(currentImage, viewPrjMat);
-        ;
-    });
+    std::ranges::for_each(sceneHandlers, [&](auto &handler) { handler->checkInteractionReach(player); });
+    UniformBufferObject ubo{};
+    GlobalUniformBufferObject gubo{};
+
+    // defines the global parameters for the uniform
+    gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
+    gubo.pointParams = glm::vec3(10.0, 2.0, 0.0);
+    gubo.eyePos = player.pos;
+    gubo.ambientUpper = glm::vec4(0.05f, 0.05f, 1.0f, 0.0f); // sky blue
+    gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f);  // warm ground
+    gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);     // world up
+
+    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
+    for (auto *instance : sceneLoader->getInstances()) {
+        ubo.mMat = instance->Wm;
+        ubo.mvpMat = viewPrjMat * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        instance->DS[0][0]->map(currentImage, &ubo, 0);
+        instance->DS[0][0]->map(currentImage, &gubo, 1);
+    }
+
+    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat);
     hudManager->updateUniformBuffer(currentImage, deltaT);
 }
 
 void Game::localCleanup() {
-    std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->cleanUp(); });
+    sceneLoader->cleanUp();
     renderPass.destroy();
     hudManager->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
-    std::ranges::for_each(sceneLoaders, [](auto &loader) { loader->pipelinesAndDescriptorSetsCleanup(); });
+    sceneLoader->pipelinesAndDescriptorSetsCleanup();
     renderPass.cleanup();
     hudManager->pipelinesAndDescriptorSetsCleanup();
 }
@@ -111,9 +102,7 @@ void Game::setWindowParameters() {
 
 void Game::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     renderPass.begin(commandBuffer, currentImage);
-    std::ranges::for_each(sceneLoaders, [commandBuffer, currentImage](auto &loader) {
-        loader->populateCommandBuffer(commandBuffer, currentImage);
-    });
+    sceneLoader->populateCommandBuffer(commandBuffer, currentImage);
     renderPass.end(commandBuffer);
 }
 
@@ -125,8 +114,7 @@ float Game::handleMovement() {
     getSixAxis(deltaT, m, r, fire);
 
     glm::vec3 newPos = cameraController.computePos(player.pos, m, r, deltaT);
-    std::ranges::for_each(sceneHandlers, [&](auto &handler) { newPos = handler->resolveCollision(player, newPos); });
-    player.pos = newPos;
+    player.pos = sceneLoader->getCollisionDetector()->resolveCollision(player, newPos);
     viewPrjMat = cameraController.computeViewPrjMat(player.pos);
     player.updateColliders();
 

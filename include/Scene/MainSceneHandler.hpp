@@ -19,9 +19,6 @@ class MainSceneHandler : public SceneHandler {
     MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager);
     ~MainSceneHandler() override = default;
 
-    void updateUniformBuffers(uint32_t currentImage, Player &p, glm::mat4 viewPrjMat, float deltaT,
-                              void *data) override;
-
     void onInteractionReach(std::string_view id, Player &p) override;
 
     void offInteractionReach(std::string_view id, Player &p) override;

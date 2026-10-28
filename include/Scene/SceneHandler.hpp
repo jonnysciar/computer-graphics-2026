@@ -24,8 +24,6 @@ class SceneHandler : public Listener<Player &, Key>, Listener<Player &, MouseSta
           collisionDetector(this->sceneLoader->getCollisionDetector()) {}
     ~SceneHandler() override = default;
 
-    virtual void updateUniformBuffers(uint32_t currentImage, Player &p, glm::mat4 viewPrjMat, float deltaT,
-                                      void *data) = 0;
     virtual void onInteractionReach(std::string_view id, Player &p) = 0;
     virtual void offInteractionReach(std::string_view id, Player &p) = 0;
 
@@ -34,10 +32,6 @@ class SceneHandler : public Listener<Player &, Key>, Listener<Player &, MouseSta
             return;
 
         interactionController->checkInteractionReach(this, p);
-    }
-
-    glm::vec3 resolveCollision(Player &player, glm::vec3 newPos) const {
-        return collisionDetector->resolveCollision(player, newPos);
     }
 
     void onEvent(Player &p, Key event) override {}
