@@ -6,8 +6,6 @@ class HUDManager;
 
 class MainSceneHandler : public SceneHandler {
   private:
-    static const std::map<std::string_view, Interactable> interMap;
-
     HUDManager *hudManager;
 
     glm::vec4 debugView = glm::vec4(5.0f, 1.0f, 1.0f, 1.0f);

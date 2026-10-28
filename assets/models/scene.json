@@ -539,6 +539,16 @@
         "type": "AABB",
         "visible": false
       }
+    },
+    {
+      "id": "cube",
+      "VD": "VD",
+      "model": "assets/models/Cube.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
     }
   ],
   "textures": [
@@ -1298,6 +1308,18 @@
             "rock-metallic",
             "rock-roughness",
             "rock-ao"
+          ]
+        },
+        {
+          "id": "cube",
+          "solid": true,
+          "model": "cube",
+          "texture": [
+            "clay-albedo",
+            "clay-normal",
+            "clay-metallic",
+            "clay-roughness",
+            "clay-ao"
           ]
         }
       ]

@@ -29,12 +29,15 @@ void Game::localInit() {
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
-    sceneHandlers.resize(nScenes);
+    sceneHandlers.resize(nHandler);
     sceneHandlers[0] = std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get());
+    sceneHandlers[1] = std::make_unique<Room1Handler>(sceneLoader.get());
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
-    inputManager->Listenable<Player &, Key>::addListener(sceneHandlers[0]->Listener<Player &, Key>::getPtr());
     inputManager->Listenable<Player &, Key>::addListener(player.getPtr());
+    std::ranges::for_each(sceneHandlers, [&](auto &handler) {
+        inputManager->Listenable<Player &, Key>::addListener(handler->Listener<Player &, Key>::getPtr());
+    });
 }
 
 // Here you create your pipelines and Descriptor Sets!

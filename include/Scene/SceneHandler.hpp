@@ -13,10 +13,28 @@ struct Instance;
 
 class SceneHandler : public Listener<Player &, Key>, Listener<Player &, MouseState> {
   protected:
+    using InteractableMap = std::map<std::string_view, Interactable>;
+    InteractableMap interMap;
     SceneLoader *sceneLoader;
     std::vector<Instance *> instances;
     CollisionDetector *collisionDetector;
     std::unique_ptr<InteractionController> interactionController;
+
+    void setupInteractionController() {
+        std::vector<Interactable> interactables;
+        interactables.reserve(interMap.size());
+        for (const auto &instance : instances) {
+            auto it = interMap.find(*instance->id);
+            if (it == interMap.end())
+                continue;
+
+            auto inter = it->second;
+            inter.instance = instance;
+            interactables.push_back(std::move(inter));
+        }
+
+        interactionController = std::make_unique<InteractionController>(collisionDetector, std::move(interactables));
+    }
 
   public:
     explicit SceneHandler(SceneLoader *sceneLoader)

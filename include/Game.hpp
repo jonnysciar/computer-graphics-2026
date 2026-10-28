@@ -8,7 +8,7 @@
 #include "Scene/SceneHandler.hpp"
 
 class Game : public BaseProject {
-    constexpr static int nScenes = 1;
+    constexpr static int nHandler = 2;
 
   protected:
     RenderPass renderPass{};
