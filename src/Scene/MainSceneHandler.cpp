@@ -5,31 +5,31 @@
 MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
     : SceneHandler(sceneLoader), hudManager(hudManager) {
 
-    interMap = {{"cube", Interactable{.instance = nullptr, .callback = [](Interactable &i, Player &p) {
+    interMap = {{"cube", Interactable{.instance = nullptr, .callback = [](Interactable &i, GameStatus &p) {
                                           std::cout << "################ JS cube ################" << std::endl;
                                       }}}};
 
     setupInteractionController();
 }
 
-void MainSceneHandler::onInteractionReach(std::string_view id, Player &p) {
+void MainSceneHandler::onInteractionReach(std::string_view id, GameStatus &gs) {
     if (!interMap.contains(id))
         return;
 
     hudManager->setPrompt("Press E to pick up");
 }
 
-void MainSceneHandler::offInteractionReach(std::string_view id, Player &p) {
+void MainSceneHandler::offInteractionReach(std::string_view id, GameStatus &gs) {
     if (!interMap.contains(id))
         return;
 
     hudManager->setPrompt("");
 }
 
-void MainSceneHandler::onEvent(Player &p, Key k) {
+void MainSceneHandler::onEvent(GameStatus &gs, Key k) {
     switch (k.glfw_key) {
     case GLFW_KEY_E:
-        interactionController->interact(p);
+        interactionController->interact(gs);
         sceneLoader->refreshColliders();
         break;
     case GLFW_KEY_L:

@@ -11,7 +11,7 @@ class SceneHandler;
 struct Interactable {
     Instance *instance;
     bool reachable{false};
-    std::function<void(Interactable &, Player &)> callback;
+    std::function<void(Interactable &, GameStatus &)> callback;
 };
 
 // Decides which interactable object is in reach and when it gets picked up.
@@ -24,6 +24,6 @@ class InteractionController {
   public:
     explicit InteractionController(CollisionDetector *collisionDetector, std::vector<Interactable> interactables);
 
-    void checkInteractionReach(SceneHandler *sceneHandler, Player &player);
-    void interact(Player &p);
+    void checkInteractionReach(SceneHandler *sceneHandler, GameStatus &gs);
+    void interact(GameStatus &gs);
 };

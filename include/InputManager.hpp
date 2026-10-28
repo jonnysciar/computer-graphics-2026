@@ -4,7 +4,8 @@
 
 #include <GLFW/glfw3.h>
 
-class Player;
+struct GameStatus;
+;
 
 struct MouseState {
     double pixelX, pixelY; // Position in pixels (window coordinates)
@@ -23,7 +24,9 @@ struct Key {
     explicit Key(int k) : glfw_key(k), isDown(false) {}
 };
 
-class InputManager : public Listenable<Player &, Key>, public Listenable<Player &, MouseState> {
+class InputManager : public Listenable<Key>,
+                     public Listenable<GameStatus &, Key>,
+                     public Listenable<GameStatus &, MouseState> {
   private:
     GLFWwindow *window;
     int windowWidth;
@@ -38,16 +41,16 @@ class InputManager : public Listenable<Player &, Key>, public Listenable<Player 
     std::vector<Key> keys = {Key{GLFW_KEY_E}, Key{GLFW_KEY_M}, Key{GLFW_KEY_Q}, Key{GLFW_KEY_Z}, Key{GLFW_KEY_L}};
 
     // Updates mouse position and button states
-    void updateMouseInput(Player &p);
+    void updateMouseInput(GameStatus &p);
 
     // True only on the frame in which the key goes from released to pressed
-    void updatePressedKeys(Player &p);
+    void updatePressedKeys(GameStatus &p);
 
   public:
     InputManager(GLFWwindow *win, int width, int height);
 
     // To be called once per frame
-    void update(Player &p, float deltaT);
+    void update(GameStatus &p, float deltaT);
 
     const MouseState &getMouseState() const { return mouseState; }
 

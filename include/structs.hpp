@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <Player.hpp>
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -23,4 +23,9 @@ struct Vertex {
     glm::vec3 norm;
     glm::vec2 UV;
     glm::vec4 tan;
+};
+
+struct GameStatus {
+    Player player{};
+    std::vector<bool> lightStates;
 };

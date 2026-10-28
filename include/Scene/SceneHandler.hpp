@@ -6,12 +6,11 @@
 #include "Listener/Listener.hpp"
 #include "SceneLoader.hpp"
 
-#include <cstdint>
 #include <vector>
 
 struct Instance;
 
-class SceneHandler : public Listener<Player &, Key>, Listener<Player &, MouseState> {
+class SceneHandler : public Listener<GameStatus &, Key>, Listener<GameStatus &, MouseState> {
   protected:
     using InteractableMap = std::map<std::string_view, Interactable>;
     InteractableMap interMap;
@@ -42,16 +41,16 @@ class SceneHandler : public Listener<Player &, Key>, Listener<Player &, MouseSta
           collisionDetector(this->sceneLoader->getCollisionDetector()) {}
     ~SceneHandler() override = default;
 
-    virtual void onInteractionReach(std::string_view id, Player &p) = 0;
-    virtual void offInteractionReach(std::string_view id, Player &p) = 0;
+    virtual void onInteractionReach(std::string_view id, GameStatus &gs) = 0;
+    virtual void offInteractionReach(std::string_view id, GameStatus &gs) = 0;
 
-    void checkInteractionReach(Player &p) {
+    void checkInteractionReach(GameStatus &gs) {
         if (!interactionController)
             return;
 
-        interactionController->checkInteractionReach(this, p);
+        interactionController->checkInteractionReach(this, gs);
     }
 
-    void onEvent(Player &p, Key event) override {}
-    void onEvent(Player &p, MouseState event) override {}
+    void onEvent(GameStatus &gs, Key event) override {}
+    void onEvent(GameStatus &gs, MouseState event) override {}
 };

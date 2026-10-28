@@ -8,8 +8,6 @@
 #include "Scene/SceneHandler.hpp"
 
 class Game : public BaseProject {
-    constexpr static int nHandler = 2;
-
   protected:
     RenderPass renderPass{};
     std::unique_ptr<SceneLoader> sceneLoader;
@@ -22,7 +20,7 @@ class Game : public BaseProject {
 
     glm::mat4 viewPrjMat = glm::mat4(0.0f);
 
-    Player player{};
+    GameStatus gameStatus;
 
     // What to do when the window changes size
     void onWindowResize(int w, int h) override;

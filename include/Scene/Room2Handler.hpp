@@ -7,9 +7,9 @@ class Room2Handler : public SceneHandler {
     Room2Handler(SceneLoader *sceneLoader);
     ~Room2Handler() override = default;
 
-    void onInteractionReach(std::string_view id, Player &p) override;
+    void onInteractionReach(std::string_view id, GameStatus &gs) override;
 
-    void offInteractionReach(std::string_view id, Player &p) override;
+    void offInteractionReach(std::string_view id, GameStatus &gs) override;
 
-    void onEvent(Player &p, Key k) override;
+    void onEvent(GameStatus &p, Key k) override;
 };

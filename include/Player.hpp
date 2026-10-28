@@ -7,7 +7,7 @@
 #include <modules/Starter.hpp>
 #include <modules/Colliders.hpp>
 
-class Player : public Listener<Player &, Key> {
+class Player : public Listener<Key> {
     static constexpr float BODY_RADIUS = 0.4f;
     static constexpr float REACH_RADIUS = 2.0f;
 
@@ -27,7 +27,7 @@ class Player : public Listener<Player &, Key> {
         reachCollider.setWorldMatrix(matrix);
     }
 
-    void onEvent(Player &, Key key) override {
+    void onEvent(Key key) override {
         switch (key.glfw_key) {
         case GLFW_KEY_Q:
             pos.y += 1.0;

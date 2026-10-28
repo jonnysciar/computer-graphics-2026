@@ -8,24 +8,24 @@ InteractionController::InteractionController(CollisionDetector *collisionDetecto
                                              std::vector<Interactable> interactables)
     : collisionDetector(collisionDetector), interactables(std::move(interactables)) {}
 
-void InteractionController::checkInteractionReach(SceneHandler *sceneHandler, Player &player) {
+void InteractionController::checkInteractionReach(SceneHandler *sceneHandler, GameStatus &gs) {
     for (auto &interactable : interactables) {
-        auto isCol = player.reachCollider.collidesWith(*interactable.instance->C);
+        auto isCol = gs.player.reachCollider.collidesWith(*interactable.instance->C);
         if (isCol && !interactable.reachable) {
-            sceneHandler->onInteractionReach(*interactable.instance->id, player);
+            sceneHandler->onInteractionReach(*interactable.instance->id, gs);
             interactable.reachable = true;
         } else if (!isCol && interactable.reachable) {
-            sceneHandler->offInteractionReach(*interactable.instance->id, player);
+            sceneHandler->offInteractionReach(*interactable.instance->id, gs);
             interactable.reachable = false;
         }
     }
 }
 
-void InteractionController::interact(Player &p) {
+void InteractionController::interact(GameStatus &gs) {
     for (auto &in : interactables) {
         if (!in.reachable)
             continue;
 
-        in.callback(in, p);
+        in.callback(in, gs);
     }
 }
