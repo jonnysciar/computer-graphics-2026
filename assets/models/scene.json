@@ -558,24 +558,24 @@
       "format": "C"
     },
     {
-      "id": "cobblestone-normal-ogl",
+      "id": "cobblestone-normal",
       "texture": "assets/textures/cobblestone-floor/cobblestone_floor_normal-ogl.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "cobblestone-metallic",
       "texture": "assets/textures/cobblestone-floor/cobblestone_floor_metallic.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "cobblestone-roughness",
       "texture": "assets/textures/cobblestone-floor/cobblestone_floor_roughness.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "cobblestone-ao",
       "texture": "assets/textures/cobblestone-floor/cobblestone_floor_ao.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "wooden-panels-albedo",
@@ -588,44 +588,44 @@
       "format": "C"
     },
     {
-      "id": "wooden-panels-normal-ogl",
+      "id": "wooden-panels-normal",
       "texture": "assets/textures/wooden-panels/wooden_panels_normal-ogl.png",
-      "format": "C"
+      "format": "D"
     },
     {
-      "id": "rock-normal-ogl",
+      "id": "rock-normal",
       "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_normal-ogl.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "wooden-panels-metallic",
       "texture": "assets/textures/wooden-panels/wooden_panels_metallic.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "rock-metallic",
       "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_metallic.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "wooden-panels-roughness",
       "texture": "assets/textures/wooden-panels/wooden_panels_roughness.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "rock-roughness",
       "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_roughness.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "wooden-panels-ao",
       "texture": "assets/textures/wooden-panels/wooden_panels_ao.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "rock-ao",
       "texture": "assets/textures/rock-wall-mortar/rock-wall-mortar_ao.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "clay-albedo",
@@ -633,24 +633,24 @@
       "format": "C"
     },
     {
-      "id": "clay-normal-ogl",
+      "id": "clay-normal",
       "texture": "assets/textures/clay-shingles1/clay-shingles1_normal-ogl.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "clay-metallic",
       "texture": "assets/textures/clay-shingles1/clay-shingles1_metallic.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "clay-roughness",
       "texture": "assets/textures/clay-shingles1/clay-shingles1_roughness.png",
-      "format": "C"
+      "format": "D"
     },
     {
       "id": "clay-ao",
       "texture": "assets/textures/clay-shingles1/clay-shingles1_ao.png",
-      "format": "C"
+      "format": "D"
     }
   ],
   "instances": [

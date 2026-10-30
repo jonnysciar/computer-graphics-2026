@@ -1,10 +1,6 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-// ============================================================
-//  FRAGMENT SHADER — ADVANCED TEXTURING EXERCISE (E07)
-// ============================================================
-
 // ------------------------------------------------------------
 //  INPUT / OUTPUT
 // ------------------------------------------------------------
@@ -19,18 +15,9 @@ layout(location = 0) out vec4 outColor;
 //  UNIFORMS
 // ------------------------------------------------------------
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
-
-    // --- Directional light ---
     vec4 lightColor;
-    vec3 pointParams;
-
-    // --- Camera ---
-    vec3 eyePos;
-
-    // --- Hemispheric ambient ---
-    vec4 ambientUpper;  // xyz = sky / upper  color  (lU)
-    vec4 ambientLower;  // xyz = ground / lower color (lD)
-    vec4 ambientDir;    // xyz = "up" direction for blending (d)
+    vec3 lightParams;
+    vec3 playerPos;
 } gubo;
 
 // ------------------------------------------------------------
@@ -46,16 +33,11 @@ vec3 pointLightColor(vec3 lPos, vec3 fragPosition, out vec3 L) {
     float dist    = max(length(toLight), 0.0001);
     L = toLight / dist;
 
-    float g    = gubo.pointParams.x;
-    float beta = gubo.pointParams.y;
+    float g    = gubo.lightParams.x;
+    float beta = gubo.lightParams.y;
 
     float decay = pow(g / dist, beta);
     return gubo.lightColor.rgb * decay;
-}
-
-// ---- [TODO 1] Build the TBN frame matrix ------------------
-mat3 computeTBN0(vec3 N, vec3 T, float tangentW) {
-    return mat3(1.0);   // replace
 }
 
 mat3 computeTBN(vec3 N, vec3 T, float tangentW) {
@@ -65,15 +47,8 @@ mat3 computeTBN(vec3 N, vec3 T, float tangentW) {
     return mat3(T, B, N);               // columns: tangent space -> world space
 }
 
-
-// ---- [TODO 2] Decode a tangent-space normal map -----------
-vec3 getNormalFromMap0(mat3 TBN, int ti) {
-    return vec3(0.0, 0.0, 1.0);   // replace
-}
-
-vec3 getNormalFromMap(mat3 TBN, int ti) {
-    vec3 n = texture(textureMap[ti + 1], fragUV).rgb;
-    n = n * 2.0 - 1.0;                  // [0,1] -> [-1,1]
+vec3 computeNormalMap(mat3 TBN) {
+    vec3 n = texture(textureMap[1], fragUV).rgb * 2.0 - 1.0;
     return normalize(TBN * n);          // tangent space -> world space
 }
 
@@ -105,56 +80,26 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
            GeometrySchlickGGX(max(dot(N, L), 0.0), roughness);
 }
 
-// ---- [TODO 3] Compute base reflectivity F0 ----------------
-vec3 computeF00(vec3 albedo, float metallic) {
-    return vec3(0.04);   // replace
-}
-
 vec3 computeF0(vec3 albedo, float metallic) {
     return mix(vec3(0.04), albedo, metallic);
 }
 
-// ---- [TODO 4] Hemispheric ambient lighting ----------------
-vec3 hemisphericAmbient0(vec3 N, vec3 mA) {
-    vec3 lU = gubo.ambientUpper.xyz;
-    vec3 lD = gubo.ambientLower.xyz;
-    vec3 d  = normalize(gubo.ambientDir.xyz);
-
-    return vec3(0.0);   // replace
-}
-
-vec3 hemisphericAmbient(vec3 N, vec3 mA) {
-    vec3 lU = gubo.ambientUpper.xyz;
-    vec3 lD = gubo.ambientLower.xyz;
-    vec3 d  = normalize(gubo.ambientDir.xyz);
-
-    float t = 0.5 + 0.5 * dot(N, d);    // 1 = facing up, 0 = facing down
-    return mix(lD, lU, t) * mA;         // blend sky/ground, modulate by albedo
-}
-
 vec3 computeLight(vec3 lPos) {
-    int ti = 0;
-
     // ---- Sample PBR textures -----------------------------------
     //  Albedo: textures are stored in sRGB, but all PBR
     //  math must be performed in linear space. Convert with:
     //  albedo_linear = pow(albedo_sRGB, vec3(2.2))
-    vec3  albedo    = pow(texture(textureMap[ti], fragUV).rgb, vec3(2.2));
-    float metallic  = texture(textureMap[ti + 2], fragUV).r;
-    float roughness = texture(textureMap[ti + 3], fragUV).r;
-    float ao        = texture(textureMap[ti + 4], fragUV).r;
+    vec3  albedo    = pow(texture(textureMap[0], fragUV).rgb, vec3(2.2));
+    float metallic  = texture(textureMap[2], fragUV).r;
+    float roughness = texture(textureMap[3], fragUV).r;
+    float ao        = texture(textureMap[4], fragUV).r;
 
     // ---- Build TBN and decode the normal map ------
     mat3 TBN = computeTBN(fragNorm, fragTan.xyz, fragTan.w);
-    //vec3 N   = getNormalFromMap(TBN, ti);
-    vec3 N = normalize(fragNorm);
+    vec3 N = normalize(computeNormalMap(TBN));
 
     // ---- Geometry setup ---------------------
-/*vec3 V = normalize(gubo.eyePos - fragPos);
-    vec3 L = normalize(-gubo.lightDir);
-    vec3 H = normalize(V + L);*/
-
-    vec3 V = normalize(gubo.eyePos - fragPos);
+    vec3 V = normalize(gubo.playerPos - fragPos);
     vec3 L;
     vec3 lightCol = pointLightColor(lPos, fragPos, L);      // fills L, returns attenuated color
     vec3 H = normalize(V + L);
@@ -171,16 +116,11 @@ vec3 computeLight(vec3 lPos) {
     vec3 f_diffuse  = albedo * NdotL;
     vec3 f_specular = (D * G * F) / max(4.0 * NdotV, 0.001);
 
-    // ---- [TODO 5a] Assemble the full PBR BRDF ------------------
-    //vec3 fr = f_diffuse + f_specular;   // replace
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);   // energy conservation; metals have no diffuse
     vec3 fr = kD * f_diffuse + f_specular;
 
     //vec3 direct = gubo.lightColor.rgb * fr;
     vec3 direct = lightCol * fr;
-
-    // ---- [TODO 5b] Apply Ambient Occlusion ---------------------
-    vec3 ambient = hemisphericAmbient(N, albedo) * ao;   // add AO attenuation
 
     vec3 color = direct;
     color = color / (color + vec3(1.0));
@@ -192,6 +132,5 @@ vec3 computeLight(vec3 lPos) {
 //  MAIN
 // ============================================================
 void main() {
-    outColor = vec4(computeLight(gubo.eyePos), 1.0);
-    //outColor += vec4(computeLight(vec3(3.0, 3.0, 2.0)), 1.0);
+    outColor = vec4(computeLight(vec3(4.0, 3.0, 4.0)), 1.0);
 }

@@ -59,11 +59,8 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     // defines the global parameters for the uniform
     gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-    gubo.pointParams = glm::vec3(10.0, 2.0, 0.0);
-    gubo.eyePos = gameStatus.player.pos;
-    gubo.ambientUpper = glm::vec4(0.05f, 0.05f, 1.0f, 0.0f); // sky blue
-    gubo.ambientLower = glm::vec4(0.0f, 0.05f, 1.0f, 0.0f);  // warm ground
-    gubo.ambientDir = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);     // world up
+    gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
+    gubo.playerPos = gameStatus.player.pos;
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
     for (auto *instance : sceneLoader->getInstances()) {

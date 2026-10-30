@@ -138,7 +138,9 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
         for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
             auto *inst = &scene.TI[ti].I[i];
             instances.push_back(inst);
-            collisionDetector->addCollider(inst->C, true);
+            if (inst->C) {
+                collisionDetector->addCollider(inst->C, true);
+            }
         }
     }
 }
