@@ -139,7 +139,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
             auto *inst = &scene.TI[ti].I[i];
             instances.push_back(inst);
             if (inst->C) {
-                collisionDetector->addCollider(inst->C, true);
+                collisionDetector->addCollider(inst->C, !unsolid.contains(*inst->id));
             }
         }
     }

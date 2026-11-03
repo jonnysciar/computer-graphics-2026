@@ -44,6 +44,15 @@ void HUDManager::setPrompt(std::string_view text) {
     }
 }
 
+void HUDManager::setStatus(std::string_view text) {
+    if (text.empty()) {
+        txt.removeText(3);
+    } else {
+        txt.print(-0.95f, -0.95f, text.data(), 3, "CO", false, false, true, TAL_LEFT, TRH_LEFT, TRV_TOP,
+                  {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f, 1.0f});
+    }
+}
+
 void HUDManager::cleanUp() { txt.localCleanup(); }
 
 void HUDManager::pipelinesAndDescriptorSetsCleanup() { txt.pipelinesAndDescriptorSetsCleanup(); }

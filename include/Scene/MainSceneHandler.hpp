@@ -2,12 +2,8 @@
 
 #include "SceneHandler.hpp"
 
-class HUDManager;
-
 class MainSceneHandler : public SceneHandler {
   private:
-    HUDManager *hudManager;
-
     glm::vec4 debugView = glm::vec4(5.0f, 1.0f, 1.0f, 1.0f);
     float elapsedT = 0.0f;
     bool increase = true;

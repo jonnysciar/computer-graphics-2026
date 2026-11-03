@@ -1311,9 +1311,39 @@
           ]
         },
         {
-          "id": "cube",
-          "solid": true,
+          "id": "key_1",
+          "solid": false,
           "model": "cube",
+          "translate": [4.0, 2.0, 4.0],
+          "scale": [0.25, 0.25, 0.25],
+          "texture": [
+            "clay-albedo",
+            "clay-normal",
+            "clay-metallic",
+            "clay-roughness",
+            "clay-ao"
+          ]
+        },
+        {
+          "id": "key_2",
+          "solid": false,
+          "model": "cube",
+          "translate": [57.0, 2.0, 0.0],
+          "scale": [0.25, 0.25, 0.25],
+          "texture": [
+            "clay-albedo",
+            "clay-normal",
+            "clay-metallic",
+            "clay-roughness",
+            "clay-ao"
+          ]
+        },
+        {
+          "id": "key_3",
+          "solid": false,
+          "model": "cube",
+          "translate": [-25.0, 2.0, 0.0],
+          "scale": [0.25, 0.25, 0.25],
           "texture": [
             "clay-albedo",
             "clay-normal",

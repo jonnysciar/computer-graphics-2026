@@ -3,12 +3,7 @@
 #include "HUDManager.hpp"
 
 MainSceneHandler::MainSceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
-    : SceneHandler(sceneLoader), hudManager(hudManager) {
-
-    interMap = {{"cube", Interactable{.instance = nullptr, .callback = [](Interactable &i, GameStatus &p) {
-                                          std::cout << "################ JS cube ################" << std::endl;
-                                      }}}};
-
+    : SceneHandler(sceneLoader, hudManager) {
     setupInteractionController();
 }
 

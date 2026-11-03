@@ -1,6 +1,6 @@
 #include "Scene/Room2Handler.hpp"
 
-Room2Handler::Room2Handler(SceneLoader *sceneLoader) : SceneHandler(sceneLoader) {
+Room2Handler::Room2Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
     interactionController = std::make_unique<InteractionController>(collisionDetector, std::vector<Interactable>{});
 }
 

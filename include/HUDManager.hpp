@@ -16,6 +16,7 @@ class HUDManager {
     void pipelinesAndDescriptorSetsInit();
     void updateUniformBuffer(uint32_t currentImage, float deltaT);
     void setPrompt(std::string_view text);
+    void setStatus(std::string_view text);
 
     void cleanUp();
     void pipelinesAndDescriptorSetsCleanup();
