@@ -6,12 +6,49 @@
 #include <modules/Scene.hpp>
 
 Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
-    interMap = {{"key_1", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
-                                           HandlerHelper::hideInstance(i.instance);
-                                           gs.player.pickUp(*i.instance->id);
-                                           this->hudManager->setStatus("Keys: " +
-                                                                 std::to_string(gs.player.countItems()));
-                                       }}}};
+    interMap = {
+        {"key_1", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+            HandlerHelper::hideInstance(i.instance);
+            gs.player.pickUp(*i.instance->id);
+            this->hudManager->setStatus("Keys: " + std::to_string(gs.player.countItems()));
+        }}},
+        {"door_1_2", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+            if (!gs.door_1_2.getIsLocked()) {
+                if (gs.door_1_2.getIsOpen()) {
+                    gs.door_1_2.rotateInstanceY(i.instance, -90.0f);
+                    gs.door_1_2.setIsOpen(false);
+                }
+                else {
+                    gs.door_1_2.rotateInstanceY(i.instance, +90.0f);
+                    gs.door_1_2.setIsOpen(true);
+                }
+            }
+        }}}        ,
+        {"door_1_4", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+            if (!gs.door_1_2.getIsLocked()) {
+                if (gs.door_1_2.getIsOpen()) {
+                    gs.door_1_2.rotateInstanceY(i.instance, +90.0f);
+                    gs.door_1_2.setIsOpen(false);
+                }
+                else {
+                    gs.door_1_2.rotateInstanceY(i.instance, -90.0f);
+                    gs.door_1_2.setIsOpen(true);
+                }
+            }
+        }}},
+        {"door_1_5", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+            if (!gs.door_1_2.getIsLocked()) {
+                if (gs.door_1_2.getIsOpen()) {
+                    gs.door_1_2.rotateInstanceY(i.instance, -90.0f);
+                    gs.door_1_2.setIsOpen(false);
+                }
+                else {
+                    gs.door_1_2.rotateInstanceY(i.instance, +90.0f);
+                    gs.door_1_2.setIsOpen(true);
+                }
+            }
+        }}}
+    };
     setupInteractionController();
 }
 
