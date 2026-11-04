@@ -13,6 +13,7 @@ struct UniformBufferObject {
 struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 lightColor;
     alignas(16) glm::vec3 lightParams;
+    alignas(16) glm::vec3 lightPos;
     alignas(16) glm::vec3 playerPos;
 };
 

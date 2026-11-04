@@ -17,6 +17,7 @@ layout(location = 0) out vec4 outColor;
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 lightColor;
     vec3 lightParams;
+    vec3 lightPos;
     vec3 playerPos;
 } gubo;
 
@@ -122,7 +123,7 @@ vec3 computeLight(vec3 lPos) {
     //vec3 direct = gubo.lightColor.rgb * fr;
     vec3 direct = lightCol * fr;
 
-    vec3 color = direct;
+    vec3 color = direct + vec3(0.001) * ao * albedo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     return color;
@@ -132,5 +133,5 @@ vec3 computeLight(vec3 lPos) {
 //  MAIN
 // ============================================================
 void main() {
-    outColor = vec4(computeLight(vec3(4.0, 3.0, 4.0)), 1.0);
+    outColor = vec4(computeLight(gubo.lightPos), 1.0);
 }
