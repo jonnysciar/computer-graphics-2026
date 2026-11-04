@@ -11,9 +11,6 @@
 void Game::onWindowResize(int w, int h) {
     std::cout << "Window resized to: " << w << " x " << h << "\n";
 
-    renderPass.width = w;
-    renderPass.height = h;
-
     sceneLoader->onResize(w, h);
     hudManager->onResize(w, h);
     inputManager->onResize(w, h);
@@ -28,7 +25,6 @@ void Game::localInit() {
     sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight,
                                                 sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
-    renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
     sceneHandlers.push_back(std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get()));
@@ -46,8 +42,7 @@ void Game::localInit() {
 
 // Here you create your pipelines and Descriptor Sets!
 void Game::pipelinesAndDescriptorSetsInit() {
-    renderPass.create();
-    sceneLoader->pipelinesAndDescriptorSetsInit(renderPass);
+    sceneLoader->pipelinesAndDescriptorSetsInit();
     hudManager->pipelinesAndDescriptorSetsInit();
 }
 
@@ -81,13 +76,11 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
 void Game::localCleanup() {
     sceneLoader->cleanUp();
-    renderPass.destroy();
     hudManager->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
     sceneLoader->pipelinesAndDescriptorSetsCleanup();
-    renderPass.cleanup();
     hudManager->pipelinesAndDescriptorSetsCleanup();
 }
 
@@ -105,9 +98,7 @@ void Game::setWindowParameters() {
 }
 
 void Game::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    renderPass.begin(commandBuffer, currentImage);
     sceneLoader->populateCommandBuffer(commandBuffer, currentImage);
-    renderPass.end(commandBuffer);
 }
 
 float Game::handleMovement() {

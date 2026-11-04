@@ -9,7 +9,6 @@
 
 class Game : public BaseProject {
   protected:
-    RenderPass renderPass{};
     std::unique_ptr<SceneLoader> sceneLoader;
     std::vector<std::unique_ptr<SceneHandler>> sceneHandlers;
 

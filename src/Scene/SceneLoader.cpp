@@ -143,14 +143,19 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
             }
         }
     }
+
+    rp.init(this->bp);
 }
 
 void SceneLoader::onResize(int newW, int newH) {
     // the colliders' wireframes are drawn in their own render pass: it must have the same size as the main one
+    rp.width = newW;
+    rp.height = newH;
     scene.ColShow.resizeScreen(newW, newH);
 }
 
-void SceneLoader::pipelinesAndDescriptorSetsInit(RenderPass &rp) {
+void SceneLoader::pipelinesAndDescriptorSetsInit() {
+    rp.create();
     for (auto &[key, ps] : pMap) {
         int i = 0;
         for (auto &p : ps) {
@@ -163,10 +168,11 @@ void SceneLoader::pipelinesAndDescriptorSetsInit(RenderPass &rp) {
 }
 
 void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    // TODO if shadow mapping probably rework
+    rp.begin(commandBuffer, currentImage);
     for (int i = 0; i < pMap.begin()->second.size(); i++) {
         scene.populateCommandBuffer(commandBuffer, i, currentImage);
     }
+    rp.end(commandBuffer);
 }
 
 void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat) {
@@ -192,6 +198,7 @@ void SceneLoader::cleanUp() {
     }
 
     scene.localCleanup();
+    rp.destroy();
 }
 
 void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
@@ -202,4 +209,5 @@ void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
     }
 
     scene.pipelinesAndDescriptorSetsCleanup();
+    rp.cleanup();
 }

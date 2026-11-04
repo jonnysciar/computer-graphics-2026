@@ -11,6 +11,8 @@ class SceneLoader {
     BaseProject *bp;
     int w, h;
 
+    RenderPass rp{};
+
     std::map<std::string, DescriptorSetLayout> dslMap;
     std::map<std::string, VertexDescriptor> vdMap;
     std::map<std::string, std::vector<Pipeline>> pMap;
@@ -35,7 +37,7 @@ class SceneLoader {
 
     void onResize(int newW, int newH);
 
-    void pipelinesAndDescriptorSetsInit(RenderPass &rp);
+    void pipelinesAndDescriptorSetsInit();
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
