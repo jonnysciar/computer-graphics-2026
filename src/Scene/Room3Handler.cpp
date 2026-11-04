@@ -15,11 +15,11 @@ Room3Handler::Room3Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : S
             {"door_2_3", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
                 if (!gs.door_2_3.getIsLocked()) {
                     if (gs.door_2_3.getIsOpen()) {
-                        gs.door_2_3.rotateInstanceY(i.instance, +90.0f);
+                        gs.door_2_3.rotateInstanceY(i.instance, -90.0f);
                         gs.door_2_3.setIsOpen(false);
                     }
                     else {
-                        gs.door_2_3.rotateInstanceY(i.instance, -90.0f);
+                        gs.door_2_3.rotateInstanceY(i.instance, +90.0f);
                         gs.door_2_3.setIsOpen(true);
                     }
                 }
