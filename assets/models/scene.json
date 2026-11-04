@@ -551,6 +551,16 @@
       }
     },
     {
+      "id": "key",
+      "VD": "VD",
+      "model": "assets/models/Key.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
       "id": "door_1_2",
       "VD": "VD",
       "model": "assets/models/doors/Door_1_2.gltf",
@@ -1383,7 +1393,7 @@
         {
           "id": "key_1",
           "solid": false,
-          "model": "cube",
+          "model": "key",
           "translate": [4.0, 2.0, 4.0],
           "scale": [0.25, 0.25, 0.25],
           "texture": [
@@ -1397,7 +1407,7 @@
         {
           "id": "key_2",
           "solid": false,
-          "model": "cube",
+          "model": "key",
           "translate": [57.0, 2.0, 0.0],
           "scale": [0.25, 0.25, 0.25],
           "texture": [
@@ -1411,7 +1421,7 @@
         {
           "id": "key_3",
           "solid": false,
-          "model": "cube",
+          "model": "key",
           "translate": [-25.0, 2.0, 0.0],
           "scale": [0.25, 0.25, 0.25],
           "texture": [

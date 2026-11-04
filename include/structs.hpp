@@ -22,12 +22,6 @@ struct Vertex {
     glm::vec2 UV;
     glm::vec4 tan;
 };
-/*
-struct  Door {
-    const std::string id;
-    bool isLocked;
-};
-//*/
 
 struct GameStatus {
     Player player{};
@@ -39,5 +33,5 @@ struct GameStatus {
     Door door_2_3{"door_2_3", false, false};
     Door door_5_6{"door_5_6", false, true};
     Door door_6_7{"door_6_7", false, true};
-    Door door_7_o{"door_7_o", false, true};
+    Door door_7_o{"door_7_o", false, false};
 };
