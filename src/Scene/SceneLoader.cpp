@@ -44,23 +44,23 @@ void SceneLoader::generateVertexDescriptors(nlohmann::json &jsonFile) {
     }
 }
 
-void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, std::size_t guboSize, std::size_t uboSize,
-                                              int numTextures) {
+void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int numTextures) {
     std::string tech_name = technique.at("technique");
 
     if (dslMap.contains(tech_name))
         return;
 
     DescriptorSetLayout dsl{};
-    dsl.init(this->bp,
-             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, static_cast<int>(uboSize), 1},
-              {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<int>(guboSize), 1},
-              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
-              {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
+    dsl.init(
+        this->bp,
+        {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
+         {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
+         {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
+         {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
     dslMap.insert({std::move(tech_name), std::move(dsl)});
 }
 
-void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSize, std::size_t uboSize) {
+void SceneLoader::generatePipelines(nlohmann::json &jsonFile) {
     for (auto &technique : jsonFile.at("instances")) {
         std::string tech_name = technique.at("technique");
         int numTextures = technique.at("elements")[0].at("texture").size();
@@ -69,7 +69,7 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSi
         if (dslMap.contains(tech_name))
             continue;
 
-        generateDescriptorSetLayout(technique, guboSize, uboSize, numTextures);
+        generateDescriptorSetLayout(technique, numTextures);
 
         std::string model_name = technique.at("elements")[0].at("model");
         std::string vd_name;
@@ -105,14 +105,13 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSi
     }
 }
 
-SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize,
-                         std::size_t uboSize)
+SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h)
     : bp(bp), w(w), h(h) {
     std::ifstream ifs(scene_json.data());
     nlohmann::json jsonFile = nlohmann::json::parse(ifs);
 
     generateVertexDescriptors(jsonFile);
-    generatePipelines(jsonFile, guboSize, uboSize);
+    generatePipelines(jsonFile);
 
     int numElem = 0;
     std::unordered_set<std::string> unsolid;

@@ -1,30 +1,4 @@
 #pragma once
-// ============================================================================
-//  OmniShadow.hpp  -  omnidirectional (point light) shadow map for Starter.hpp
-//
-//  Include AFTER Starter.hpp and Scene.hpp. Header-only, no change to
-//  Starter.hpp or Scene.hpp needed.
-//
-//  Shadow casters are taken automatically from the Scene: every Instance
-//  (its Model + its current Instance::Wm) is drawn into the shadow map.
-//
-//  How it works
-//   * Own VkRenderPass: color = R32_SFLOAT (world-space distance light->surface),
-//     depth = D32 (z-test). Rendered once per cube face (6 begin/end of the
-//     same render pass, one framebuffer per face).
-//   * Result is a cube image sampled in the scene shader as samplerCube.
-//   * Per-frame data (light position, 6 view-proj matrices, caster model
-//     matrices) live in uniform buffers, so the command buffers recorded once by
-//     Starter stay valid while light and objects move.
-//
-//  Mirrors the BaseProject pattern:
-//     init() + attachScene()              <-> localInit()
-//     pipelinesAndDescriptorSetsInit()    <-> pipelinesAndDescriptorSetsInit()
-//     updateUniformBuffer()               <-> updateUniformBuffer()
-//     populateCommandBuffer()             <-> Scene::populateCommandBuffer
-//     pipelinesAndDescriptorSetsCleanup() <-> pipelinesAndDescriptorSetsCleanup()
-//     localCleanup()                      <-> localCleanup()
-// ============================================================================
 
 #include <functional>
 

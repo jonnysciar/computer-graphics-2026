@@ -22,8 +22,7 @@ void Game::onWindowResize(int w, int h) {
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
-    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight,
-                                                sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
+    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight);
 
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
