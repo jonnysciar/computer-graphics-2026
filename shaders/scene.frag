@@ -26,6 +26,9 @@ layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
 // ------------------------------------------------------------
 layout(binding = 2, set = 0) uniform sampler2D textureMap[5];
 
+// Omnidirectional shadow map: world-space distance light -> nearest occluder
+layout(binding = 3, set = 0) uniform samplerCube shadowMap;
+
 
 const float PI = 3.14159265359;
 
@@ -85,6 +88,36 @@ vec3 computeF0(vec3 albedo, float metallic) {
     return mix(vec3(0.04), albedo, metallic);
 }
 
+// ------------------------------------------------------------
+//  OMNIDIRECTIONAL SHADOW (PCF)   -- tune these to your scene scale
+// ------------------------------------------------------------
+const float SHADOW_BIAS          = 0.05;   // world units
+const float SHADOW_NORMAL_OFFSET = 0.05;   // world units, applied at grazing angles
+const float SHADOW_PCF_RADIUS    = 0.02;   // fraction of light-fragment distance
+
+const vec3 shadowSampleDirs[20] = vec3[](
+    vec3( 1, 1, 1), vec3( 1,-1, 1), vec3(-1,-1, 1), vec3(-1, 1, 1),
+    vec3( 1, 1,-1), vec3( 1,-1,-1), vec3(-1,-1,-1), vec3(-1, 1,-1),
+    vec3( 1, 1, 0), vec3( 1,-1, 0), vec3(-1,-1, 0), vec3(-1, 1, 0),
+    vec3( 1, 0, 1), vec3(-1, 0, 1), vec3( 1, 0,-1), vec3(-1, 0,-1),
+    vec3( 0, 1, 1), vec3( 0,-1, 1), vec3( 0,-1,-1), vec3( 0, 1,-1));
+
+// returns 1.0 = fully lit, 0.0 = fully in shadow
+float computeShadow(vec3 Ng, vec3 L) {
+    float NdotL  = clamp(dot(Ng, L), 0.0, 1.0);
+    vec3  toFrag = (fragPos + Ng * SHADOW_NORMAL_OFFSET * (1.0 - NdotL)) - gubo.lightPos;
+    float cur    = length(toFrag);
+    float bias   = SHADOW_BIAS * (1.0 + (1.0 - NdotL));
+    float radius = SHADOW_PCF_RADIUS * cur;
+
+    float lit = 0.0;
+    for (int i = 0; i < 20; i++) {
+        float closest = texture(shadowMap, toFrag + shadowSampleDirs[i] * radius).r;
+        lit += (cur - bias <= closest) ? 1.0 : 0.0;
+    }
+    return lit / 20.0;
+}
+
 vec3 computeLight(vec3 lPos) {
     // ---- Sample PBR textures -----------------------------------
     //  Albedo: textures are stored in sRGB, but all PBR
@@ -121,9 +154,12 @@ vec3 computeLight(vec3 lPos) {
     vec3 fr = kD * f_diffuse + f_specular;
 
     //vec3 direct = gubo.lightColor.rgb * fr;
-    vec3 direct = lightCol * fr;
+    float visibility = computeShadow(normalize(fragNorm), L);
+    vec3 direct = lightCol * fr * visibility;
 
-    vec3 color = direct + vec3(0.001) * ao * albedo;
+    vec3 ambient = vec3(0.02) * albedo * ao * lightCol;
+
+    vec3 color = direct + ambient;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     return color;

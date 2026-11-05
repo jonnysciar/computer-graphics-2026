@@ -13,6 +13,8 @@ std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector
         textDefs.emplace_back(true, i, VkDescriptorImageInfo{});
     }
 
+    textDefs.emplace_back(false, 0, VkDescriptorImageInfo{});
+
     std::vector<PipelineAndTexturesDefs> pts;
     pts.reserve(pipelines.size());
     for (auto &pipeline : pipelines) {
@@ -53,7 +55,8 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, std::si
     dsl.init(this->bp,
              {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, static_cast<int>(uboSize), 1},
               {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<int>(guboSize), 1},
-              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
+              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
+              {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
     dslMap.insert({std::move(tech_name), std::move(dsl)});
 }
 
@@ -145,6 +148,9 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
     }
 
     rp.init(this->bp);
+
+    omniShadow.init(this->bp, &vdMap.begin()->second);
+    omniShadow.attachScene(&scene);
 }
 
 void SceneLoader::onResize(int newW, int newH) {
@@ -164,10 +170,13 @@ void SceneLoader::pipelinesAndDescriptorSetsInit() {
         }
     }
 
+    omniShadow.pipelinesAndDescriptorSetsInit();
+    scene.TechniqueIds["General"]->PT[0].texDefs[0][5].info = omniShadow.getViewAndSampler();
     scene.pipelinesAndDescriptorSetsInit();
 }
 
 void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+    omniShadow.populateCommandBuffer(commandBuffer, currentImage);
     rp.begin(commandBuffer, currentImage);
     for (int i = 0; i < pMap.begin()->second.size(); i++) {
         scene.populateCommandBuffer(commandBuffer, i, currentImage);
@@ -197,6 +206,8 @@ void SceneLoader::cleanUp() {
         }
     }
 
+    omniShadow.localCleanup();
+
     scene.localCleanup();
     rp.destroy();
 }
@@ -207,6 +218,8 @@ void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
             p.cleanup();
         }
     }
+
+    omniShadow.pipelinesAndDescriptorSetsCleanup();
 
     scene.pipelinesAndDescriptorSetsCleanup();
     rp.cleanup();

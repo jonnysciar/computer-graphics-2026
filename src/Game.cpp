@@ -59,7 +59,7 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     // defines the global parameters for the uniform
     gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
     gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
-    gubo.lightPos = glm::vec3(0.0f, 3.5f, 4.0f);
+    gubo.lightPos = glm::vec3(0.0f, 2.5f, 4.0f);
     gubo.playerPos = gameStatus.player.pos;
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
@@ -70,6 +70,8 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
         instance->DS[0][0]->map(currentImage, &ubo, 0);
         instance->DS[0][0]->map(currentImage, &gubo, 1);
     }
+
+    sceneLoader->omniShadow.updateUniformBuffer(currentImage, gubo.lightPos);
 
     sceneLoader->updateUniformBuffer(currentImage, viewPrjMat);
     hudManager->updateUniformBuffer(currentImage, deltaT);

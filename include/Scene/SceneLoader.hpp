@@ -5,6 +5,7 @@
 
 #include "structs.hpp"
 #include "CollisionDetector.hpp"
+#include "OmniShadow.hpp"
 
 class SceneLoader {
   private:
@@ -33,6 +34,8 @@ class SceneLoader {
     void generatePipelines(nlohmann::json &jsonFile, std::size_t guboSize, std::size_t uboSize);
 
   public:
+    OmniShadow omniShadow;
+
     SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize, std::size_t uboSize);
 
     void onResize(int newW, int newH);
