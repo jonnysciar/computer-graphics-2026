@@ -1,6 +1,7 @@
 #include "Scene/SceneLoader.hpp"
 
-#include "structs.hpp"
+#include "GameStatus.hpp"
+#include "uniform_buffers.hpp"
 
 #include <unordered_set>
 
@@ -60,7 +61,7 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int num
     dslMap.insert({std::move(tech_name), std::move(dsl)});
 }
 
-void SceneLoader::generatePipelines(nlohmann::json &jsonFile) {
+void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPhysicalDevice physicalDev) {
     for (auto &technique : jsonFile.at("instances")) {
         std::string tech_name = technique.at("technique");
         int numTextures = technique.at("elements")[0].at("texture").size();
@@ -102,16 +103,23 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile) {
         TechniqueRef pr{};
         pr.init(tech_name.c_str(), generateTextureDef(pMap.at(tech_name), numTextures), numTextures, &vd);
         prs.push_back(pr);
+
+        if (technique.contains("shadow")) {
+            auto &shadow = technique.at("shadow");
+            smMap[tech_name].init(this->bp, &vd, dev, physicalDev,
+                                  {.vertShader = shadow.at("vertex"), .fragShader = shadow.at("fragment")});
+        }
     }
 }
 
-SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h)
+SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice dev, VkPhysicalDevice physicalDev,
+                         int w, int h)
     : bp(bp), w(w), h(h) {
     std::ifstream ifs(scene_json.data());
     nlohmann::json jsonFile = nlohmann::json::parse(ifs);
 
     generateVertexDescriptors(jsonFile);
-    generatePipelines(jsonFile);
+    generatePipelines(jsonFile, dev, physicalDev);
 
     int numElem = 0;
     std::unordered_set<std::string> unsolid;
@@ -135,6 +143,10 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
         exit(-1);
     }
 
+    for (auto &sm : smMap | std::views::values) {
+        sm.attachScene(&scene);
+    }
+
     collisionDetector = std::make_unique<CollisionDetector>();
     for (int ti = 0; ti < scene.TechniqueInstanceCount; ti++) {
         for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
@@ -147,9 +159,6 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
     }
 
     rp.init(this->bp);
-
-    omniShadow.init(this->bp, &vdMap.begin()->second);
-    omniShadow.attachScene(&scene);
 }
 
 void SceneLoader::onResize(int newW, int newH) {
@@ -161,21 +170,25 @@ void SceneLoader::onResize(int newW, int newH) {
 
 void SceneLoader::pipelinesAndDescriptorSetsInit() {
     rp.create();
-    for (auto &[key, ps] : pMap) {
-        int i = 0;
+    for (auto &ps : pMap | std::views::values) {
         for (auto &p : ps) {
             p.create(&rp);
-            i++;
         }
     }
 
-    omniShadow.pipelinesAndDescriptorSetsInit();
-    scene.TechniqueIds["General"]->PT[0].texDefs[0][5].info = omniShadow.getViewAndSampler();
+    // Not fully functional in case of different DSL
+    for (auto &[tech_name, sm] : smMap) {
+        sm.pipelinesAndDescriptorSetsInit();
+        scene.TechniqueIds[tech_name]->PT[0].texDefs[0][5].info = sm.getViewAndSampler();
+    }
+
     scene.pipelinesAndDescriptorSetsInit();
 }
 
 void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-    omniShadow.populateCommandBuffer(commandBuffer, currentImage);
+    for (auto &sm : smMap | std::views::values) {
+        sm.populateCommandBuffer(commandBuffer, currentImage);
+    }
     rp.begin(commandBuffer, currentImage);
     for (int i = 0; i < pMap.begin()->second.size(); i++) {
         scene.populateCommandBuffer(commandBuffer, i, currentImage);
@@ -183,7 +196,30 @@ void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
     rp.end(commandBuffer);
 }
 
-void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat) {
+void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus) {
+
+    UniformBufferObject ubo{};
+    GlobalUniformBufferObject gubo{};
+
+    // defines the global parameters for the uniform
+    gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
+    gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
+    gubo.lightPos = glm::vec3(0.0f, 2.5f, 4.0f);
+    gubo.playerPos = gameStatus.player.pos;
+
+    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
+    for (auto *instance : instances) {
+        ubo.mMat = instance->Wm;
+        ubo.mvpMat = viewPrjMat * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+        instance->DS[0][0]->map(currentImage, &ubo, 0);
+        instance->DS[0][0]->map(currentImage, &gubo, 1);
+    }
+
+    for (auto &sm : smMap | std::views::values) {
+        sm.updateUniformBuffer(currentImage, gubo.lightPos);
+    }
+
     // updates the view-projection matrix used to draw the colliders' wireframes
     scene.updateColliderVisualizer(currentImage, viewPrjMat);
 }
@@ -199,13 +235,15 @@ void SceneLoader::cleanUp() {
         dsl.cleanup();
     }
 
-    for (auto &[key, ps] : pMap) {
+    for (auto &ps : pMap | std::views::values) {
         for (auto &p : ps) {
             p.destroy();
         }
     }
 
-    omniShadow.localCleanup();
+    for (auto &sm : smMap | std::views::values) {
+        sm.localCleanup();
+    }
 
     scene.localCleanup();
     rp.destroy();
@@ -218,7 +256,9 @@ void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
         }
     }
 
-    omniShadow.pipelinesAndDescriptorSetsCleanup();
+    for (auto &sm : smMap | std::views::values) {
+        sm.pipelinesAndDescriptorSetsCleanup();
+    }
 
     scene.pipelinesAndDescriptorSetsCleanup();
     rp.cleanup();

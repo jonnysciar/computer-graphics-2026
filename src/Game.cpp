@@ -1,6 +1,8 @@
 // This has been adapted from the Vulkan tutorial
 
 #include "Game.hpp"
+
+#include "uniform_buffers.hpp"
 #include "Scene/MainSceneHandler.hpp"
 #include "Scene/Room1Handler.hpp"
 #include "Scene/Room2Handler.hpp"
@@ -22,7 +24,8 @@ void Game::onWindowResize(int w, int h) {
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
-    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight);
+    sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", device, physicalDevice, windowWidth,
+                                                windowHeight);
 
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
@@ -52,27 +55,8 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     inputManager->update(gameStatus, deltaT);
 
     std::ranges::for_each(sceneHandlers, [&](auto &handler) { handler->checkInteractionReach(gameStatus); });
-    UniformBufferObject ubo{};
-    GlobalUniformBufferObject gubo{};
 
-    // defines the global parameters for the uniform
-    gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-    gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
-    gubo.lightPos = glm::vec3(0.0f, 2.5f, 4.0f);
-    gubo.playerPos = gameStatus.player.pos;
-
-    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
-    for (auto *instance : sceneLoader->getInstances()) {
-        ubo.mMat = instance->Wm;
-        ubo.mvpMat = viewPrjMat * ubo.mMat;
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-        instance->DS[0][0]->map(currentImage, &ubo, 0);
-        instance->DS[0][0]->map(currentImage, &gubo, 1);
-    }
-
-    sceneLoader->omniShadow.updateUniformBuffer(currentImage, gubo.lightPos);
-
-    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat);
+    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat, gameStatus);
     hudManager->updateUniformBuffer(currentImage, deltaT);
 }
 

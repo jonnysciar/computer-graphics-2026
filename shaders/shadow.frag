@@ -4,6 +4,7 @@
 layout(set = 0, binding = 0) uniform ShadowUBO {
 	mat4 faceVP[6];
 	vec4 lightPosFar;
+	mat4 model;
 } shadow;
 
 layout(location = 0) in vec3 fragWorldPos;

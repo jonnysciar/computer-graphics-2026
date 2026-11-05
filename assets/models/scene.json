@@ -742,6 +742,10 @@
           "fragment": "shaders/scene.frag.spv"
         }
       ],
+      "shadow": {
+        "vertex": "shaders/shadow.vert.spv",
+        "fragment": "shaders/shadow.frag.spv"
+      },
       "elements": [
         {
           "id": "floor",

@@ -2,6 +2,9 @@
 
 #include "CollisionDetector.hpp"
 
+const float CameraController::nearPlane = 0.1f;
+const float CameraController::farPlane = 100.0f;
+
 glm::vec3 CameraController::computePos(glm::vec3 pos, glm::vec3 m, glm::vec3 r, float deltaT) {
     Yaw += ROT_SPEED * deltaT * r.y;   // y
     Pitch += ROT_SPEED * deltaT * r.x; // x

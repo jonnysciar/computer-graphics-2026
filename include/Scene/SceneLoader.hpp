@@ -3,9 +3,9 @@
 #include <modules/Starter.hpp>
 #include <modules/Scene.hpp>
 
-#include "structs.hpp"
+#include "GameStatus.hpp"
 #include "CollisionDetector.hpp"
-#include "OmniShadow.hpp"
+#include "ShadowMapper.hpp"
 
 class SceneLoader {
   private:
@@ -17,6 +17,7 @@ class SceneLoader {
     std::map<std::string, DescriptorSetLayout> dslMap;
     std::map<std::string, VertexDescriptor> vdMap;
     std::map<std::string, std::vector<Pipeline>> pMap;
+    std::map<std::string, ShadowMapper> smMap;
 
     Scene scene;
 
@@ -30,12 +31,10 @@ class SceneLoader {
 
     void generateVertexDescriptors(nlohmann::json &jsonFile);
     void generateDescriptorSetLayout(nlohmann::json &technique, int numTextures);
-    void generatePipelines(nlohmann::json &jsonFile);
+    void generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPhysicalDevice physicalDev);
 
   public:
-    OmniShadow omniShadow;
-
-    SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h);
+    SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice dev, VkPhysicalDevice physicalDev, int w, int h);
 
     void onResize(int newW, int newH);
 
@@ -43,7 +42,7 @@ class SceneLoader {
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
-    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat);
+    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus);
 
     const std::vector<Instance *> &getInstances();
 

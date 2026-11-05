@@ -1,37 +1,33 @@
 #pragma once
 
+#include "CameraController.hpp"
+#include "uniform_buffers.hpp"
+
 #include <functional>
 
-struct OmniShadowParams {
+struct ShadowMapperParams {
     uint32_t resolution = 512; // size of each cube face
-    float nearPlane = 0.1f;
-    float farPlane = 100.0f; // must cover everything the light reaches
+    float nearPlane = CameraController::nearPlane;
+    float farPlane = CameraController::farPlane; // must cover everything the light reaches
     std::string vertShader = "shaders/shadow.vert.spv";
     std::string fragShader = "shaders/shadow.frag.spv";
 };
 
-// Reads BaseProject's protected members from outside a derived class, using the
-// standard "pointer-to-member through a derived class" trick. It is never
-// instantiated and nothing in Starter.hpp is modified.
-struct OmniShadowBPAccess : BaseProject {
-    static VkDevice getDevice(BaseProject *bp) { return bp->*(&OmniShadowBPAccess::device); }
-    static VkPhysicalDevice getPhysicalDevice(BaseProject *bp) { return bp->*(&OmniShadowBPAccess::physicalDevice); }
-};
-
-class OmniShadow {
+class ShadowMapper {
   public:
     // Return false to exclude an instance from casting shadows
     // (e.g. the lamp mesh that surrounds the light).
     using CasterFilter = std::function<bool(const Instance &)>;
 
-    // ---------------------------------------------------------------- localInit
-    //   shadow.init(this, &VD, params);
-    void init(BaseProject *bp, VertexDescriptor *vd, OmniShadowParams p = {}) {
+    ShadowMapper() = default;
+
+    void init(BaseProject *bp, VertexDescriptor *vd, VkDevice dev, VkPhysicalDevice physicalDev,
+              ShadowMapperParams p = {}) {
         BP = bp;
-        device = OmniShadowBPAccess::getDevice(bp);
-        physDev = OmniShadowBPAccess::getPhysicalDevice(bp);
+        device = dev;
+        physDevice = physicalDev;
         VD = vd;
-        prm = p;
+        prm = std::move(p);
 
         createShadowImages();
         createRenderPass();
@@ -41,15 +37,13 @@ class OmniShadow {
         DSLshadow.init(
             BP, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                   static_cast<int>(sizeof(ShadowUBO)), 1}});
-        DSLcaster.init(BP, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
-                             static_cast<int>(sizeof(glm::mat4)), 1}});
 
         VkPushConstantRange pk{};
         pk.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pk.offset = 0;
         pk.size = sizeof(uint32_t); // cube face index
 
-        P.init(BP, VD, prm.vertShader, prm.fragShader, {&DSLshadow, &DSLcaster}, {pk});
+        P.init(BP, VD, prm.vertShader, prm.fragShader, {&DSLshadow}, {pk});
         P.setCullMode(VK_CULL_MODE_NONE); // robust against the cube-map winding flip
 
         // Minimal description of our render pass for Pipeline::create()
@@ -86,7 +80,7 @@ class OmniShadow {
         }
         BP->DPSZs.uniformBlocksInPool += 1 + (int)casters.size();
         BP->DPSZs.setsInPool += 1 + (int)casters.size();
-        std::cout << "OmniShadow: " << casters.size() << " shadow casters\n";
+        std::cout << "ShadowMapper: " << casters.size() << " shadow casters\n";
     }
 
     // ------------------------------------- pipelinesAndDescriptorSetsInit
@@ -94,7 +88,7 @@ class OmniShadow {
         P.create(&rpInfo);
         DSshadow.init(BP, &DSLshadow, {});
         for (auto &c : casters)
-            c.ds.init(BP, &DSLcaster, {});
+            c.ds.init(BP, &DSLshadow, {});
     }
 
     // ------------------------------------------------ updateUniformBuffer
@@ -109,8 +103,8 @@ class OmniShadow {
 
         // current world matrix of every caster (Instance::Wm)
         for (auto &c : casters) {
-            glm::mat4 m = c.inst->Wm;
-            c.ds.map(currentImage, &m, 0);
+            u.model = c.inst->Wm;
+            c.ds.map(currentImage, &u, 0);
         }
     }
 
@@ -137,7 +131,7 @@ class OmniShadow {
             DSshadow.bind(cb, P, 0, currentImage);
             vkCmdPushConstants(cb, P.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &face);
             for (auto &c : casters) {
-                c.ds.bind(cb, P, 1, currentImage);
+                c.ds.bind(cb, P, 0, currentImage);
                 c.model->bind(cb);
                 vkCmdDrawIndexed(cb, static_cast<uint32_t>(c.model->indices.size()), 1, 0, 0, 0);
             }
@@ -148,7 +142,9 @@ class OmniShadow {
 
     // Use as the external (fromInstance = false) texture of your TechniqueRef:
     // it is the samplerCube binding of the scene DescriptorSet.
-    VkDescriptorImageInfo getViewAndSampler() { return {sampler, cubeView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL}; }
+    VkDescriptorImageInfo getViewAndSampler() const {
+        return {sampler, cubeView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+    }
 
     // ------------------------------------- pipelinesAndDescriptorSetsCleanup
     void pipelinesAndDescriptorSetsCleanup() {
@@ -161,7 +157,6 @@ class OmniShadow {
     // ------------------------------------------------------- localCleanup
     void localCleanup() {
         P.destroy();
-        DSLcaster.cleanup();
         DSLshadow.cleanup();
 
         vkDestroySampler(device, sampler, nullptr);
@@ -180,15 +175,7 @@ class OmniShadow {
         vkFreeMemory(device, depthMem, nullptr);
     }
 
-    float getFarPlane() const { return prm.farPlane; }
-
   private:
-    // std140-compatible: matches ShadowUBO in ShadowVert/ShadowFrag
-    struct ShadowUBO {
-        glm::mat4 faceVP[6];
-        glm::vec4 lightPosFar; // xyz = light position, w = far plane
-    };
-
     struct Caster {
         Instance *inst = nullptr;
         Model *model = nullptr;
@@ -199,9 +186,9 @@ class OmniShadow {
 
     BaseProject *BP = nullptr;
     VkDevice device = VK_NULL_HANDLE;
-    VkPhysicalDevice physDev = VK_NULL_HANDLE;
+    VkPhysicalDevice physDevice = VK_NULL_HANDLE;
     VertexDescriptor *VD = nullptr;
-    OmniShadowParams prm;
+    ShadowMapperParams prm;
 
     VkImage cubeImage = VK_NULL_HANDLE;
     VkDeviceMemory cubeMem = VK_NULL_HANDLE;
@@ -217,7 +204,7 @@ class OmniShadow {
     VkFramebuffer framebuffers[6] = {};
     VkSampler sampler = VK_NULL_HANDLE;
 
-    DescriptorSetLayout DSLshadow, DSLcaster;
+    DescriptorSetLayout DSLshadow;
     DescriptorSet DSshadow;
     Pipeline P;
     RenderPass rpInfo{};
@@ -258,11 +245,11 @@ class OmniShadow {
     // ---- Vulkan helpers (BaseProject's are protected) -----------------------
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags props) {
         VkPhysicalDeviceMemoryProperties mp;
-        vkGetPhysicalDeviceMemoryProperties(physDev, &mp);
+        vkGetPhysicalDeviceMemoryProperties(physDevice, &mp);
         for (uint32_t i = 0; i < mp.memoryTypeCount; i++)
             if ((typeFilter & (1u << i)) && (mp.memoryTypes[i].propertyFlags & props) == props)
                 return i;
-        throw std::runtime_error("OmniShadow: no suitable memory type!");
+        throw std::runtime_error("ShadowMapper: no suitable memory type!");
     }
 
     void createImage(uint32_t layers, VkFormat fmt, VkImageUsageFlags usage, VkImageCreateFlags flags, VkImage &img,
@@ -283,7 +270,7 @@ class OmniShadow {
         VkResult r = vkCreateImage(device, &ii, nullptr, &img);
         if (r != VK_SUCCESS) {
             PrintVkError(r);
-            throw std::runtime_error("OmniShadow: failed to create image!");
+            throw std::runtime_error("ShadowMapper: failed to create image!");
         }
 
         VkMemoryRequirements mr;
@@ -293,7 +280,7 @@ class OmniShadow {
         ai.allocationSize = mr.size;
         ai.memoryTypeIndex = findMemoryType(mr.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         if (vkAllocateMemory(device, &ai, nullptr, &mem) != VK_SUCCESS)
-            throw std::runtime_error("OmniShadow: failed to allocate image memory!");
+            throw std::runtime_error("ShadowMapper: failed to allocate image memory!");
         vkBindImageMemory(device, img, mem, 0);
     }
 
@@ -309,7 +296,7 @@ class OmniShadow {
         VkResult r = vkCreateImageView(device, &vi, nullptr, &v);
         if (r != VK_SUCCESS) {
             PrintVkError(r);
-            throw std::runtime_error("OmniShadow: failed to create image view!");
+            throw std::runtime_error("ShadowMapper: failed to create image view!");
         }
         return v;
     }
@@ -317,11 +304,11 @@ class OmniShadow {
     VkFormat pickDepthFormat() {
         for (VkFormat f : {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}) {
             VkFormatProperties fp;
-            vkGetPhysicalDeviceFormatProperties(physDev, f, &fp);
+            vkGetPhysicalDeviceFormatProperties(physDevice, f, &fp);
             if (fp.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
                 return f;
         }
-        throw std::runtime_error("OmniShadow: no depth format available!");
+        throw std::runtime_error("ShadowMapper: no depth format available!");
     }
 
     void createShadowImages() {
@@ -398,7 +385,7 @@ class OmniShadow {
         VkResult r = vkCreateRenderPass(device, &ri, nullptr, &vkRP);
         if (r != VK_SUCCESS) {
             PrintVkError(r);
-            throw std::runtime_error("OmniShadow: failed to create render pass!");
+            throw std::runtime_error("ShadowMapper: failed to create render pass!");
         }
     }
 
@@ -415,7 +402,7 @@ class OmniShadow {
             VkResult r = vkCreateFramebuffer(device, &fi, nullptr, &framebuffers[f]);
             if (r != VK_SUCCESS) {
                 PrintVkError(r);
-                throw std::runtime_error("OmniShadow: failed to create framebuffer!");
+                throw std::runtime_error("ShadowMapper: failed to create framebuffer!");
             }
         }
     }
@@ -437,7 +424,7 @@ class OmniShadow {
         VkResult r = vkCreateSampler(device, &si, nullptr, &sampler);
         if (r != VK_SUCCESS) {
             PrintVkError(r);
-            throw std::runtime_error("OmniShadow: failed to create sampler!");
+            throw std::runtime_error("ShadowMapper: failed to create sampler!");
         }
     }
 };

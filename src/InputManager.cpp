@@ -1,5 +1,5 @@
 #include "InputManager.hpp"
-#include "structs.hpp"
+#include "GameStatus.hpp"
 
 InputManager::InputManager(GLFWwindow *win, int width, int height)
     : window(win), windowWidth(width), windowHeight(height), prevMouseLeftPressed(false) {}
