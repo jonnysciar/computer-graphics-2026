@@ -30,9 +30,8 @@ class ShadowMapper {
         prm = std::move(p);
 
         createShadowImages();
-        createRenderPass();
-        createFramebuffers();
         createSampler();
+        createRenderPass(); // Starter RenderPass: init only, create() is in pipelinesAndDescriptorSetsInit
 
         DSLshadow.init(
             BP, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -43,19 +42,8 @@ class ShadowMapper {
         pk.offset = 0;
         pk.size = sizeof(uint32_t); // cube face index
 
-        P.init(BP, VD, prm.vertShader, prm.fragShader, {&DSLshadow}, {pk});
-        P.setCullMode(VK_CULL_MODE_NONE); // robust against the cube-map winding flip
-
-        // Minimal description of our render pass for Pipeline::create()
-        // (Starter's RenderPass object is NOT used to create anything).
-        rpInfo.BP = BP;
-        rpInfo.width = rpInfo.height = (int)prm.resolution;
-        rpInfo.count = 6;
-        rpInfo.renderPass = vkRP;
-        rpInfo.colorAttchementsCount = 1;
-        rpInfo.firstColorAttIdx = -1; // -> 1 sample
-        rpInfo.depthAttIdx = 1;
-        rpInfo.resolveAttIdx = -1;
+        pipeline.init(BP, VD, prm.vertShader, prm.fragShader, {&DSLshadow}, {pk});
+        pipeline.setCullMode(VK_CULL_MODE_NONE); // robust against the cube-map winding flip
     }
 
     // Call in localInit(), AFTER scene.init(...) (and after you set DPSZs).
@@ -85,8 +73,9 @@ class ShadowMapper {
 
     // ------------------------------------- pipelinesAndDescriptorSetsInit
     void pipelinesAndDescriptorSetsInit() {
-        P.create(&rpInfo);
-        DSshadow.init(BP, &DSLshadow, {});
+        renderPass.create();         // VkRenderPass + depth buffer (+ 6 framebuffers, replaced below)
+        bindCubeFaceFramebuffers();  // one framebuffer per cube face
+        pipeline.create(&renderPass);
         for (auto &c : casters)
             c.ds.init(BP, &DSLshadow, {});
     }
@@ -99,7 +88,6 @@ class ShadowMapper {
         for (int f = 0; f < 6; f++)
             u.faceVP[f] = faceViewProj(f, lightPos, prm.nearPlane, prm.farPlane);
         u.lightPosFar = glm::vec4(lightPos, prm.farPlane);
-        DSshadow.map(currentImage, &u, 0);
 
         // current world matrix of every caster (Instance::Wm)
         for (auto &c : casters) {
@@ -112,31 +100,18 @@ class ShadowMapper {
     // Record the shadow pass. Call BEFORE RP.begin(...) of your main pass,
     // inside the same command buffer (or in a command buffer with a lower order).
     void populateCommandBuffer(VkCommandBuffer cb, int currentImage) {
-        VkClearValue clear[2]{};
-        clear[0].color = {{1.0e30f, 0.0f, 0.0f, 0.0f}}; // "nothing hit" = very far
-        clear[1].depthStencil = {1.0f, 0};
-
         for (uint32_t face = 0; face < 6; face++) {
-            VkRenderPassBeginInfo bi{};
-            bi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            bi.renderPass = vkRP;
-            bi.framebuffer = framebuffers[face];
-            bi.renderArea.offset = {0, 0};
-            bi.renderArea.extent = {prm.resolution, prm.resolution};
-            bi.clearValueCount = 2;
-            bi.pClearValues = clear;
-            vkCmdBeginRenderPass(cb, &bi, VK_SUBPASS_CONTENTS_INLINE);
+            renderPass.begin(cb, face); // framebuffer #face renders into cube face #face
 
-            P.bind(cb);
-            DSshadow.bind(cb, P, 0, currentImage);
-            vkCmdPushConstants(cb, P.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &face);
+            pipeline.bind(cb);
+            vkCmdPushConstants(cb, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &face);
             for (auto &c : casters) {
-                c.ds.bind(cb, P, 0, currentImage);
+                c.ds.bind(cb, pipeline, 0, currentImage);
                 c.model->bind(cb);
                 vkCmdDrawIndexed(cb, static_cast<uint32_t>(c.model->indices.size()), 1, 0, 0, 0);
             }
 
-            vkCmdEndRenderPass(cb);
+            renderPass.end(cb);
         }
     }
 
@@ -148,31 +123,25 @@ class ShadowMapper {
 
     // ------------------------------------- pipelinesAndDescriptorSetsCleanup
     void pipelinesAndDescriptorSetsCleanup() {
-        P.cleanup();
-        DSshadow.cleanup();
+        pipeline.cleanup();
+        renderPass.cleanup(); // framebuffers, depth buffer, VkRenderPass
         for (auto &c : casters)
             c.ds.cleanup();
     }
 
     // ------------------------------------------------------- localCleanup
     void localCleanup() {
-        P.destroy();
+        renderPass.destroy();
+        pipeline.destroy();
         DSLshadow.cleanup();
 
         vkDestroySampler(device, sampler, nullptr);
-        for (auto fb : framebuffers)
-            vkDestroyFramebuffer(device, fb, nullptr);
-        vkDestroyRenderPass(device, vkRP, nullptr);
 
         for (auto v : faceViews)
             vkDestroyImageView(device, v, nullptr);
         vkDestroyImageView(device, cubeView, nullptr);
         vkDestroyImage(device, cubeImage, nullptr);
         vkFreeMemory(device, cubeMem, nullptr);
-
-        vkDestroyImageView(device, depthView, nullptr);
-        vkDestroyImage(device, depthImage, nullptr);
-        vkFreeMemory(device, depthMem, nullptr);
     }
 
   private:
@@ -194,20 +163,14 @@ class ShadowMapper {
     VkDeviceMemory cubeMem = VK_NULL_HANDLE;
     VkImageView cubeView = VK_NULL_HANDLE;
     VkImageView faceViews[6] = {};
-    VkImage depthImage = VK_NULL_HANDLE;
-    VkDeviceMemory depthMem = VK_NULL_HANDLE;
-    VkImageView depthView = VK_NULL_HANDLE;
     VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
     static constexpr VkFormat distFormat = VK_FORMAT_R32_SFLOAT;
 
-    VkRenderPass vkRP = VK_NULL_HANDLE;
-    VkFramebuffer framebuffers[6] = {};
     VkSampler sampler = VK_NULL_HANDLE;
 
     DescriptorSetLayout DSLshadow;
-    DescriptorSet DSshadow;
-    Pipeline P;
-    RenderPass rpInfo{};
+    Pipeline pipeline;
+    RenderPass renderPass{};
 
     // ---- cube face matrices ------------------------------------------------
     // Built directly from the Vulkan cube-map face selection table, so that
@@ -318,43 +281,30 @@ class ShadowMapper {
         cubeView = createView(cubeImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_CUBE, 0, 6);
         for (uint32_t i = 0; i < 6; i++)
             faceViews[i] = createView(cubeImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
-
-        // one depth buffer shared by the 6 sequential face passes
-        depthFormat = pickDepthFormat();
-        createImage(1, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, depthImage, depthMem);
-        depthView = createView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D, 0, 1);
+        // the depth buffer is created and owned by Starter's RenderPass (see createRenderPass)
     }
 
+    // Describes the pass to Starter's RenderPass (attachments, clear values, dependencies).
+    // The depth buffer and the VkRenderPass are created later by renderPass.create().
     void createRenderPass() {
-        VkAttachmentDescription att[2]{};
-        att[0].format = distFormat;
-        att[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        att[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        att[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        att[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        att[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        att[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        att[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // ready to be sampled
+        depthFormat = pickDepthFormat();
 
-        att[1].format = depthFormat;
-        att[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        att[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        att[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        att[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        att[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        att[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        att[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        std::vector<AttachmentProperties> att = {
+            // 0: world-space distance light -> surface (final layout: ready to be sampled)
+            {COLOR_AT, distFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+             VK_IMAGE_ASPECT_COLOR_BIT, false, false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR,
+             VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
+             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
+            // 1: depth, shared by the 6 sequential face passes
+            {DEPTH_AT, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT, false,
+             false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
+             VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
+             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
+        att[0].clearValue.color = {{1.0e30f, 0.0f, 0.0f, 0.0f}}; // "nothing hit" = very far
+        att[1].clearValue.depthStencil = {1.0f, 0};
 
-        VkAttachmentReference colorRef{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-        VkAttachmentReference depthRef{1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
-
-        VkSubpassDescription sub{};
-        sub.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        sub.colorAttachmentCount = 1;
-        sub.pColorAttachments = &colorRef;
-        sub.pDepthStencilAttachment = &depthRef;
-
-        VkSubpassDependency dep[2]{};
+        std::vector<VkSubpassDependency> dep(2);
         // previous frame's sampling / previous face's writes must finish before we overwrite
         dep[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         dep[0].dstSubpass = 0;
@@ -374,32 +324,36 @@ class ShadowMapper {
         dep[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         dep[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-        VkRenderPassCreateInfo ri{};
-        ri.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        ri.attachmentCount = 2;
-        ri.pAttachments = att;
-        ri.subpassCount = 1;
-        ri.pSubpasses = &sub;
-        ri.dependencyCount = 2;
-        ri.pDependencies = dep;
-        VkResult r = vkCreateRenderPass(device, &ri, nullptr, &vkRP);
-        if (r != VK_SUCCESS) {
-            PrintVkError(r);
-            throw std::runtime_error("ShadowMapper: failed to create render pass!");
-        }
+        // count = 6: one framebuffer per cube face, selected with renderPass.begin(cb, face)
+        renderPass.init(BP, (int)prm.resolution, (int)prm.resolution, 6, &att, &dep);
     }
 
-    void createFramebuffers() {
+    // RenderPass::create() builds its `count` framebuffers on its own 2D attachments, which
+    // cannot target the layers of the cube image. Replace them with one framebuffer per cube
+    // face (sharing the RenderPass depth buffer) and release the placeholder colour image.
+    void bindCubeFaceFramebuffers() {
+        for (auto fb : renderPass.frameBuffers)
+            vkDestroyFramebuffer(device, fb, nullptr);
+
+        FrameBufferAttachment &placeholder = renderPass.attachments[0];
+        vkDestroyImageView(device, placeholder.view, nullptr);
+        vkDestroyImage(device, placeholder.image, nullptr);
+        vkFreeMemory(device, placeholder.mem, nullptr);
+        // RenderPass::cleanup() destroys these again: harmless on null handles
+        placeholder.view = VK_NULL_HANDLE;
+        placeholder.image = VK_NULL_HANDLE;
+        placeholder.mem = VK_NULL_HANDLE;
+
         for (int f = 0; f < 6; f++) {
-            VkImageView views[2] = {faceViews[f], depthView};
+            VkImageView views[2] = {faceViews[f], renderPass.attachments[1].view};
             VkFramebufferCreateInfo fi{};
             fi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            fi.renderPass = vkRP;
+            fi.renderPass = renderPass.renderPass;
             fi.attachmentCount = 2;
             fi.pAttachments = views;
             fi.width = fi.height = prm.resolution;
             fi.layers = 1;
-            VkResult r = vkCreateFramebuffer(device, &fi, nullptr, &framebuffers[f]);
+            VkResult r = vkCreateFramebuffer(device, &fi, nullptr, &renderPass.frameBuffers[f]);
             if (r != VK_SUCCESS) {
                 PrintVkError(r);
                 throw std::runtime_error("ShadowMapper: failed to create framebuffer!");
