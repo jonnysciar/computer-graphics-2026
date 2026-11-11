@@ -51,7 +51,8 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, std::si
 
     DescriptorSetLayout dsl{};
     dsl.init(this->bp,
-             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, static_cast<int>(uboSize), 1},
+             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+               static_cast<int>(uboSize), 1},
               {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, static_cast<int>(guboSize), 1},
               {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
     dslMap.insert({std::move(tech_name), std::move(dsl)});
@@ -102,6 +103,22 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, std::size_t guboSi
     }
 }
 
+void SceneLoader::loadLights(nlohmann::json &jsonFile) {
+    if (!jsonFile.contains("lights"))
+        return;
+
+    for (auto &l : jsonFile.at("lights")) {
+        auto p = l.at("position").get<std::array<float, 3>>();
+        auto c = l.at("color").get<std::array<float, 3>>();
+        lights.push_back(LightDef{.id = l.at("id").get<std::string>(),
+                                  .pos = glm::vec3(p[0], p[1], p[2]),
+                                  .color = glm::vec3(c[0], c[1], c[2]),
+                                  .intensity = l.value("intensity", 1.0f),
+                                  .range = l.value("range", 10.0f),
+                                  .on = l.value("on", true)});
+    }
+}
+
 SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, int h, std::size_t guboSize,
                          std::size_t uboSize)
     : bp(bp), w(w), h(h) {
@@ -110,6 +127,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
 
     generateVertexDescriptors(jsonFile);
     generatePipelines(jsonFile, guboSize, uboSize);
+    loadLights(jsonFile);
 
     int numElem = 0;
     std::unordered_set<std::string> unsolid;
@@ -138,6 +156,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, int w, in
         for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
             auto *inst = &scene.TI[ti].I[i];
             instances.push_back(inst);
+            instanceLights.push_back(getLightIndex(*inst->id));
             if (inst->C) {
                 collisionDetector->addCollider(inst->C, !unsolid.contains(*inst->id));
             }
@@ -175,6 +194,15 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
 }
 
 const std::vector<Instance *> &SceneLoader::getInstances() { return instances; }
+
+const std::vector<LightDef> &SceneLoader::getLights() const { return lights; }
+
+int SceneLoader::getLightIndex(std::string_view id) const {
+    auto it = std::ranges::find(lights, id, &LightDef::id);
+    return it == lights.end() ? -1 : static_cast<int>(it - lights.begin());
+}
+
+const std::vector<int> &SceneLoader::getInstanceLights() const { return instanceLights; }
 
 CollisionDetector *SceneLoader::getCollisionDetector() const { return collisionDetector.get(); }
 

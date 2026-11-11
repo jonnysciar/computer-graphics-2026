@@ -20,8 +20,12 @@ class SceneLoader {
     std::vector<VertexDescriptorRef> vdrs;
     std::vector<TechniqueRef> prs;
     std::vector<Instance *> instances;
+    std::vector<LightDef> lights;
+    std::vector<int> instanceLights;
 
     std::unique_ptr<CollisionDetector> collisionDetector;
+
+    void loadLights(nlohmann::json &jsonFile);
 
     static std::vector<PipelineAndTexturesDefs> generateTextureDef(std::vector<Pipeline> &pipelines, int numTextures);
 
@@ -42,6 +46,13 @@ class SceneLoader {
     void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat);
 
     const std::vector<Instance *> &getInstances();
+
+    const std::vector<LightDef> &getLights() const;
+
+    int getLightIndex(std::string_view id) const;
+
+    // Light index of each instance (parallel to getInstances()), -1 if none
+    const std::vector<int> &getInstanceLights() const;
 
     CollisionDetector *getCollisionDetector() const;
 
