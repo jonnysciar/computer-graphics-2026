@@ -15,11 +15,12 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : S
                                        }}}};
 
     for (auto torchId : Torch::ofRoom(sceneLoader, 1)) {
-        interMap.insert({torchId, Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
-                                                   int idx = this->sceneLoader->getLightIndex(*i.instance->id);
-                                                   gs.lightStates[idx] = !gs.lightStates[idx];
-                                                   onInteractionReach(*i.instance->id, gs);
-                                               }}});
+        interMap.insert(
+            {torchId, Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+                                       int idx = this->sceneLoader->getLightIndex(*i.instance->id);
+                                       gs.lightStates[idx] = !gs.lightStates[idx];
+                                       onInteractionReach(*i.instance->id, gs);
+                                   }}});
     }
     setupInteractionController();
 }
