@@ -34,7 +34,7 @@ void Game::localInit() {
 
     if (gameStatus.torches.size() != NUM_LIGHTS) {
         std::cout << "Number of torch lights: " << gameStatus.torches.size() << " mismatches " << NUM_LIGHTS << "\n";
-        //std::exit(1);
+        // std::exit(1);
     }
 
     sceneHandlers.push_back(std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get()));

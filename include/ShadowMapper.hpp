@@ -8,8 +8,8 @@
 #include <vector>
 
 struct ShadowMapperParams {
-    uint32_t resolution = 64; // size of each cube face
-    uint32_t lightCount = NUM_LIGHTS;   // number of shadow-casting point lights (1 .. NUM_LIGHTS)
+    uint32_t resolution = 64;         // size of each cube face
+    uint32_t lightCount = NUM_LIGHTS; // number of shadow-casting point lights (1 .. NUM_LIGHTS)
     float nearPlane = CameraController::nearPlane;
     float farPlane = CameraController::farPlane; // must cover everything the lights reach
     std::string vertShader = "shaders/shadow.vert.spv";
@@ -92,8 +92,8 @@ class ShadowMapper {
 
     // ------------------------------------- pipelinesAndDescriptorSetsInit
     void pipelinesAndDescriptorSetsInit() {
-        renderPass.create();        // VkRenderPass (+ placeholder image and framebuffers, replaced below)
-        bindLayerFramebuffers();    // one framebuffer per shadow layer
+        renderPass.create();     // VkRenderPass (+ placeholder image and framebuffers, replaced below)
+        bindLayerFramebuffers(); // one framebuffer per shadow layer
         pipeline.create(&renderPass);
         for (auto &c : casters)
             c.ds.init(BP, &DSLshadow, {});
@@ -170,7 +170,6 @@ class ShadowMapper {
     }
 
   private:
-
     struct Caster {
         Instance *inst = nullptr;
         Model *model = nullptr;
@@ -281,7 +280,8 @@ class ShadowMapper {
             createView(shadowImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 0, layerCount);
         layerViews.resize(layerCount);
         for (uint32_t i = 0; i < layerCount; i++)
-            layerViews[i] = createView(shadowImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
+            layerViews[i] =
+                createView(shadowImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
     }
 
     // Describes the pass to Starter's RenderPass: a depth-only pass (no colour attachment).
@@ -289,10 +289,20 @@ class ShadowMapper {
     void createRenderPass() {
         std::vector<AttachmentProperties> att = {
             // 0: depth, stored and left ready to be sampled
-            {DEPTH_AT, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-             VK_IMAGE_ASPECT_DEPTH_BIT, false, false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR,
-             VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
-             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+            {DEPTH_AT,
+             depthFormat,
+             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+             VK_IMAGE_ASPECT_DEPTH_BIT,
+             false,
+             false,
+             {},
+             VK_SAMPLE_COUNT_1_BIT,
+             VK_ATTACHMENT_LOAD_OP_CLEAR,
+             VK_ATTACHMENT_STORE_OP_STORE,
+             VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+             VK_ATTACHMENT_STORE_OP_DONT_CARE,
+             VK_IMAGE_LAYOUT_UNDEFINED,
+             VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
              VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
         att[0].clearValue.depthStencil = {1.0f, 0};
 

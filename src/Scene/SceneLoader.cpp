@@ -56,8 +56,7 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int num
     if (tech_name == "General") {
         dsl.init(
             this->bp,
-            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
-              sizeof(UniformBufferObject), 1},
+            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
              {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
              {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
@@ -65,8 +64,7 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int num
     } else {
         dsl.init(
             this->bp,
-            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
-              sizeof(UniformBufferObject), 1},
+            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
              {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
     }
@@ -156,7 +154,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
     }
 
     for (auto &sm : smMap | std::views::values) {
-        sm.attachScene(&scene, [](const Instance &inst) -> bool {return !inst.id->starts_with("torch");});
+        sm.attachScene(&scene, [](const Instance &inst) -> bool { return !inst.id->starts_with("torch"); });
     }
 
     collisionDetector = std::make_unique<CollisionDetector>();

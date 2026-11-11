@@ -20,8 +20,8 @@ struct GlobalUniformBufferObject {
 };
 
 struct ShadowUBO {
-    alignas(16) glm::mat4 model;                    // caster world matrix
-    alignas(16) glm::vec4 params;                   // x = near, y = far, z = light count
+    alignas(16) glm::mat4 model;  // caster world matrix
+    alignas(16) glm::vec4 params; // x = near, y = far, z = light count
     alignas(16) glm::vec4 lightPos[NUM_LIGHTS];
 };
 

@@ -27,7 +27,8 @@ class SceneLoader {
 
     std::unique_ptr<CollisionDetector> collisionDetector;
 
-    static std::vector<PipelineAndTexturesDefs> generateTextureDef(std::string_view tech_name, std::vector<Pipeline> &pipelines, int numTextures);
+    static std::vector<PipelineAndTexturesDefs> generateTextureDef(std::string_view tech_name,
+                                                                   std::vector<Pipeline> &pipelines, int numTextures);
 
     void generateVertexDescriptors(nlohmann::json &jsonFile);
     void generateDescriptorSetLayout(nlohmann::json &technique, int numTextures);
