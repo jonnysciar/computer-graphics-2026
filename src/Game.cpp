@@ -66,9 +66,6 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};
 
-    // defines the global parameters for the uniform
-    gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-    gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
     gubo.playerPos = gameStatus.player.pos;
     gubo.decay = glm::vec4(5.0f, 2.0f, 0.0f, 0.0f);
 
