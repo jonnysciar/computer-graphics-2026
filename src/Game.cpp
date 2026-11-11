@@ -29,6 +29,9 @@ void Game::localInit() {
     sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", windowWidth, windowHeight,
                                                 sizeof(GlobalUniformBufferObject), sizeof(UniformBufferObject));
 
+    for (const auto &light : sceneLoader->getLights())
+        gameStatus.lightStates.push_back(light.on);
+
     renderPass.init(this);
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
@@ -67,12 +70,32 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
     gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
     gubo.playerPos = gameStatus.player.pos;
+    gubo.decay = glm::vec4(5.0f, 2.0f, 0.0f, 0.0f);
+
+    const auto &lights = sceneLoader->getLights();
+    gubo.lightCount = std::min(static_cast<int>(lights.size()), MAX_LIGHTS);
+    for (int i = 0; i < gubo.lightCount; i++) {
+        const auto &l = lights[i];
+        gubo.lights[i].posRange = glm::vec4(l.pos, l.range);
+        gubo.lights[i].colorInt = glm::vec4(l.color, gameStatus.lightStates[i] ? l.intensity : 0.0f);
+    }
+
+    const auto &instances = sceneLoader->getInstances();
+    const auto &instanceLights = sceneLoader->getInstanceLights();
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
-    for (auto *instance : sceneLoader->getInstances()) {
+    for (std::size_t k = 0; k < instances.size(); k++) {
+        auto *instance = instances[k];
         ubo.mMat = instance->Wm;
         ubo.mvpMat = viewPrjMat * ubo.mMat;
         ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+        int li = instanceLights[k];
+        if (li < 0)
+            ubo.emission = glm::vec4(0.0f);
+        else
+            ubo.emission = gameStatus.lightStates[li] ? glm::vec4(lights[li].color, 1.0f) : glm::vec4(0.1f);
+
         instance->DS[0][0]->map(currentImage, &ubo, 0);
         instance->DS[0][0]->map(currentImage, &gubo, 1);
     }
