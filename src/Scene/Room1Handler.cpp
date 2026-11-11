@@ -3,9 +3,8 @@
 #include "HUDManager.hpp"
 #include "Scene/HandlerHelper.hpp"
 
-#include <modules/Scene.hpp>
-
-Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
+Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
+    : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"key_1", Interactable{.instance = nullptr,
                                        .callback =
                                            [this](Interactable &i, GameStatus &gs) {
@@ -51,12 +50,31 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : S
                                                   }
                                               }
                                           }}}};
+
+    for (auto &torch : gs.torches) {
+        if (torch.room != 1)
+            continue;
+        interMap.insert(
+            {torch.id, Interactable{.instance = nullptr,
+                                    .callback = [&torch](Interactable &, GameStatus &) { torch.on = !torch.on; }}});
+    }
     setupInteractionController();
 }
 
 void Room1Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
     if (!interMap.contains(id))
         return;
+
+    auto torch = gs.torches | std::views::filter([id](auto &torch) { return torch.room == 1 && torch.id == id; });
+    if (!torch.empty()) {
+        hudManager->setPrompt(torch.front().on ? "Press E to extinguish" : "Press E to light");
+        return;
+    }
+
+    if (id == "door_1_2" || id == "door_1_4" || id == "door_1_5") {
+        hudManager->setPrompt("Press E to open/close");
+        return;
+    }
 
     hudManager->setPrompt("Press E to pick up");
 }

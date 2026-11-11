@@ -23,6 +23,19 @@
 			]
 		}
 	],
+	"materials":[
+		{
+			"doubleSided":true,
+			"name":"Material.001",
+			"pbrMetallicRoughness":{
+				"baseColorTexture":{
+					"index":0
+				},
+				"metallicFactor":0,
+				"roughnessFactor":0.5
+			}
+		}
+	],
 	"meshes":[
 		{
 			"name":"Cube.008",
@@ -31,11 +44,26 @@
 					"attributes":{
 						"POSITION":0,
 						"NORMAL":1,
-						"TEXCOORD_0":2
+						"TEXCOORD_0":2,
+						"TANGENT":3
 					},
-					"indices":3
+					"indices":4,
+					"material":0
 				}
 			]
+		}
+	],
+	"textures":[
+		{
+			"sampler":0,
+			"source":0
+		}
+	],
+	"images":[
+		{
+			"mimeType":"image/png",
+			"name":"wooden_panels_albedo",
+			"uri":"wooden_panels_albedo.png"
 		}
 	],
 	"accessors":[
@@ -69,6 +97,12 @@
 		},
 		{
 			"bufferView":3,
+			"componentType":5126,
+			"count":24,
+			"type":"VEC4"
+		},
+		{
+			"bufferView":4,
 			"componentType":5123,
 			"count":36,
 			"type":"SCALAR"
@@ -95,14 +129,26 @@
 		},
 		{
 			"buffer":0,
-			"byteLength":72,
+			"byteLength":384,
 			"byteOffset":768,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":72,
+			"byteOffset":1152,
 			"target":34963
+		}
+	],
+	"samplers":[
+		{
+			"magFilter":9729,
+			"minFilter":9987
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":840,
+			"byteLength":1224,
 			"uri":"Door.bin"
 		}
 	]

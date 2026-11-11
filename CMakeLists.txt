@@ -13,10 +13,7 @@ set(NAME main)
 file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HDRS "${CMAKE_SOURCE_DIR}/include/*.hpp")
 
-add_executable(${NAME} ${HDRS} ${SRCS}
-        include/Door.hpp
-        include/Door.hpp
-        include/Door.hpp)
+add_executable(${NAME} ${HDRS} ${SRCS})
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 # Starter

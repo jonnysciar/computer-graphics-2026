@@ -79,6 +79,7 @@ class ShadowMapper {
                     continue;
                 if (filter && !filter(in))
                     continue;
+
                 casters.emplace_back();
                 casters.back().inst = &in;
                 casters.back().model = m;

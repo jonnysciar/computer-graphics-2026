@@ -32,7 +32,11 @@ void Room3Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
     if (!interMap.contains(id))
         return;
 
-    hudManager->setPrompt("Press E to pick up");
+    if (id == "door_2_3") {
+        hudManager->setPrompt("Press E to open/close");
+    } else {
+        hudManager->setPrompt("Press E to pick up");
+    }
 }
 
 void Room3Handler::offInteractionReach(std::string_view id, GameStatus &gs) {

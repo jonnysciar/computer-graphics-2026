@@ -1,12 +1,12 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-#define MAX_SHADOW_LIGHTS 8        // = ShadowMapper::MaxLights
+#define NUM_LIGHTS 8        //
 
 layout(set = 0, binding = 0) uniform ShadowUBO {
 	mat4 model;                    // caster world matrix
 	vec4 params;                   // x = near, y = far, z = light count, w = guard band scale
-	vec4 lightPos[MAX_SHADOW_LIGHTS];
+	vec4 lightPos[NUM_LIGHTS];
 } ubo;
 
 layout(push_constant) uniform PC {

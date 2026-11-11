@@ -14,17 +14,14 @@ layout(location = 0) out vec4 outColor;
 // ------------------------------------------------------------
 //  UNIFORMS
 // ------------------------------------------------------------
-#define NUM_LIGHTS 1        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
+#define NUM_LIGHTS 8        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
 
-// EXAMPLE multi-light layout: adapt to your own GUBO. std140, so in C++:
-//   alignas(16) glm::vec4 lightColor[NUM_LIGHTS];
-//   alignas(16) glm::vec4 lightPos[NUM_LIGHTS];
-//   alignas(16) glm::vec3 lightParams;
-//   alignas(16) glm::vec3 playerPos;
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
-    vec4 lightColor[NUM_LIGHTS];   // rgb = colour of light i, a = intensity of light
+    vec4 lightColor[NUM_LIGHTS];   // rgb = colour of light i
     vec4 lightPos[NUM_LIGHTS];     // xyz = world position of light i
-    vec3 playerPos;
+    vec4 lightParams[NUM_LIGHTS];  // x = on/off, y = g, z = beta
+    vec4 playerPos;
+    vec4 extra;
 } gubo;
 
 // ------------------------------------------------------------
@@ -44,8 +41,8 @@ vec3 pointLightColor(int light_i, vec3 fragPosition, out vec3 L) {
     float dist    = max(length(toLight), 0.0001);
     L = toLight / dist;
 
-    float g    = gubo.lightColor[light_i].a;
-    float beta = 2.0;
+    float g    = gubo.lightParams[light_i].y;
+    float beta = gubo.lightParams[light_i].z;
 
     float decay = pow(g / dist, beta);
     return gubo.lightColor[light_i].rgb * decay;
@@ -167,7 +164,7 @@ vec3 computeLight() {
     vec3 N = normalize(computeNormalMap(TBN));
 
     // ---- Geometry setup ---------------------
-    vec3 V  = normalize(gubo.playerPos - fragPos);
+    vec3 V  = normalize(gubo.playerPos.xyz - fragPos);
     vec3 Ng = normalize(fragNorm);                      // geometric normal, used for shadows
     float NdotV = max(dot(N, V), 0.0);
 
@@ -176,6 +173,8 @@ vec3 computeLight() {
     // ---- Sum of the contributions of all the lights ------------
     vec3 direct = vec3(0.0);
     for (int i = 0; i < NUM_LIGHTS; i++) {
+        if (gubo.lightParams[i].x < 1.0) continue; //Light is off
+
         vec3 lPos = gubo.lightPos[i].xyz;
         vec3 L;
         vec3 lightCol = pointLightColor(i, fragPos, L);  // fills L
@@ -199,13 +198,13 @@ vec3 computeLight() {
         vec3 fr = kD * f_diffuse + f_specular;
 
         float visibility = 1.0;
-        if (gubo.lightPos[0].w > 0.0) {
+        if (gubo.extra.x > 0.0) {
             visibility = computeShadow(i, lPos, Ng, L);
         }
         direct += lightCol * fr * visibility;
     }
 
-    vec3 color = direct + vec3(0.001) * ao * albedo;
+    vec3 color = direct + vec3(0.0001) * ao * albedo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     return color;

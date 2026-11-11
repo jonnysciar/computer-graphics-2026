@@ -4,8 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
-struct GameStatus;
-;
+class GameStatus;
 
 struct MouseState {
     double pixelX, pixelY; // Position in pixels (window coordinates)

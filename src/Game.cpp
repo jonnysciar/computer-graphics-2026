@@ -8,6 +8,7 @@
 #include "Scene/Room2Handler.hpp"
 #include "Scene/Room3Handler.hpp"
 #include "Scene/Room4Handler.hpp"
+#include "Scene/Room6Handler.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
@@ -29,10 +30,18 @@ void Game::localInit() {
 
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
+    gameStatus.loadLights("assets/models/lights.json");
+
+    if (gameStatus.torches.size() != NUM_LIGHTS) {
+        std::cout << "Number of torch lights: " << gameStatus.torches.size() << " mismatches " << NUM_LIGHTS << "\n";
+        //std::exit(1);
+    }
+
     sceneHandlers.push_back(std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get()));
-    sceneHandlers.push_back(std::make_unique<Room1Handler>(sceneLoader.get(), hudManager.get()));
+    sceneHandlers.push_back(std::make_unique<Room1Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
     sceneHandlers.push_back(std::make_unique<Room3Handler>(sceneLoader.get(), hudManager.get()));
     sceneHandlers.push_back(std::make_unique<Room4Handler>(sceneLoader.get(), hudManager.get()));
+    sceneHandlers.push_back(std::make_unique<Room6Handler>(sceneLoader.get(), hudManager.get()));
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Key>::addListener(gameStatus.player.getPtr());

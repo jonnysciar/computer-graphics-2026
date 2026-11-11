@@ -5,8 +5,8 @@
 
 #include <unordered_set>
 
-std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector<Pipeline> &pipelines,
-                                                                     int numTextures) {
+std::vector<PipelineAndTexturesDefs>
+SceneLoader::generateTextureDef(std::string_view tech_name, std::vector<Pipeline> &pipelines, int numTextures) {
     std::vector<TextureDefs> textDefs;
     textDefs.reserve(numTextures);
 
@@ -14,7 +14,8 @@ std::vector<PipelineAndTexturesDefs> SceneLoader::generateTextureDef(std::vector
         textDefs.emplace_back(true, i, VkDescriptorImageInfo{});
     }
 
-    textDefs.emplace_back(false, 0, VkDescriptorImageInfo{});
+    if (tech_name == "General")
+        textDefs.emplace_back(false, 0, VkDescriptorImageInfo{});
 
     std::vector<PipelineAndTexturesDefs> pts;
     pts.reserve(pipelines.size());
@@ -52,12 +53,23 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int num
         return;
 
     DescriptorSetLayout dsl{};
-    dsl.init(
-        this->bp,
-        {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
-         {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
-         {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
-         {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
+    if (tech_name == "General") {
+        dsl.init(
+            this->bp,
+            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
+              sizeof(UniformBufferObject), 1},
+             {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
+             {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
+             {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
+
+    } else {
+        dsl.init(
+            this->bp,
+            {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
+              sizeof(UniformBufferObject), 1},
+             {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
+             {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
+    }
     dslMap.insert({std::move(tech_name), std::move(dsl)});
 }
 
@@ -101,7 +113,7 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPh
 
         pMap.insert({tech_name, std::move(pipelines)});
         TechniqueRef pr{};
-        pr.init(tech_name.c_str(), generateTextureDef(pMap.at(tech_name), numTextures), numTextures, &vd);
+        pr.init(tech_name.c_str(), generateTextureDef(tech_name, pMap.at(tech_name), numTextures), numTextures, &vd);
         prs.push_back(pr);
 
         if (technique.contains("shadow")) {
@@ -133,9 +145,9 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
         }
     }
 
-    this->bp->DPSZs.uniformBlocksInPool += numElem * 2;
-    this->bp->DPSZs.texturesInPool += numElem * 5;
-    this->bp->DPSZs.setsInPool += numElem;
+    this->bp->DPSZs.uniformBlocksInPool += numElem * 5;
+    this->bp->DPSZs.texturesInPool += numElem * 10;
+    this->bp->DPSZs.setsInPool += numElem * 3;
 
     int nPasses = pMap.begin()->second.size();
     if (scene.init(this->bp, nPasses, vdrs, prs, scene_json.data()) != 0) {
@@ -144,7 +156,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
     }
 
     for (auto &sm : smMap | std::views::values) {
-        sm.attachScene(&scene);
+        sm.attachScene(&scene, [](const Instance &inst) -> bool {return !inst.id->starts_with("torch");});
     }
 
     collisionDetector = std::make_unique<CollisionDetector>();
@@ -201,44 +213,34 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};
 
-    // defines the global parameters for the uniform
-    gubo.lightColor[0] = glm::vec4(1.0f, 0.5f, 0.5f, 5.0f);
-    gubo.lightPos[0] = glm::vec4(4.0f, 2.5f, 4.5f, gameStatus.player.isShadow ? 1.0f : 0.0f);
-
-    /*gubo.lightColor[1] = glm::vec4(1.0f, 0.5f, 0.5f, 10.0f);
-    gubo.lightPos[1] = glm::vec4(1.5f, 2.5f, 7.0f, 1.0f);
-
-    gubo.lightColor[2] = glm::vec4(1.0f, 0.5f, 0.5f, 10.0f);
-    gubo.lightPos[2] = glm::vec4(7.0f, 2.5f, 7.0f, 1.0f);
-
-    gubo.lightColor[3] = glm::vec4(1.0f, 0.5f, 0.5f, 10.0f);
-    gubo.lightPos[3] = glm::vec4(10.5f, 10.5f, 10.5f, 1.0f);*/
-
-    /*gubo.lightColor[4] = glm::vec4(1.0f, 0.0f, 0.0f, 10.0f);
-    gubo.lightPos[4] = glm::vec4(f, 2.5f, 1.5f, 1.0f);
-
-    gubo.lightColor[5] = glm::vec4(0.0f, 0.0f, 1.0f, 10.0f);
-    gubo.lightPos[5] = glm::vec4(6.0f, 2.5f, 4.5f, 1.0f);
-
-    gubo.lightColor[6] = glm::vec4(1.0f, 0.0f, 0.0f, 10.0f);
-    gubo.lightPos[6] = glm::vec4(7.0f, 2.5f, 1.5f, 1.0f);
-
-    gubo.lightColor[7] = glm::vec4(0.0f, 0.0f, 1.0f, 10.0f);
-    gubo.lightPos[7] = glm::vec4(6.0f, 2.5f, 4.5f, 1.0f);*/
-
-    gubo.playerPos = gameStatus.player.pos;
+    gubo.playerPos = glm::vec4(gameStatus.player.pos, 1.0f);
+    for (int i = 0; i < NUM_LIGHTS; i++) {
+        gubo.lightColor[i] = glm::vec4(gameStatus.torches[i].color, 1.0f);
+        gubo.lightPos[i] = glm::vec4(gameStatus.torches[i].pos, 1.0f);
+        gubo.lightParams[i] = glm::vec4(gameStatus.torches[i].on ? 1.0f : 0.0f, gameStatus.torches[i].g,
+                                        gameStatus.torches[i].beta, 1.0f);
+    }
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
     for (auto *instance : instances) {
         ubo.mMat = instance->Wm;
         ubo.mvpMat = viewPrjMat * ubo.mMat;
         ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+        gubo.extra = glm::vec4(gameStatus.player.isShadow ? 1.0f : 0.0f, glm::vec3(0.0));
+        for (int i = 0; i < NUM_LIGHTS; i++) {
+            if (gameStatus.torches[i].id == *instance->id) {
+                gubo.extra = glm::vec4(gameStatus.torches[i].color, gameStatus.torches[i].on ? 1.0f : 0.0f);
+                break;
+            }
+        }
+
         instance->DS[0][0]->map(currentImage, &ubo, 0);
         instance->DS[0][0]->map(currentImage, &gubo, 1);
     }
 
     for (auto &sm : smMap | std::views::values) {
-        sm.updateUniformBuffer(currentImage, {gubo.lightPos[0]});
+        sm.updateUniformBuffer(currentImage, {std::begin(gubo.lightPos), std::end(gubo.lightPos)});
     }
 
     // updates the view-projection matrix used to draw the colliders' wireframes
@@ -271,7 +273,7 @@ void SceneLoader::cleanUp() {
 }
 
 void SceneLoader::pipelinesAndDescriptorSetsCleanup() {
-    for (auto &[key, ps] : pMap) {
+    for (auto &ps : pMap | std::views::values) {
         for (auto &p : ps) {
             p.cleanup();
         }
