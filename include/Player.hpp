@@ -19,7 +19,6 @@ class Player : public Listener<Key> {
     Collider bodyCollider;
     Collider reachCollider;
     std::unordered_set<std::string> collectedItems;
-    bool isShadow = false;
 
     Player() {
         bodyCollider.initSphere(0.0f, 0.0f, 0.0f, BODY_RADIUS);
@@ -46,8 +45,6 @@ class Player : public Listener<Key> {
         case GLFW_KEY_Z:
             pos.y -= 1.0;
             break;
-        case GLFW_KEY_1:
-            isShadow = !isShadow;
         default:
             break;
         }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <Player.hpp>
-#include <Door.hpp>
+#include "Player.hpp"
+#include "Settings.hpp"
+#include "Door.hpp"
 
 struct Torch {
     std::string id;
@@ -16,6 +17,7 @@ struct Torch {
 class GameStatus {
   public:
     Player player{};
+    Settings settings{};
     std::vector<Torch> torches;
 
     Door door_1_2{"door_1_2", false, false};

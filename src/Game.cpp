@@ -45,6 +45,7 @@ void Game::localInit() {
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Key>::addListener(gameStatus.player.getPtr());
+    inputManager->Listenable<Key>::addListener(gameStatus.settings.getPtr());
     std::ranges::for_each(sceneHandlers, [&](auto &handler) {
         inputManager->Listenable<GameStatus &, Key>::addListener(
             handler->template Listener<GameStatus &, Key>::getPtr());
