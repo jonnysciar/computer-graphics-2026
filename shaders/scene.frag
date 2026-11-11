@@ -32,9 +32,9 @@ layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
 // ------------------------------------------------------------
 layout(binding = 2, set = 0) uniform sampler2D textureMap[5];
 
-// Omnidirectional shadow maps of all the lights: 6 layers per light (+X -X +Y -Y +Z -Z),
-// each texel = world-space distance light -> nearest occluder
-layout(binding = 3, set = 0) uniform sampler2DArray shadowMaps;
+// Omnidirectional shadow maps of all the lights: depth, 6 layers per light (+X -X +Y -Y +Z -Z).
+// Hardware depth comparison + bilinear filtering (sampler with compareEnable).
+layout(binding = 3, set = 0) uniform sampler2DArrayShadow shadowMaps;
 
 
 const float PI = 3.14159265359;
@@ -96,21 +96,29 @@ vec3 computeF0(vec3 albedo, float metallic) {
 }
 
 // ------------------------------------------------------------
-//  OMNIDIRECTIONAL SHADOWS (PCF)   -- tune these to your scene scale
+//  OMNIDIRECTIONAL SHADOWS (hardware PCF)
 // ------------------------------------------------------------
-const float SHADOW_BIAS          = 0.05;   // world units
+// These three MUST match the C++ side
+#define SHADOW_NEAR          0.1    // = ShadowMapperParams::nearPlane
+#define SHADOW_FAR           100.0  // = ShadowMapperParams::farPlane
+#define SHADOW_GUARD_TEXELS  4.0    // = ShadowMapper::GuardTexels
+
+// tune to your scene scale
+const float SHADOW_BIAS          = 0.05;   // world units along the face axis
 const float SHADOW_NORMAL_OFFSET = 0.05;   // world units, applied at grazing angles
-const float SHADOW_PCF_RADIUS    = 0.02;   // fraction of the light-fragment distance
+const float SHADOW_PCF_TEXELS    = 1.5;    // tap offset; each tap is already a bilinear 2x2 comparison
+const float LIGHT_CUTOFF         = 1e-4;   // lights contributing less than this are skipped
 
-const vec3 shadowSampleDirs[20] = vec3[](
-    vec3( 1, 1, 1), vec3( 1,-1, 1), vec3(-1,-1, 1), vec3(-1, 1, 1),
-    vec3( 1, 1,-1), vec3( 1,-1,-1), vec3(-1,-1,-1), vec3(-1, 1,-1),
-    vec3( 1, 1, 0), vec3( 1,-1, 0), vec3(-1,-1, 0), vec3(-1, 1, 0),
-    vec3( 1, 0, 1), vec3(-1, 0, 1), vec3( 1, 0,-1), vec3(-1, 0,-1),
-    vec3( 0, 1, 1), vec3( 0,-1, 1), vec3( 0,-1,-1), vec3( 0, 1,-1));
+const float SHADOW_A = SHADOW_FAR / (SHADOW_FAR - SHADOW_NEAR);                  // stored depth = A + B / zf
+const float SHADOW_B = -SHADOW_FAR * SHADOW_NEAR / (SHADOW_FAR - SHADOW_NEAR);
 
-// Distance stored by light `li` in direction `d` (cube face selection from the Vulkan spec)
-float shadowDistance(int li, vec3 d) {
+// returns 1.0 = fully lit by light li, 0.0 = fully in shadow
+float computeShadow(int li, vec3 lPos, vec3 Ng, vec3 L) {
+    float NdotL = clamp(dot(Ng, L), 0.0, 1.0);
+    vec3  d     = (fragPos + Ng * SHADOW_NORMAL_OFFSET * (1.0 - NdotL)) - lPos;
+    float bias  = SHADOW_BIAS * (1.0 + (1.0 - NdotL));
+
+    // cube face selection (Vulkan spec), done ONCE per light
     vec3 a = abs(d);
     int face; float sc; float tc; float ma;
     if (a.x >= a.y && a.x >= a.z) {
@@ -123,24 +131,25 @@ float shadowDistance(int li, vec3 d) {
         ma = a.z;
         if (d.z > 0.0) { face = 4; sc =  d.x; tc = -d.y; } else { face = 5; sc = -d.x; tc = -d.y; }
     }
-    vec2 uv = 0.5 * vec2(sc, tc) / ma + 0.5;
-    return textureLod(shadowMaps, vec3(uv, float(li * 6 + face)), 0.0).r;
-}
 
-// returns 1.0 = fully lit by light li, 0.0 = fully in shadow
-float computeShadow(int li, vec3 lPos, vec3 Ng, vec3 L) {
-    float NdotL  = clamp(dot(Ng, L), 0.0, 1.0);
-    vec3  toFrag = (fragPos + Ng * SHADOW_NORMAL_OFFSET * (1.0 - NdotL)) - lPos;
-    float cur    = length(toFrag);
-    float bias   = SHADOW_BIAS * (1.0 + (1.0 - NdotL));
-    float radius = SHADOW_PCF_RADIUS * cur;
+    // reference depth of this fragment (moved towards the light by the bias)
+    float zf = ma - bias;
+    if (zf >= SHADOW_FAR || zf <= SHADOW_NEAR) return 1.0;     // outside the shadow range: lit
+    float ref = SHADOW_A + SHADOW_B / zf;
 
-    float lit = 0.0;
-    for (int i = 0; i < 20; i++) {
-        float closest = shadowDistance(li, toFrag + shadowSampleDirs[i] * radius);
-        lit += (cur - bias <= closest) ? 1.0 : 0.0;
-    }
-    return lit / 20.0;
+    // texture coordinates on the face (the face is rendered with a guard band, see ShadowMapper)
+    float res   = float(textureSize(shadowMaps, 0).x);
+    float guard = 1.0 - 2.0 * SHADOW_GUARD_TEXELS / res;
+    vec2  uv    = 0.5 * guard * vec2(sc, tc) / ma + 0.5;
+    float layer = float(li * 6 + face);
+    float o     = SHADOW_PCF_TEXELS / res;
+
+    // 4 taps, each a hardware bilinear depth comparison = 16 comparisons
+    float lit = texture(shadowMaps, vec4(uv + vec2(-o, -o), layer, ref))
+              + texture(shadowMaps, vec4(uv + vec2( o, -o), layer, ref))
+              + texture(shadowMaps, vec4(uv + vec2(-o,  o), layer, ref))
+              + texture(shadowMaps, vec4(uv + vec2( o,  o), layer, ref));
+    return lit * 0.25;
 }
 
 vec3 computeLight() {
@@ -173,6 +182,10 @@ vec3 computeLight() {
         vec3 H = normalize(V + L);
 
         float NdotL = max(dot(N, L), 0.0);
+
+        // early-outs: skip all the BRDF + shadow work when the light cannot contribute
+        if (NdotL <= 0.0) continue;                                              // fr == 0 (G term vanishes)
+        if (max(lightCol.r, max(lightCol.g, lightCol.b)) < LIGHT_CUTOFF) continue; // too far / too dim
 
         // ---- Cook-Torrance terms ----------------
         vec3  F = fresnelSchlick(max(dot(V, H), 0.0), F0);

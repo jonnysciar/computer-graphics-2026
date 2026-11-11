@@ -8,8 +8,8 @@
 #include <vector>
 
 struct ShadowMapperParams {
-    uint32_t resolution = 512; // size of each cube face
-    uint32_t lightCount = NUM_LIGHTS;   // number of shadow-casting point lights (1 .. ShadowMapper::MaxLights)
+    uint32_t resolution = 64; // size of each cube face
+    uint32_t lightCount = NUM_LIGHTS;   // number of shadow-casting point lights (1 .. NUM_LIGHTS)
     float nearPlane = CameraController::nearPlane;
     float farPlane = CameraController::farPlane; // must cover everything the lights reach
     std::string vertShader = "shaders/shadow.vert.spv";
@@ -18,12 +18,17 @@ struct ShadowMapperParams {
 
 // Omnidirectional shadows for several point lights.
 //
-// Storage: ONE 2D-array image with 6 layers per light (layer = light * 6 + face, face order
-// +X -X +Y -Y +Z -Z). Each texel holds the world-space distance light -> nearest surface.
-// The scene shader samples it as `sampler2DArray` and selects the cube face itself, so no
+// Storage: ONE depth image (2D array) with 6 layers per light (layer = light * 6 + face, face
+// order +X -X +Y -Y +Z -Z). The scene shader samples it as `sampler2DArrayShadow`: the GPU does
+// the depth comparison and the bilinear PCF, and the shader selects the cube face itself, so no
 // cube-array / dynamic sampler-array device features are needed.
+// Each face is rendered with a slightly wider field of view (a guard band of GuardTexels texels)
+// so that PCF taps near a face edge still read valid data.
 class ShadowMapper {
   public:
+    // Keep in sync with SHADOW_GUARD_TEXELS in scene.frag
+    static constexpr float GuardTexels = 4.0f;
+
     // Return false to exclude an instance from casting shadows
     // (e.g. the lamp mesh that surrounds a light).
     using CasterFilter = std::function<bool(const Instance &)>;
@@ -39,9 +44,10 @@ class ShadowMapper {
         prm = std::move(p);
 
         if (prm.lightCount < 1 || prm.lightCount > NUM_LIGHTS)
-            throw std::runtime_error("ShadowMapper: lightCount must be in [1, MaxLights]");
+            throw std::runtime_error("ShadowMapper: lightCount must be in [1, NUM_LIGHTS]");
         layerCount = prm.lightCount * 6;
 
+        depthFormat = pickDepthFormat(); // also sets linearCompare
         createShadowImages();
         createSampler();
         createRenderPass(); // Starter RenderPass: init only, create() is in pipelinesAndDescriptorSetsInit
@@ -85,7 +91,7 @@ class ShadowMapper {
 
     // ------------------------------------- pipelinesAndDescriptorSetsInit
     void pipelinesAndDescriptorSetsInit() {
-        renderPass.create();        // VkRenderPass + depth buffer (+ framebuffers, replaced below)
+        renderPass.create();        // VkRenderPass (+ placeholder image and framebuffers, replaced below)
         bindLayerFramebuffers();    // one framebuffer per shadow layer
         pipeline.create(&renderPass);
         for (auto &c : casters)
@@ -100,7 +106,8 @@ class ShadowMapper {
             throw std::runtime_error("ShadowMapper: updateUniformBuffer needs one position per light");
 
         ShadowUBO u{};
-        u.params = glm::vec4(prm.nearPlane, prm.farPlane, (float)prm.lightCount, 0.0f);
+        u.params = glm::vec4(prm.nearPlane, prm.farPlane, (float)prm.lightCount,
+                             1.0f - 2.0f * GuardTexels / (float)prm.resolution); // w = guard band scale
         for (uint32_t i = 0; i < prm.lightCount; i++)
             u.lightPos[i] = lightPos[i];
 
@@ -131,9 +138,9 @@ class ShadowMapper {
     }
 
     // Use as the external (fromInstance = false) texture of your TechniqueRef:
-    // it is the `sampler2DArray shadowMaps` binding of the scene DescriptorSet.
+    // it is the `sampler2DArrayShadow shadowMaps` binding of the scene DescriptorSet.
     VkDescriptorImageInfo getViewAndSampler() const {
-        return {sampler, shadowView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+        return {sampler, shadowView, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL};
     }
 
     uint32_t getLightCount() const { return prm.lightCount; }
@@ -141,7 +148,7 @@ class ShadowMapper {
     // ------------------------------------- pipelinesAndDescriptorSetsCleanup
     void pipelinesAndDescriptorSetsCleanup() {
         pipeline.cleanup();
-        renderPass.cleanup(); // framebuffers, depth buffer, VkRenderPass
+        renderPass.cleanup(); // framebuffers, VkRenderPass
         for (auto &c : casters)
             c.ds.cleanup();
     }
@@ -178,12 +185,12 @@ class ShadowMapper {
     ShadowMapperParams prm;
     uint32_t layerCount = 0; // lightCount * 6
 
-    VkImage shadowImage = VK_NULL_HANDLE; // 2D array, layerCount layers
+    VkImage shadowImage = VK_NULL_HANDLE; // depth, 2D array, layerCount layers
     VkDeviceMemory shadowMem = VK_NULL_HANDLE;
     VkImageView shadowView = VK_NULL_HANDLE; // 2D_ARRAY view, sampled by the scene shader
     std::vector<VkImageView> layerViews;     // one 2D view per layer, framebuffer targets
     VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
-    static constexpr VkFormat distFormat = VK_FORMAT_R32_SFLOAT;
+    bool linearCompare = true; // depth format supports linear filtering (hardware PCF)
 
     VkSampler sampler = VK_NULL_HANDLE;
 
@@ -250,66 +257,59 @@ class ShadowMapper {
         return v;
     }
 
+    // depth format that can be both rendered to and sampled
     VkFormat pickDepthFormat() {
+        const VkFormatFeatureFlags need =
+            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT;
         for (VkFormat f : {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}) {
             VkFormatProperties fp;
             vkGetPhysicalDeviceFormatProperties(physDevice, f, &fp);
-            if (fp.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+            if ((fp.optimalTilingFeatures & need) == need) {
+                linearCompare = (fp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) != 0;
                 return f;
+            }
         }
-        throw std::runtime_error("ShadowMapper: no depth format available!");
+        throw std::runtime_error("ShadowMapper: no sampleable depth format available!");
     }
 
     void createShadowImages() {
-        // 6 layers per light, rendered + sampled
-        createImage(layerCount, distFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 0,
-                    shadowImage, shadowMem);
+        // 6 depth layers per light, rendered + sampled
+        createImage(layerCount, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    0, shadowImage, shadowMem);
         shadowView =
-            createView(shadowImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 0, layerCount);
+            createView(shadowImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 0, layerCount);
         layerViews.resize(layerCount);
         for (uint32_t i = 0; i < layerCount; i++)
-            layerViews[i] =
-                createView(shadowImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
-        // the depth buffer is created and owned by Starter's RenderPass (see createRenderPass)
+            layerViews[i] = createView(shadowImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
     }
 
-    // Describes the pass to Starter's RenderPass (attachments, clear values, dependencies).
-    // The depth buffer and the VkRenderPass are created later by renderPass.create().
+    // Describes the pass to Starter's RenderPass: a depth-only pass (no colour attachment).
+    // The VkRenderPass is created later by renderPass.create().
     void createRenderPass() {
-        depthFormat = pickDepthFormat();
-
         std::vector<AttachmentProperties> att = {
-            // 0: world-space distance light -> surface (final layout: ready to be sampled)
-            {COLOR_AT, distFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-             VK_IMAGE_ASPECT_COLOR_BIT, false, false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR,
+            // 0: depth, stored and left ready to be sampled
+            {DEPTH_AT, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+             VK_IMAGE_ASPECT_DEPTH_BIT, false, false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR,
              VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
-             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
-            // 1: depth, shared by all the sequential layer passes
-            {DEPTH_AT, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT, false,
-             false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
-             VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
-             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
-        att[0].clearValue.color = {{1.0e30f, 0.0f, 0.0f, 0.0f}}; // "nothing hit" = very far
-        att[1].clearValue.depthStencil = {1.0f, 0};
+             VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
+        att[0].clearValue.depthStencil = {1.0f, 0};
 
         std::vector<VkSubpassDependency> dep(2);
         // previous frame's sampling / previous layer's writes must finish before we overwrite
         dep[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         dep[0].dstSubpass = 0;
         dep[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                              VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dep[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT |
-                               VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dep[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-                              VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dep[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
-                               VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                              VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dep[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dep[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dep[0].dstAccessMask =
+            VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         // shadow writes must be visible to the main pass fragment shader
         dep[1].srcSubpass = 0;
         dep[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dep[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dep[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dep[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        dep[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         dep[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         dep[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -317,9 +317,9 @@ class ShadowMapper {
         renderPass.init(BP, (int)prm.resolution, (int)prm.resolution, (int)layerCount, &att, &dep);
     }
 
-    // RenderPass::create() builds its `count` framebuffers on its own 2D attachments, which
+    // RenderPass::create() builds its `count` framebuffers on its own 2D attachment, which
     // cannot target the layers of the shadow image. Replace them with one framebuffer per
-    // layer (sharing the RenderPass depth buffer) and release the placeholder colour image.
+    // layer and release the placeholder depth image RenderPass allocated.
     void bindLayerFramebuffers() {
         for (auto fb : renderPass.frameBuffers)
             vkDestroyFramebuffer(device, fb, nullptr);
@@ -334,12 +334,11 @@ class ShadowMapper {
         placeholder.mem = VK_NULL_HANDLE;
 
         for (uint32_t f = 0; f < layerCount; f++) {
-            VkImageView views[2] = {layerViews[f], renderPass.attachments[1].view};
             VkFramebufferCreateInfo fi{};
             fi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             fi.renderPass = renderPass.renderPass;
-            fi.attachmentCount = 2;
-            fi.pAttachments = views;
+            fi.attachmentCount = 1;
+            fi.pAttachments = &layerViews[f];
             fi.width = fi.height = prm.resolution;
             fi.layers = 1;
             VkResult r = vkCreateFramebuffer(device, &fi, nullptr, &renderPass.frameBuffers[f]);
@@ -351,16 +350,16 @@ class ShadowMapper {
     }
 
     void createSampler() {
-        // R32_SFLOAT is not guaranteed to support linear filtering -> NEAREST;
-        // smoothing is done by PCF in the scene fragment shader.
+        // hardware depth comparison: one tap returns the (bilinear) fraction of lit texels
         VkSamplerCreateInfo si{};
         si.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        si.magFilter = si.minFilter = VK_FILTER_NEAREST;
+        si.magFilter = si.minFilter = linearCompare ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
         si.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
         si.addressModeU = si.addressModeV = si.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         si.anisotropyEnable = VK_FALSE;
         si.maxAnisotropy = 1.0f;
-        si.compareEnable = VK_FALSE;
+        si.compareEnable = VK_TRUE;
+        si.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL; // lit when ref <= stored depth
         si.minLod = 0.0f;
         si.maxLod = 0.0f;
         si.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
