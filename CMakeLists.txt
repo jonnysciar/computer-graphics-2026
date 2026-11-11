@@ -16,7 +16,9 @@ file(GLOB_RECURSE HDRS "${CMAKE_SOURCE_DIR}/include/*.hpp")
 add_executable(${NAME} ${HDRS} ${SRCS}
         include/Door.hpp
         include/Door.hpp
-        include/Door.hpp)
+        include/Door.hpp
+        src/Scene/Room6Handler.cpp
+        include/Scene/Room6Handler.hpp)
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 # Starter

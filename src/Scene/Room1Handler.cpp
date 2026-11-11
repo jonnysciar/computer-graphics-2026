@@ -23,7 +23,7 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : S
                     gs.door_1_2.setIsOpen(true);
                 }
             }
-        }}}        ,
+        }}},
         {"door_1_4", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
             if (!gs.door_1_4.getIsLocked()) {
                 if (gs.door_1_4.getIsOpen()) {
@@ -56,7 +56,12 @@ void Room1Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
     if (!interMap.contains(id))
         return;
 
-    hudManager->setPrompt("Press E to pick up");
+    if (id == "door_1_2" || id == "door_1_4" || id == "door_1_5") {
+        hudManager->setPrompt("Press E to open/close");
+    }
+    else {
+        hudManager->setPrompt("Press E to pick up");
+    }
 }
 
 void Room1Handler::offInteractionReach(std::string_view id, GameStatus &gs) {
