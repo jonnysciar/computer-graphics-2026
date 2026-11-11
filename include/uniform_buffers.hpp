@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#define NUM_LIGHTS 1
+
 // The uniform buffer object used in this example
 struct UniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
@@ -10,17 +12,15 @@ struct UniformBufferObject {
 };
 
 struct GlobalUniformBufferObject {
-    alignas(16) glm::vec4 lightColor;
-    alignas(16) glm::vec3 lightParams;
-    alignas(16) glm::vec3 lightPos;
+    alignas(16) glm::vec4 lightColor[NUM_LIGHTS];
+    alignas(16) glm::vec4 lightPos[NUM_LIGHTS];
     alignas(16) glm::vec3 playerPos;
 };
 
-// std140-compatible: matches ShadowUBO in ShadowVert/ShadowFrag
 struct ShadowUBO {
-    alignas(16) glm::mat4 faceVP[6];
-    alignas(16) glm::vec4 lightPosFar; // xyz = light position, w = far plane
-    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 model;                    // caster world matrix
+    alignas(16) glm::vec4 params;                   // x = near, y = far, z = light count
+    alignas(16) glm::vec4 lightPos[NUM_LIGHTS];
 };
 
 struct Vertex {

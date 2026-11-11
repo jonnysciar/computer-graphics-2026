@@ -202,9 +202,30 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
     GlobalUniformBufferObject gubo{};
 
     // defines the global parameters for the uniform
-    gubo.lightColor = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-    gubo.lightParams = glm::vec3(2.0, 2.0, 0.0);
-    gubo.lightPos = glm::vec3(0.0f, 2.5f, 4.0f);
+    gubo.lightColor[0] = glm::vec4(1.0f, 0.5f, 0.5f, 5.0f);
+    gubo.lightPos[0] = glm::vec4(4.0f, 2.5f, 4.5f, gameStatus.player.isShadow ? 1.0f : 0.0f);
+
+    /*gubo.lightColor[1] = glm::vec4(1.0f, 0.5f, 0.5f, 10.0f);
+    gubo.lightPos[1] = glm::vec4(1.5f, 2.5f, 7.0f, 1.0f);
+
+    gubo.lightColor[2] = glm::vec4(1.0f, 0.5f, 0.5f, 10.0f);
+    gubo.lightPos[2] = glm::vec4(7.0f, 2.5f, 7.0f, 1.0f);
+
+    gubo.lightColor[3] = glm::vec4(1.0f, 0.5f, 0.5f, 10.0f);
+    gubo.lightPos[3] = glm::vec4(10.5f, 10.5f, 10.5f, 1.0f);*/
+
+    /*gubo.lightColor[4] = glm::vec4(1.0f, 0.0f, 0.0f, 10.0f);
+    gubo.lightPos[4] = glm::vec4(f, 2.5f, 1.5f, 1.0f);
+
+    gubo.lightColor[5] = glm::vec4(0.0f, 0.0f, 1.0f, 10.0f);
+    gubo.lightPos[5] = glm::vec4(6.0f, 2.5f, 4.5f, 1.0f);
+
+    gubo.lightColor[6] = glm::vec4(1.0f, 0.0f, 0.0f, 10.0f);
+    gubo.lightPos[6] = glm::vec4(7.0f, 2.5f, 1.5f, 1.0f);
+
+    gubo.lightColor[7] = glm::vec4(0.0f, 0.0f, 1.0f, 10.0f);
+    gubo.lightPos[7] = glm::vec4(6.0f, 2.5f, 4.5f, 1.0f);*/
+
     gubo.playerPos = gameStatus.player.pos;
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
@@ -217,7 +238,7 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
     }
 
     for (auto &sm : smMap | std::views::values) {
-        sm.updateUniformBuffer(currentImage, gubo.lightPos);
+        sm.updateUniformBuffer(currentImage, {gubo.lightPos[0]});
     }
 
     // updates the view-projection matrix used to draw the colliders' wireframes

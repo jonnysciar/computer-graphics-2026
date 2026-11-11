@@ -4,19 +4,28 @@
 #include "uniform_buffers.hpp"
 
 #include <functional>
+#include <stdexcept>
+#include <vector>
 
 struct ShadowMapperParams {
     uint32_t resolution = 512; // size of each cube face
+    uint32_t lightCount = NUM_LIGHTS;   // number of shadow-casting point lights (1 .. ShadowMapper::MaxLights)
     float nearPlane = CameraController::nearPlane;
-    float farPlane = CameraController::farPlane; // must cover everything the light reaches
+    float farPlane = CameraController::farPlane; // must cover everything the lights reach
     std::string vertShader = "shaders/shadow.vert.spv";
     std::string fragShader = "shaders/shadow.frag.spv";
 };
 
+// Omnidirectional shadows for several point lights.
+//
+// Storage: ONE 2D-array image with 6 layers per light (layer = light * 6 + face, face order
+// +X -X +Y -Y +Z -Z). Each texel holds the world-space distance light -> nearest surface.
+// The scene shader samples it as `sampler2DArray` and selects the cube face itself, so no
+// cube-array / dynamic sampler-array device features are needed.
 class ShadowMapper {
   public:
     // Return false to exclude an instance from casting shadows
-    // (e.g. the lamp mesh that surrounds the light).
+    // (e.g. the lamp mesh that surrounds a light).
     using CasterFilter = std::function<bool(const Instance &)>;
 
     ShadowMapper() = default;
@@ -29,18 +38,21 @@ class ShadowMapper {
         VD = vd;
         prm = std::move(p);
 
+        if (prm.lightCount < 1 || prm.lightCount > NUM_LIGHTS)
+            throw std::runtime_error("ShadowMapper: lightCount must be in [1, MaxLights]");
+        layerCount = prm.lightCount * 6;
+
         createShadowImages();
         createSampler();
         createRenderPass(); // Starter RenderPass: init only, create() is in pipelinesAndDescriptorSetsInit
 
-        DSLshadow.init(
-            BP, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                  static_cast<int>(sizeof(ShadowUBO)), 1}});
+        DSLshadow.init(BP, {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT,
+                             static_cast<int>(sizeof(ShadowUBO)), 1}});
 
         VkPushConstantRange pk{};
         pk.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pk.offset = 0;
-        pk.size = sizeof(uint32_t); // cube face index
+        pk.size = sizeof(uint32_t); // layer = light * 6 + face
 
         pipeline.init(BP, VD, prm.vertShader, prm.fragShader, {&DSLshadow}, {pk});
         pipeline.setCullMode(VK_CULL_MODE_NONE); // robust against the cube-map winding flip
@@ -66,28 +78,31 @@ class ShadowMapper {
                 casters.back().model = m;
             }
         }
-        BP->DPSZs.uniformBlocksInPool += 1 + (int)casters.size();
-        BP->DPSZs.setsInPool += 1 + (int)casters.size();
-        std::cout << "ShadowMapper: " << casters.size() << " shadow casters\n";
+        BP->DPSZs.uniformBlocksInPool += (int)casters.size();
+        BP->DPSZs.setsInPool += (int)casters.size();
+        std::cout << "ShadowMapper: " << casters.size() << " shadow casters, " << prm.lightCount << " lights\n";
     }
 
     // ------------------------------------- pipelinesAndDescriptorSetsInit
     void pipelinesAndDescriptorSetsInit() {
-        renderPass.create();         // VkRenderPass + depth buffer (+ 6 framebuffers, replaced below)
-        bindCubeFaceFramebuffers();  // one framebuffer per cube face
+        renderPass.create();        // VkRenderPass + depth buffer (+ framebuffers, replaced below)
+        bindLayerFramebuffers();    // one framebuffer per shadow layer
         pipeline.create(&renderPass);
         for (auto &c : casters)
             c.ds.init(BP, &DSLshadow, {});
     }
 
     // ------------------------------------------------ updateUniformBuffer
-    // Call every frame with the light position (world space): the same value
-    // you put in gubo.lightPos.
-    void updateUniformBuffer(int currentImage, const glm::vec3 &lightPos) {
+    // Call every frame with the world-space position of every shadow-casting light, in the
+    // same order as the lights in your GUBO (light i here = shadow layers 6i..6i+5).
+    void updateUniformBuffer(int currentImage, const std::vector<glm::vec4> &lightPos) {
+        if (lightPos.size() != prm.lightCount)
+            throw std::runtime_error("ShadowMapper: updateUniformBuffer needs one position per light");
+
         ShadowUBO u{};
-        for (int f = 0; f < 6; f++)
-            u.faceVP[f] = faceViewProj(f, lightPos, prm.nearPlane, prm.farPlane);
-        u.lightPosFar = glm::vec4(lightPos, prm.farPlane);
+        u.params = glm::vec4(prm.nearPlane, prm.farPlane, (float)prm.lightCount, 0.0f);
+        for (uint32_t i = 0; i < prm.lightCount; i++)
+            u.lightPos[i] = lightPos[i];
 
         // current world matrix of every caster (Instance::Wm)
         for (auto &c : casters) {
@@ -100,11 +115,11 @@ class ShadowMapper {
     // Record the shadow pass. Call BEFORE RP.begin(...) of your main pass,
     // inside the same command buffer (or in a command buffer with a lower order).
     void populateCommandBuffer(VkCommandBuffer cb, int currentImage) {
-        for (uint32_t face = 0; face < 6; face++) {
-            renderPass.begin(cb, face); // framebuffer #face renders into cube face #face
+        for (uint32_t layer = 0; layer < layerCount; layer++) {
+            renderPass.begin(cb, layer); // framebuffer #layer renders into shadow layer #layer
 
             pipeline.bind(cb);
-            vkCmdPushConstants(cb, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &face);
+            vkCmdPushConstants(cb, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &layer);
             for (auto &c : casters) {
                 c.ds.bind(cb, pipeline, 0, currentImage);
                 c.model->bind(cb);
@@ -116,10 +131,12 @@ class ShadowMapper {
     }
 
     // Use as the external (fromInstance = false) texture of your TechniqueRef:
-    // it is the samplerCube binding of the scene DescriptorSet.
+    // it is the `sampler2DArray shadowMaps` binding of the scene DescriptorSet.
     VkDescriptorImageInfo getViewAndSampler() const {
-        return {sampler, cubeView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+        return {sampler, shadowView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
     }
+
+    uint32_t getLightCount() const { return prm.lightCount; }
 
     // ------------------------------------- pipelinesAndDescriptorSetsCleanup
     void pipelinesAndDescriptorSetsCleanup() {
@@ -137,18 +154,19 @@ class ShadowMapper {
 
         vkDestroySampler(device, sampler, nullptr);
 
-        for (auto v : faceViews)
+        for (auto v : layerViews)
             vkDestroyImageView(device, v, nullptr);
-        vkDestroyImageView(device, cubeView, nullptr);
-        vkDestroyImage(device, cubeImage, nullptr);
-        vkFreeMemory(device, cubeMem, nullptr);
+        vkDestroyImageView(device, shadowView, nullptr);
+        vkDestroyImage(device, shadowImage, nullptr);
+        vkFreeMemory(device, shadowMem, nullptr);
     }
 
   private:
+
     struct Caster {
         Instance *inst = nullptr;
         Model *model = nullptr;
-        DescriptorSet ds; // set 1: model matrix, one UBO per swap-chain image
+        DescriptorSet ds; // model matrix + light data, one UBO per swap-chain image
     };
     Scene *scene = nullptr;
     std::vector<Caster> casters;
@@ -158,11 +176,12 @@ class ShadowMapper {
     VkPhysicalDevice physDevice = VK_NULL_HANDLE;
     VertexDescriptor *VD = nullptr;
     ShadowMapperParams prm;
+    uint32_t layerCount = 0; // lightCount * 6
 
-    VkImage cubeImage = VK_NULL_HANDLE;
-    VkDeviceMemory cubeMem = VK_NULL_HANDLE;
-    VkImageView cubeView = VK_NULL_HANDLE;
-    VkImageView faceViews[6] = {};
+    VkImage shadowImage = VK_NULL_HANDLE; // 2D array, layerCount layers
+    VkDeviceMemory shadowMem = VK_NULL_HANDLE;
+    VkImageView shadowView = VK_NULL_HANDLE; // 2D_ARRAY view, sampled by the scene shader
+    std::vector<VkImageView> layerViews;     // one 2D view per layer, framebuffer targets
     VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
     static constexpr VkFormat distFormat = VK_FORMAT_R32_SFLOAT;
 
@@ -171,39 +190,6 @@ class ShadowMapper {
     DescriptorSetLayout DSLshadow;
     Pipeline pipeline;
     RenderPass renderPass{};
-
-    // ---- cube face matrices ------------------------------------------------
-    // Built directly from the Vulkan cube-map face selection table, so that
-    // texture(samplerCube, dir) in the scene shader hits the right texel.
-    // Clip space is Vulkan's (y down, depth 0..1): no extra projection flip.
-    static glm::mat4 faceViewProj(int f, const glm::vec3 &L, float n, float fa) {
-        static const glm::vec3 R[6] = {{0, 0, -1}, {0, 0, 1}, {1, 0, 0}, {1, 0, 0}, {1, 0, 0}, {-1, 0, 0}};    // sc
-        static const glm::vec3 U[6] = {{0, -1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}, {0, -1, 0}, {0, -1, 0}}; // tc
-        static const glm::vec3 F[6] = {{1, 0, 0},  {-1, 0, 0}, {0, 1, 0},
-                                       {0, -1, 0}, {0, 0, 1},  {0, 0, -1}}; // major axis
-
-        glm::mat4 V(1.0f);
-        V[0][0] = R[f].x;
-        V[1][0] = R[f].y;
-        V[2][0] = R[f].z;
-        V[3][0] = -glm::dot(R[f], L);
-        V[0][1] = U[f].x;
-        V[1][1] = U[f].y;
-        V[2][1] = U[f].z;
-        V[3][1] = -glm::dot(U[f], L);
-        V[0][2] = F[f].x;
-        V[1][2] = F[f].y;
-        V[2][2] = F[f].z;
-        V[3][2] = -glm::dot(F[f], L);
-
-        glm::mat4 Pm(0.0f); // 90 deg fov, aspect 1, depth 0..1
-        Pm[0][0] = 1.0f;
-        Pm[1][1] = 1.0f;
-        Pm[2][2] = fa / (fa - n);
-        Pm[3][2] = -fa * n / (fa - n);
-        Pm[2][3] = 1.0f; // w = forward distance
-        return Pm * V;
-    }
 
     // ---- Vulkan helpers (BaseProject's are protected) -----------------------
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags props) {
@@ -275,12 +261,15 @@ class ShadowMapper {
     }
 
     void createShadowImages() {
-        // cube of distances: 6 layers, cube-compatible, rendered + sampled
-        createImage(6, distFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                    VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, cubeImage, cubeMem);
-        cubeView = createView(cubeImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_CUBE, 0, 6);
-        for (uint32_t i = 0; i < 6; i++)
-            faceViews[i] = createView(cubeImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
+        // 6 layers per light, rendered + sampled
+        createImage(layerCount, distFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 0,
+                    shadowImage, shadowMem);
+        shadowView =
+            createView(shadowImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D_ARRAY, 0, layerCount);
+        layerViews.resize(layerCount);
+        for (uint32_t i = 0; i < layerCount; i++)
+            layerViews[i] =
+                createView(shadowImage, distFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D, i, 1);
         // the depth buffer is created and owned by Starter's RenderPass (see createRenderPass)
     }
 
@@ -296,7 +285,7 @@ class ShadowMapper {
              VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
              VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
              VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
-            // 1: depth, shared by the 6 sequential face passes
+            // 1: depth, shared by all the sequential layer passes
             {DEPTH_AT, depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT, false,
              false, {}, VK_SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
              VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED,
@@ -305,7 +294,7 @@ class ShadowMapper {
         att[1].clearValue.depthStencil = {1.0f, 0};
 
         std::vector<VkSubpassDependency> dep(2);
-        // previous frame's sampling / previous face's writes must finish before we overwrite
+        // previous frame's sampling / previous layer's writes must finish before we overwrite
         dep[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         dep[0].dstSubpass = 0;
         dep[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
@@ -324,14 +313,14 @@ class ShadowMapper {
         dep[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         dep[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-        // count = 6: one framebuffer per cube face, selected with renderPass.begin(cb, face)
-        renderPass.init(BP, (int)prm.resolution, (int)prm.resolution, 6, &att, &dep);
+        // count = layerCount: one framebuffer per layer, selected with renderPass.begin(cb, layer)
+        renderPass.init(BP, (int)prm.resolution, (int)prm.resolution, (int)layerCount, &att, &dep);
     }
 
     // RenderPass::create() builds its `count` framebuffers on its own 2D attachments, which
-    // cannot target the layers of the cube image. Replace them with one framebuffer per cube
-    // face (sharing the RenderPass depth buffer) and release the placeholder colour image.
-    void bindCubeFaceFramebuffers() {
+    // cannot target the layers of the shadow image. Replace them with one framebuffer per
+    // layer (sharing the RenderPass depth buffer) and release the placeholder colour image.
+    void bindLayerFramebuffers() {
         for (auto fb : renderPass.frameBuffers)
             vkDestroyFramebuffer(device, fb, nullptr);
 
@@ -344,8 +333,8 @@ class ShadowMapper {
         placeholder.image = VK_NULL_HANDLE;
         placeholder.mem = VK_NULL_HANDLE;
 
-        for (int f = 0; f < 6; f++) {
-            VkImageView views[2] = {faceViews[f], renderPass.attachments[1].view};
+        for (uint32_t f = 0; f < layerCount; f++) {
+            VkImageView views[2] = {layerViews[f], renderPass.attachments[1].view};
             VkFramebufferCreateInfo fi{};
             fi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             fi.renderPass = renderPass.renderPass;

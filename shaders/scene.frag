@@ -14,10 +14,16 @@ layout(location = 0) out vec4 outColor;
 // ------------------------------------------------------------
 //  UNIFORMS
 // ------------------------------------------------------------
+#define NUM_LIGHTS 1        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
+
+// EXAMPLE multi-light layout: adapt to your own GUBO. std140, so in C++:
+//   alignas(16) glm::vec4 lightColor[NUM_LIGHTS];
+//   alignas(16) glm::vec4 lightPos[NUM_LIGHTS];
+//   alignas(16) glm::vec3 lightParams;
+//   alignas(16) glm::vec3 playerPos;
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
-    vec4 lightColor;
-    vec3 lightParams;
-    vec3 lightPos;
+    vec4 lightColor[NUM_LIGHTS];   // rgb = colour of light i, a = intensity of light
+    vec4 lightPos[NUM_LIGHTS];     // xyz = world position of light i
     vec3 playerPos;
 } gubo;
 
@@ -26,22 +32,23 @@ layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
 // ------------------------------------------------------------
 layout(binding = 2, set = 0) uniform sampler2D textureMap[5];
 
-// Omnidirectional shadow map: world-space distance light -> nearest occluder
-layout(binding = 3, set = 0) uniform samplerCube shadowMap;
+// Omnidirectional shadow maps of all the lights: 6 layers per light (+X -X +Y -Y +Z -Z),
+// each texel = world-space distance light -> nearest occluder
+layout(binding = 3, set = 0) uniform sampler2DArray shadowMaps;
 
 
 const float PI = 3.14159265359;
 
-vec3 pointLightColor(vec3 lPos, vec3 fragPosition, out vec3 L) {
-    vec3  toLight = lPos - fragPosition;
+vec3 pointLightColor(int light_i, vec3 fragPosition, out vec3 L) {
+    vec3  toLight = gubo.lightPos[light_i].xyz - fragPosition;
     float dist    = max(length(toLight), 0.0001);
     L = toLight / dist;
 
-    float g    = gubo.lightParams.x;
-    float beta = gubo.lightParams.y;
+    float g    = gubo.lightColor[light_i].a;
+    float beta = 2.0;
 
     float decay = pow(g / dist, beta);
-    return gubo.lightColor.rgb * decay;
+    return gubo.lightColor[light_i].rgb * decay;
 }
 
 mat3 computeTBN(vec3 N, vec3 T, float tangentW) {
@@ -89,11 +96,11 @@ vec3 computeF0(vec3 albedo, float metallic) {
 }
 
 // ------------------------------------------------------------
-//  OMNIDIRECTIONAL SHADOW (PCF)   -- tune these to your scene scale
+//  OMNIDIRECTIONAL SHADOWS (PCF)   -- tune these to your scene scale
 // ------------------------------------------------------------
 const float SHADOW_BIAS          = 0.05;   // world units
 const float SHADOW_NORMAL_OFFSET = 0.05;   // world units, applied at grazing angles
-const float SHADOW_PCF_RADIUS    = 0.02;   // fraction of light-fragment distance
+const float SHADOW_PCF_RADIUS    = 0.02;   // fraction of the light-fragment distance
 
 const vec3 shadowSampleDirs[20] = vec3[](
     vec3( 1, 1, 1), vec3( 1,-1, 1), vec3(-1,-1, 1), vec3(-1, 1, 1),
@@ -102,23 +109,41 @@ const vec3 shadowSampleDirs[20] = vec3[](
     vec3( 1, 0, 1), vec3(-1, 0, 1), vec3( 1, 0,-1), vec3(-1, 0,-1),
     vec3( 0, 1, 1), vec3( 0,-1, 1), vec3( 0,-1,-1), vec3( 0, 1,-1));
 
-// returns 1.0 = fully lit, 0.0 = fully in shadow
-float computeShadow(vec3 Ng, vec3 L) {
+// Distance stored by light `li` in direction `d` (cube face selection from the Vulkan spec)
+float shadowDistance(int li, vec3 d) {
+    vec3 a = abs(d);
+    int face; float sc; float tc; float ma;
+    if (a.x >= a.y && a.x >= a.z) {
+        ma = a.x;
+        if (d.x > 0.0) { face = 0; sc = -d.z; tc = -d.y; } else { face = 1; sc =  d.z; tc = -d.y; }
+    } else if (a.y >= a.z) {
+        ma = a.y;
+        if (d.y > 0.0) { face = 2; sc =  d.x; tc =  d.z; } else { face = 3; sc =  d.x; tc = -d.z; }
+    } else {
+        ma = a.z;
+        if (d.z > 0.0) { face = 4; sc =  d.x; tc = -d.y; } else { face = 5; sc = -d.x; tc = -d.y; }
+    }
+    vec2 uv = 0.5 * vec2(sc, tc) / ma + 0.5;
+    return textureLod(shadowMaps, vec3(uv, float(li * 6 + face)), 0.0).r;
+}
+
+// returns 1.0 = fully lit by light li, 0.0 = fully in shadow
+float computeShadow(int li, vec3 lPos, vec3 Ng, vec3 L) {
     float NdotL  = clamp(dot(Ng, L), 0.0, 1.0);
-    vec3  toFrag = (fragPos + Ng * SHADOW_NORMAL_OFFSET * (1.0 - NdotL)) - gubo.lightPos;
+    vec3  toFrag = (fragPos + Ng * SHADOW_NORMAL_OFFSET * (1.0 - NdotL)) - lPos;
     float cur    = length(toFrag);
     float bias   = SHADOW_BIAS * (1.0 + (1.0 - NdotL));
     float radius = SHADOW_PCF_RADIUS * cur;
 
     float lit = 0.0;
     for (int i = 0; i < 20; i++) {
-        float closest = texture(shadowMap, toFrag + shadowSampleDirs[i] * radius).r;
+        float closest = shadowDistance(li, toFrag + shadowSampleDirs[i] * radius);
         lit += (cur - bias <= closest) ? 1.0 : 0.0;
     }
     return lit / 20.0;
 }
 
-vec3 computeLight(vec3 lPos) {
+vec3 computeLight() {
     // ---- Sample PBR textures -----------------------------------
     //  Albedo: textures are stored in sRGB, but all PBR
     //  math must be performed in linear space. Convert with:
@@ -133,33 +158,41 @@ vec3 computeLight(vec3 lPos) {
     vec3 N = normalize(computeNormalMap(TBN));
 
     // ---- Geometry setup ---------------------
-    vec3 V = normalize(gubo.playerPos - fragPos);
-    vec3 L;
-    vec3 lightCol = pointLightColor(lPos, fragPos, L);      // fills L, returns attenuated color
-    vec3 H = normalize(V + L);
-
+    vec3 V  = normalize(gubo.playerPos - fragPos);
+    vec3 Ng = normalize(fragNorm);                      // geometric normal, used for shadows
     float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
 
-    // ---- Cook-Torrance terms ----------------
-    vec3  F0 = computeF0(albedo, metallic);
-    vec3  F  = fresnelSchlick(max(dot(V, H), 0.0), F0);
-    float D  = DistributionGGX(N, H, roughness);
-    float G  = GeometrySmith(N, V, L, roughness);
+    vec3 F0 = computeF0(albedo, metallic);
 
-    vec3 f_diffuse  = albedo * NdotL;
-    vec3 f_specular = (D * G * F) / max(4.0 * NdotV, 0.001);
+    // ---- Sum of the contributions of all the lights ------------
+    vec3 direct = vec3(0.0);
+    for (int i = 0; i < NUM_LIGHTS; i++) {
+        vec3 lPos = gubo.lightPos[i].xyz;
+        vec3 L;
+        vec3 lightCol = pointLightColor(i, fragPos, L);  // fills L
+        vec3 H = normalize(V + L);
 
-    vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);   // energy conservation; metals have no diffuse
-    vec3 fr = kD * f_diffuse + f_specular;
+        float NdotL = max(dot(N, L), 0.0);
 
-    //vec3 direct = gubo.lightColor.rgb * fr;
-    float visibility = computeShadow(normalize(fragNorm), L);
-    vec3 direct = lightCol * fr * visibility;
+        // ---- Cook-Torrance terms ----------------
+        vec3  F = fresnelSchlick(max(dot(V, H), 0.0), F0);
+        float D = DistributionGGX(N, H, roughness);
+        float G = GeometrySmith(N, V, L, roughness);
 
-    vec3 ambient = vec3(0.02) * albedo * ao * lightCol;
+        vec3 f_diffuse  = albedo * NdotL;
+        vec3 f_specular = (D * G * F) / max(4.0 * NdotV, 0.001);
 
-    vec3 color = direct + ambient;
+        vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);   // energy conservation; metals have no diffuse
+        vec3 fr = kD * f_diffuse + f_specular;
+
+        float visibility = 1.0;
+        if (gubo.lightPos[0].w > 0.0) {
+            visibility = computeShadow(i, lPos, Ng, L);
+        }
+        direct += lightCol * fr * visibility;
+    }
+
+    vec3 color = direct + vec3(0.001) * ao * albedo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
     return color;
@@ -169,5 +202,5 @@ vec3 computeLight(vec3 lPos) {
 //  MAIN
 // ============================================================
 void main() {
-    outColor = vec4(computeLight(gubo.lightPos), 1.0);
+    outColor = vec4(computeLight(), 1.0);
 }
