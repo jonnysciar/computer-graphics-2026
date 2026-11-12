@@ -1543,6 +1543,19 @@
             "wooden-panels-roughness",
             "wooden-panels-ao"
           ]
+        },
+        {
+          "id": "table_1",
+          "solid": true,
+          "model": "table",
+          "translate": [0.0, 2.403, 0.0],
+          "texture": [
+            "table-albedo",
+            "table-normal",
+            "table-metallic",
+            "table-roughness",
+            "table-ao"
+          ]
         }
       ]
     },
@@ -1559,7 +1572,7 @@
           "id": "torch_1_1",
           "solid": false,
           "model": "cube",
-          "translate": [-15.0, 4.5, 4.0],
+          "translate": [-0.55, 7.0, 15.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
@@ -1567,7 +1580,7 @@
           "id": "torch_1_2",
           "solid": false,
           "model": "cube",
-          "translate": [-15.0, 4.5, -4.0],
+          "translate": [15.0, 7.0, 0.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
@@ -1575,7 +1588,7 @@
           "id": "torch_1_3",
           "solid": false,
           "model": "cube",
-          "translate": [-4.0, 4.5, -15.0],
+          "translate": [0.0, 7.0, -15.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
@@ -1583,39 +1596,119 @@
           "id": "torch_1_4",
           "solid": false,
           "model": "cube",
-          "translate": [4.0, 4.5, -15.0],
+          "translate": [-15.0, 7.0, 0.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
         {
-          "id": "torch_1_5",
+          "id": "torch_2_1",
           "solid": false,
           "model": "cube",
-          "translate": [15.0, 4.5, -4.0],
+          "translate": [39.13, 4.5, -3.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
         {
-          "id": "torch_1_6",
+          "id": "torch_2_2",
           "solid": false,
           "model": "cube",
-          "translate": [15.0, 4.5, 4.0],
+          "translate": [26.23, 4.5, -3.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
         {
-          "id": "torch_1_7",
+          "id": "torch_2_3",
           "solid": false,
           "model": "cube",
-          "translate": [-5.33, 4.5, 15.0],
+          "translate": [25.74, 4.5, 3.0],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         },
         {
-          "id": "torch_1_8",
+          "id": "torch_2_4",
           "solid": false,
           "model": "cube",
-          "translate": [5.33, 4.5, 15.0],
+          "translate": [38.48, 4.5, 3.0],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_3_1",
+          "solid": false,
+          "model": "cube",
+          "translate": [56.39, 4.5, -7.0],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_3_2",
+          "solid": false,
+          "model": "cube",
+          "translate": [55.42, 4.5, 7.0],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_4_1",
+          "solid": false,
+          "model": "cube",
+          "translate": [-24.42, 4.5, 7.0],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_4_2",
+          "solid": false,
+          "model": "cube",
+          "translate": [-25.06, 4.5, -7.0],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_5_1",
+          "solid": false,
+          "model": "cube",
+          "translate": [-7.0, 4.5, -23.52],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_5_2",
+          "solid": false,
+          "model": "cube",
+          "translate": [7.0, 4.5, -23.68],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_6_1",
+          "solid": false,
+          "model": "cube",
+          "translate": [0.26, 4.5, -39.0],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_7_1",
+          "solid": false,
+          "model": "cube",
+          "translate": [-27.32, 4.5, -34.5],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_7_2",
+          "solid": false,
+          "model": "cube",
+          "translate": [-12.32, 4.5, -34.5],
+          "scale": [0.15, 0.15, 0.15],
+          "texture": ["clay-albedo"]
+        },
+        {
+          "id": "torch_7_3",
+          "solid": false,
+          "model": "cube",
+          "translate": [-19.9, 4.5, -37.5],
           "scale": [0.15, 0.15, 0.15],
           "texture": ["clay-albedo"]
         }

@@ -52,7 +52,7 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                           }}}};
 
     for (auto &torch : gs.torches) {
-        if (torch.room != 1)
+        if (torch.room != 1 || !torch.interactable)
             continue;
         interMap.insert(
             {torch.id, Interactable{.instance = nullptr,

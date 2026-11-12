@@ -12,6 +12,7 @@ struct Torch {
     float beta;
     bool on;
     int room;
+    bool interactable;
 };
 
 class GameStatus {
@@ -44,7 +45,8 @@ class GameStatus {
                                     .g = l.value("g", 10.0f),
                                     .beta = l.value("beta", 2.0f),
                                     .on = l.value("on", true),
-                                    .room = l.value("room", 0)});
+                                    .room = l.value("room", 0),
+                                    .interactable = l.value("interactable", true)});
         }
     }
 };

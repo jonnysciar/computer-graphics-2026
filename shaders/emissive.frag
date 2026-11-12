@@ -8,7 +8,7 @@ layout(location = 3) in vec4 fragTan;
 
 layout(location = 0) out vec4 outColor;
 
-#define NUM_LIGHTS 8
+#define NUM_LIGHTS 18
 
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 lightColor[NUM_LIGHTS];   // rgb = colour of light i

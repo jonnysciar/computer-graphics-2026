@@ -3,9 +3,9 @@
     {
       "id": "torch_1_1",
       "position": [
-        -15.0,
-        4.5,
-        4.0
+        -0.55,
+        7.0,
+        15.0
       ],
       "color": [
         1.0,
@@ -15,14 +15,15 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 1,
+      "interactable": false
     },
     {
       "id": "torch_1_2",
       "position": [
-        -15.0,
-        4.5,
-        -4.0
+        15.0,
+        7.0,
+        0.0
       ],
       "color": [
         1.0,
@@ -32,13 +33,14 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 1,
+      "interactable": false
     },
     {
       "id": "torch_1_3",
       "position": [
-        -4.0,
-        4.5,
+        0.0,
+        7.0,
         -15.0
       ],
       "color": [
@@ -49,14 +51,15 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 1,
+      "interactable": false
     },
     {
       "id": "torch_1_4",
       "position": [
-        4.0,
-        4.5,
-        -15.0
+        -15.0,
+        7.0,
+        0.0
       ],
       "color": [
         1.0,
@@ -66,14 +69,15 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 1,
+      "interactable": false
     },
     {
-      "id": "torch_1_5",
+      "id": "torch_2_1",
       "position": [
-        15.0,
+        39.13,
         4.5,
-        -4.0
+        -3.0
       ],
       "color": [
         1.0,
@@ -83,14 +87,15 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 2,
+      "interactable": true
     },
     {
-      "id": "torch_1_6",
+      "id": "torch_2_2",
       "position": [
-        15.0,
+        26.23,
         4.5,
-        4.0
+        -3.0
       ],
       "color": [
         1.0,
@@ -100,14 +105,15 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 2,
+      "interactable": true
     },
     {
-      "id": "torch_1_7",
+      "id": "torch_2_3",
       "position": [
-        -5.33,
+        25.74,
         4.5,
-        15.0
+        3.0
       ],
       "color": [
         1.0,
@@ -117,14 +123,15 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 2,
+      "interactable": true
     },
     {
-      "id": "torch_1_8",
+      "id": "torch_2_4",
       "position": [
-        5.33,
+        38.48,
         4.5,
-        15.0
+        3.0
       ],
       "color": [
         1.0,
@@ -134,7 +141,188 @@
       "g": 1.0,
       "beta": 2.0,
       "on": true,
-      "room": 1
+      "room": 2,
+      "interactable": true
+    },
+    {
+      "id": "torch_3_1",
+      "position": [
+        56.39,
+        4.5,
+        -7.0
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 3,
+      "interactable": false
+    },
+    {
+      "id": "torch_3_2",
+      "position": [
+        55.42,
+        4.5,
+        7.0
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 3,
+      "interactable": false
+    },
+    {
+      "id": "torch_4_1",
+      "position": [
+        -24.42,
+        4.5,
+        7.0
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 4,
+      "interactable": false
+    },
+    {
+      "id": "torch_4_2",
+      "position": [
+        -25.06,
+        4.5,
+        -7.0
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 4,
+      "interactable": false
+    },
+    {
+      "id": "torch_5_1",
+      "position": [
+        -7.0,
+        4.5,
+        -23.52
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 5,
+      "interactable": false
+    },
+    {
+      "id": "torch_5_2",
+      "position": [
+        7.0,
+        4.5,
+        -23.68
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 5,
+      "interactable": false
+    },
+    {
+      "id": "torch_6_1",
+      "position": [
+        0.26,
+        4.5,
+        -39.0
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 6,
+      "interactable": false
+    },
+    {
+      "id": "torch_7_1",
+      "position": [
+        -27.32,
+        4.5,
+        -34.5
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 7,
+      "interactable": false
+    },
+    {
+      "id": "torch_7_2",
+      "position": [
+        -12.32,
+        4.5,
+        -34.5
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 7,
+      "interactable": false
+    },
+    {
+      "id": "torch_7_3",
+      "position": [
+        -19.9,
+        4.5,
+        -37.5
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "g": 1.0,
+      "beta": 2.0,
+      "on": true,
+      "room": 7,
+      "interactable": false
     }
   ]
 }
