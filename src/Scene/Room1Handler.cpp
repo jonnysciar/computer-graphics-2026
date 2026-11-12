@@ -54,9 +54,11 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
     for (auto &torch : gs.torches) {
         if (torch.room != 1)
             continue;
-        interMap.insert(
-            {torch.id, Interactable{.instance = nullptr,
-                                    .callback = [&torch](Interactable &, GameStatus &) { torch.on = !torch.on; }}});
+        interMap.insert({torch.id, Interactable{.instance = nullptr,
+                                                .callback = [this, &torch](Interactable &inter, GameStatus &gs) {
+                                                    torch.on = !torch.on;
+                                                    onInteractionReach(*inter.instance->id, gs);
+                                                }}});
     }
     setupInteractionController();
 }
