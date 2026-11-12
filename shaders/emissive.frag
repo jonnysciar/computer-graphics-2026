@@ -18,7 +18,7 @@ layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 extra;
 } gubo;
 
-layout(binding = 2, set = 0) uniform sampler2D tex;
+layout(binding = 2, set = 0) uniform sampler2D textureMap[2];
 
 // 0 = flat light color, 1 = faces turned to the viewer become white
 #define WHITE_CORE 0
@@ -29,7 +29,8 @@ void main() {
     vec3 V = normalize(gubo.playerPos.xyz - fragPos);
     float facing = max(dot(N, V), 0.0);
 
-    vec3 texColor = texture(tex, fragUV).rgb;
-    vec3 color = mix(gubo.extra.rgb, vec3(1.0), WHITE_CORE * facing * facing) * gubo.extra.a * texColor;
-    outColor = vec4(color, 1.0);
+    vec3 texColor = texture(textureMap[0], fragUV).rgb;
+    float alpha = texture(textureMap[1], fragUV).r * gubo.extra.a;
+    vec3 color = mix(gubo.extra.rgb, vec3(1.0), WHITE_CORE * facing * facing) * texColor;
+    outColor = vec4(color, alpha);
 }

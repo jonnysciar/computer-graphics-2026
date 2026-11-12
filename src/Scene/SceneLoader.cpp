@@ -105,6 +105,10 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPh
             std::string frag_shader = pipeline.at("fragment");
             Pipeline P{};
             P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)});
+            if (tech_name == "Emissive") {
+                P.setTransparency(true);
+                P.setCullMode(VK_CULL_MODE_NONE);
+            }
 
             pipelines.push_back(std::move(P));
         }
@@ -154,7 +158,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
     }
 
     for (auto &sm : smMap | std::views::values) {
-        sm.attachScene(&scene, [](const Instance &inst) -> bool { return !inst.id->starts_with("torch"); });
+        sm.attachScene(&scene, [](const Instance &inst) -> bool { return !inst.id->starts_with("flame"); });
     }
 
     collisionDetector = std::make_unique<CollisionDetector>();
