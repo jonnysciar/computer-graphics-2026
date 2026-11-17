@@ -229,7 +229,9 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
         ubo.mvpMat = viewPrjMat * ubo.mMat;
         ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 
-        gubo.extra = glm::vec4(gameStatus.settings.enableShadows ? 1.0f : 0.0f, glm::vec3(0.0));
+        gubo.extra = glm::vec4(0.0f);
+        gubo.extra.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
+        gubo.extra.y = gameStatus.settings.cookTorrance;
         for (int i = 0; i < NUM_LIGHTS; i++) {
             if (gameStatus.torches[i].id == *instance->id) {
                 gubo.extra = glm::vec4(gameStatus.torches[i].color, gameStatus.torches[i].on ? 1.0f : 0.0f);
