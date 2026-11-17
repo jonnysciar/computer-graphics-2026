@@ -2280,7 +2280,7 @@
           "id": "painting_E2",
           "solid": false,
           "model": "painting_23",
-          "translate": [-10.104, 4.8203, 15.98],
+          "translate": [-9.9, 5.35, 15.98],
           "eulerAngles": [0.0, 180.0, 0.0],
           "scale": [4.1595, 4.1595, 1.0],
           "texture": [
@@ -2295,7 +2295,7 @@
           "id": "painting_E3",
           "solid": false,
           "model": "painting_04",
-          "translate": [-13.527, 7.5567, 15.98],
+          "translate": [-13.35, 8.1, 15.98],
           "eulerAngles": [0.0, 180.0, 0.0],
           "scale": [3.7133, 3.7133, 1.0],
           "texture": [
@@ -2310,7 +2310,7 @@
           "id": "painting_E4",
           "solid": false,
           "model": "painting_02",
-          "translate": [-13.6513, 3.7, 15.98],
+          "translate": [-13.6513, 4.2, 15.98],
           "eulerAngles": [0.0, 180.0, 0.0],
           "scale": [3.4, 3.4, 1.0],
           "texture": [
@@ -2325,7 +2325,7 @@
           "id": "painting_W1",
           "solid": false,
           "model": "painting_05",
-          "translate": [9.454, 7.3604, 15.98],
+          "translate": [9.25, 7.85, 15.98],
           "eulerAngles": [0.0, 180.0, 0.0],
           "scale": [2.5209, 2.5209, 1.0],
           "texture": [
@@ -2340,7 +2340,7 @@
           "id": "painting_W3",
           "solid": false,
           "model": "painting_16",
-          "translate": [12.9098, 8.65, 15.98],
+          "translate": [12.65, 9.15, 15.98],
           "eulerAngles": [0.0, 180.0, 0.0],
           "scale": [2.7, 2.7, 1.0],
           "texture": [
@@ -2355,7 +2355,7 @@
           "id": "painting_W4",
           "solid": false,
           "model": "painting_13",
-          "translate": [13.0166, 4.5, 15.98],
+          "translate": [13.0166, 5.0, 15.98],
           "eulerAngles": [0.0, 180.0, 0.0],
           "scale": [5.0, 5.0, 1.0],
           "texture": [
@@ -4080,9 +4080,9 @@
           "id": "painting_E_S",
           "solid": false,
           "model": "painting_10",
-          "translate": [-15.98, 6.5, -9.0],
+          "translate": [-15.98, 6.5, -10.5],
           "eulerAngles": [0.0, 90.0, 0.0],
-          "scale": [3.0, 3.0, 1.0],
+          "scale": [4.0, 4.0, 1.0],
           "texture": [
             "paintings-albedo",
             "paintings-normal",
@@ -4095,9 +4095,9 @@
           "id": "painting_W_S",
           "solid": false,
           "model": "painting_14",
-          "translate": [15.98, 6.5, -10.5],
+          "translate": [15.98, 6.5, -11.8],
           "eulerAngles": [0.0, -90.0, 0.0],
-          "scale": [3.0, 3.0, 1.0],
+          "scale": [4.0, 4.0, 1.0],
           "texture": [
             "paintings-albedo",
             "paintings-normal",
@@ -4105,18 +4105,7 @@
             "paintings-roughness",
             "paintings-ao"
           ]
-        }
-      ]
-    },
-    {
-      "technique": "Emissive",
-      "pipelines": [
-        {
-          "vertex": "shaders/emissive.vert.spv",
-          "fragment": "shaders/emissive.frag.spv"
-        }
-      ],
-      "elements": [
+        },
         {
           "id": "torch_1_1",
           "solid": false,
@@ -4182,7 +4171,7 @@
           "solid": false,
           "model": "torch",
           "translate": [1.85, 7.0, 15.5],
-          "eulerAngles": [90, 0, 0],
+          "eulerAngles": [90, 90, 0],
           "scale": [2.0, 2.0, 2.0],
           "texture": [
             "torch-albedo",
@@ -4417,7 +4406,7 @@
           "id": "flame_1_1",
           "solid": false,
           "model": "flame",
-          "translate": [-0.55, 7.0, 15.5],
+          "translate": [-1.85, 7.0, 15.5],
           "scale": [2.0, 2.0, 2.0],
           "texture": ["flame-albedo", "flame-opac"]
         },
@@ -4442,6 +4431,14 @@
           "solid": false,
           "model": "flame",
           "translate": [-15.5, 7.0, 0.0],
+          "scale": [2.0, 2.0, 2.0],
+          "texture": ["flame-albedo", "flame-opac"]
+        },
+        {
+          "id": "flame_1_5",
+          "solid": false,
+          "model": "flame",
+          "translate": [1.85, 7.0, 15.5],
           "scale": [2.0, 2.0, 2.0],
           "texture": ["flame-albedo", "flame-opac"]
         },
