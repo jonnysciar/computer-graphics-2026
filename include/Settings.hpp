@@ -19,7 +19,7 @@ class Settings : public Listener<Key> {
         case GLFW_KEY_2:
             cookTorrance = (++cookTorrance) % 3;
             break;
-            
+
         default:
             break;
         }
