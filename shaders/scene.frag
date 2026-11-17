@@ -14,7 +14,7 @@ layout(location = 0) out vec4 outColor;
 // ------------------------------------------------------------
 //  UNIFORMS
 // ------------------------------------------------------------
-#define NUM_LIGHTS 8        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
+#define NUM_LIGHTS 18        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
 
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 lightColor[NUM_LIGHTS];   // rgb = colour of light i
