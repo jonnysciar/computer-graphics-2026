@@ -1,179 +1,99 @@
 {
   "lights": [
     {
-      "id": "torch_1_1",
-      "position": [
-        -1.85,
-        7.0,
-        15.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_1_1",
+      "position": [-1.85, 8.0, 15.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 1,
       "interactable": false
     },
     {
-      "id": "torch_1_2",
-      "position": [
-        15.0,
-        7.0,
-        0.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_1_2",
+      "position": [15.5, 8.0, 0.0],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 1,
       "interactable": false
     },
     {
-      "id": "torch_1_3",
-      "position": [
-        0.0,
-        7.0,
-        -15.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_1_3",
+      "position": [0.0, 8.0, -15.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 1,
       "interactable": false
     },
     {
-      "id": "torch_1_4",
-      "position": [
-        -15.0,
-        7.0,
-        0.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_1_4",
+      "position": [-15.5, 8.0, 0.0],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 1,
       "interactable": false
     },
     {
-      "id": "torch_1_5",
-      "position": [
-        1.85,
-        7.0,
-        15.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_1_5",
+      "position": [1.85, 8.0, 15.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 1,
       "interactable": false
     },
     {
-      "id": "torch_2_1",
-      "position": [
-        39.13,
-        4.5,
-        -3.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_2_1",
+      "position": [39.13, 5.5, -3.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 2,
       "interactable": true
     },
     {
-      "id": "torch_2_2",
-      "position": [
-        26.23,
-        4.5,
-        -3.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_2_2",
+      "position": [26.23, 5.5, -3.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 2,
       "interactable": true
     },
     {
-      "id": "torch_2_3",
-      "position": [
-        25.74,
-        4.5,
-        3.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_2_3",
+      "position": [25.74, 5.5, 3.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 2,
       "interactable": true
     },
     {
-      "id": "torch_2_4",
-      "position": [
-        38.48,
-        4.5,
-        3.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
-      "g": 1.0,
+      "id": "flame_2_4",
+      "position": [38.48, 5.5, 3.5],
+      "color": [1.0, 0.2, 0.0],
+      "g": 5.0,
       "beta": 2.0,
       "on": true,
       "room": 2,
       "interactable": true
     },
     {
-      "id": "torch_3_1",
-      "position": [
-        56.39,
-        4.5,
-        -7.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_3_1",
+      "position": [56.39, 5.5, -7.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -181,17 +101,9 @@
       "interactable": false
     },
     {
-      "id": "torch_3_2",
-      "position": [
-        55.42,
-        4.5,
-        7.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_3_2",
+      "position": [55.42, 5.5, 7.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -199,17 +111,9 @@
       "interactable": false
     },
     {
-      "id": "torch_4_1",
-      "position": [
-        -24.42,
-        4.5,
-        7.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_4_1",
+      "position": [-24.42, 5.5, 7.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -217,17 +121,9 @@
       "interactable": false
     },
     {
-      "id": "torch_4_2",
-      "position": [
-        -25.06,
-        4.5,
-        -7.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_4_2",
+      "position": [-25.06, 5.5, -7.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -235,17 +131,9 @@
       "interactable": false
     },
     {
-      "id": "torch_5_1",
-      "position": [
-        -7.0,
-        4.5,
-        -23.52
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_5_1",
+      "position": [-7.5, 5.5, -23.52],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -253,17 +141,9 @@
       "interactable": false
     },
     {
-      "id": "torch_5_2",
-      "position": [
-        7.0,
-        4.5,
-        -23.68
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_5_2",
+      "position": [7.5, 5.5, -23.68],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -271,17 +151,9 @@
       "interactable": false
     },
     {
-      "id": "torch_6_1",
-      "position": [
-        0.26,
-        4.5,
-        -39.0
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_6_1",
+      "position": [0.26, 5.5, -39.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -289,17 +161,9 @@
       "interactable": false
     },
     {
-      "id": "torch_7_1",
-      "position": [
-        -27.32,
-        4.5,
-        -34.5
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_7_1",
+      "position": [-27.32, 5.5, -34.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -307,17 +171,9 @@
       "interactable": false
     },
     {
-      "id": "torch_7_2",
-      "position": [
-        -12.32,
-        4.5,
-        -34.5
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_7_2",
+      "position": [-12.32, 5.5, -34.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,
@@ -325,17 +181,9 @@
       "interactable": false
     },
     {
-      "id": "torch_7_3",
-      "position": [
-        -19.9,
-        4.5,
-        -37.5
-      ],
-      "color": [
-        1.0,
-        0.6,
-        0.3
-      ],
+      "id": "flame_7_3",
+      "position": [-19.9, 5.5, -37.5],
+      "color": [1.0, 0.2, 0.0],
       "g": 1.0,
       "beta": 2.0,
       "on": true,

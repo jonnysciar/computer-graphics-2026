@@ -15,7 +15,7 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                            }}},
                 {"door_1_2", Interactable{.instance = nullptr,
                                           .callback =
-                                              [this](Interactable &i, GameStatus &gs) {
+                                              [](Interactable &i, GameStatus &gs) {
                                                   if (!gs.door_1_2.getIsLocked()) {
                                                       if (gs.door_1_2.getIsOpen()) {
                                                           gs.door_1_2.rotateInstanceY(i.instance, +90.0f);
@@ -28,7 +28,7 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                               }}},
                 {"door_1_4", Interactable{.instance = nullptr,
                                           .callback =
-                                              [this](Interactable &i, GameStatus &gs) {
+                                              [](Interactable &i, GameStatus &gs) {
                                                   if (!gs.door_1_4.getIsLocked()) {
                                                       if (gs.door_1_4.getIsOpen()) {
                                                           gs.door_1_4.rotateInstanceY(i.instance, +90.0f);
@@ -39,7 +39,7 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                                       }
                                                   }
                                               }}},
-                {"door_1_5", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+                {"door_1_5", Interactable{.instance = nullptr, .callback = [](Interactable &i, GameStatus &gs) {
                                               if (!gs.door_1_5.getIsLocked()) {
                                                   if (gs.door_1_5.getIsOpen()) {
                                                       gs.door_1_5.rotateInstanceY(i.instance, -90.0f);
@@ -54,9 +54,11 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
     for (auto &torch : gs.torches) {
         if (torch.room != 1 || !torch.interactable)
             continue;
-        interMap.insert(
-            {torch.id, Interactable{.instance = nullptr,
-                                    .callback = [&torch](Interactable &, GameStatus &) { torch.on = !torch.on; }}});
+        interMap.insert({torch.id, Interactable{.instance = nullptr,
+                                                .callback = [this, &torch](Interactable &inter, GameStatus &gs) {
+                                                    torch.on = !torch.on;
+                                                    onInteractionReach(*inter.instance->id, gs);
+                                                }}});
     }
     setupInteractionController();
 }

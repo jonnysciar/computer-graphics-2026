@@ -7,6 +7,7 @@ class Settings : public Listener<Key> {
 
   public:
     bool enableShadows = false;
+    int cookTorrance = 0;
 
     Settings() = default;
 
@@ -15,6 +16,10 @@ class Settings : public Listener<Key> {
         case GLFW_KEY_1:
             enableShadows = !enableShadows;
             break;
+        case GLFW_KEY_2:
+            cookTorrance = (++cookTorrance) % 3;
+            break;
+
         default:
             break;
         }

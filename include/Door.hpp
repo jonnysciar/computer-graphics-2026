@@ -1,14 +1,10 @@
 #pragma once
 
-#include "InputManager.hpp"
-#include "glm/gtx/euler_angles.hpp"
-
 #include <vulkan/vulkan.h>
 #include <modules/Starter.hpp>
 #include <modules/Scene.hpp>
 
 #include <string>
-#include <unordered_set>
 
 class Door {
   private:
@@ -17,7 +13,7 @@ class Door {
     bool isOpen;
 
   public:
-    Door(const char *str, bool islocked, bool isopen) {};
+    Door(const char *str, bool islocked, bool isopen) : id(str), isLocked(islocked), isOpen(isopen) {};
 
     bool getIsLocked() { return isLocked; }
     void setIsLocked(bool islocked) { isLocked = islocked; }

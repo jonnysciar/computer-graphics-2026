@@ -1,7 +1,5 @@
 #include "CameraController.hpp"
 
-#include "CollisionDetector.hpp"
-
 const float CameraController::nearPlane = 0.1f;
 const float CameraController::farPlane = 100.0f;
 
