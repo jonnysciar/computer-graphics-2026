@@ -1,7 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-#define NUM_LIGHTS 18        //
+#define NUM_LIGHTS 19        //
 
 layout(set = 0, binding = 0) uniform ShadowUBO {
 	mat4 model;                    // caster world matrix

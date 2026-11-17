@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#define NUM_LIGHTS 18
+#define NUM_LIGHTS 19
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
