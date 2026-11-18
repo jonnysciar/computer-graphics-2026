@@ -11,17 +11,20 @@
 #include <unordered_set>
 
 class Player : public Listener<Key> {
-    static constexpr float BODY_RADIUS = 0.4f;
+    static constexpr float BODY_HALF_WIDTH = 0.4f;
+    static constexpr float BODY_BELOW = 4.0f;
+    static constexpr float BODY_ABOVE = 0.4f;
     static constexpr float REACH_RADIUS = 3.0f;
 
   public:
-    glm::vec3 pos = glm::vec3(0.0f, 3.5f, 10.0f);
+    glm::vec3 pos = glm::vec3(0.0f, 4.5f, 10.0f);
     Collider bodyCollider;
     Collider reachCollider;
     std::unordered_set<std::string> collectedItems;
 
     Player() {
-        bodyCollider.initSphere(0.0f, 0.0f, 0.0f, BODY_RADIUS);
+        bodyCollider.initAABB(-BODY_HALF_WIDTH, -BODY_BELOW, -BODY_HALF_WIDTH, BODY_HALF_WIDTH, BODY_ABOVE,
+                              BODY_HALF_WIDTH);
         reachCollider.initSphere(0.0f, 0.0f, 0.0f, REACH_RADIUS);
     }
 
