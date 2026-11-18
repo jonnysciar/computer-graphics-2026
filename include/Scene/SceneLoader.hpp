@@ -44,7 +44,8 @@ class SceneLoader {
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
-    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus, CameraController &cameraController);
+    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus,
+                             CameraController &cameraController);
 
     const std::vector<Instance *> &getInstances();
 

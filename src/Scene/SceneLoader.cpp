@@ -211,7 +211,8 @@ void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
     rp.end(commandBuffer);
 }
 
-void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus, CameraController &cameraController) {
+void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus,
+                                      CameraController &cameraController) {
 
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};

@@ -29,11 +29,7 @@ glm::mat4 CameraController::computeViewPrjMat(glm::vec3 pos, float nearPlane) co
 }
 
 glm::mat4 CameraController::computeViewMat(glm::vec3 pos) const {
-    glm::vec3 forward = glm::normalize(glm::vec3(
-        sin(Yaw) * cos(Pitch),
-        -sin(Pitch),
-        -cos(Yaw) * cos(Pitch)
-    ));
+    glm::vec3 forward = glm::normalize(glm::vec3(sin(Yaw) * cos(Pitch), -sin(Pitch), -cos(Yaw) * cos(Pitch)));
     return glm::lookAt(pos, pos + forward, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
