@@ -21,6 +21,8 @@ class CameraController {
     static const float farPlane;
     // If collisionDetector is given, the movement is stopped by the solid colliders
     glm::vec3 computePos(glm::vec3 pos, glm::vec3 m, glm::vec3 r, float deltaT);
-    glm::mat4 computeViewPrjMat(glm::vec3 pos) const;
+    glm::mat4 computeViewPrjMat(glm::vec3 pos, float nearPlane) const;
+    glm::mat4 computeViewMat(glm::vec3 pos) const;
+    glm::mat4 computeAttachedModelMat(glm::vec3 pos, glm::vec3 localOffset) const;
     void onResize(int w, int h);
 };

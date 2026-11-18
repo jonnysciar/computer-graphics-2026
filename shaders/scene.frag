@@ -68,7 +68,10 @@ vec3 fresnelSchlick(float dotVH, vec3 F0) {
 
 // GGX Normal Distribution Function
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
-    float a2 = roughness * roughness;
+    // FIX: roughness is perceptual (the geometry term below assumes that), so alpha = r^2 and a2 = alpha^2.
+    // Before, a2 = r^2, which made the lobe far too wide and dim -> metals looked dull/dark.
+    float alpha = roughness * roughness;
+    float a2 = alpha * alpha;
     float NdotH = max(dot(N, H), 0.0);
     float NdotH2 = NdotH * NdotH;
     float denom = NdotH2 * (a2 - 1.0) + 1.0;
@@ -234,7 +237,7 @@ vec3 evalFastBRDF(
 
     // Normalized Blinn-Phong lobe
     float normFactor = (shininess + 2.0) / (8.0 * PI);
-    vec3 f_specular = F * (normFactor * pow(NdotH, shininess)) * NdotL;
+    vec3 f_specular = F * (normFactor * pow(NdotH, shininess)) * NdotL * PI; // FIX: *PI, diffuse has no 1/PI
 
     // Energy-conserving diffuse (matches your original brightness scale)
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
@@ -242,6 +245,10 @@ vec3 evalFastBRDF(
 
     return f_diffuse + f_specular;
 }
+
+// Specular strength for non-metals in the Cook-Torrance path (1.0 = physically scaled, lower = less "wet").
+// Metals are not affected (they always use 1.0), so they keep their full highlight.
+const float DIELECTRIC_SPEC_SCALE = 0.5;
 
 vec3 cookTorrance(
     vec3 albedo,
@@ -261,18 +268,16 @@ vec3 cookTorrance(
     float G = GeometrySmith(N, V, L, roughness);
 
     vec3 f_diffuse = albedo * NdotL;
-    vec3 f_specular = (D * G * F) / max(4.0 * NdotV, 0.001);
+    // FIX: guard the denominator (NdotV can be 0 -> inf/NaN) and multiply by NdotL,
+    // like the diffuse term and like evalFastBRDF do (fr already includes cos(theta_i)).
+    vec3 f_specular = (D * G * F) / max(4.0 * NdotV * NdotL, 0.0001) * NdotL * PI * mix(DIELECTRIC_SPEC_SCALE, 1.0, metallic);
 
     vec3 kD = (vec3(1.0) - F) * (1.0 - metallic); // energy conservation; metals have no diffuse
     return kD * f_diffuse + f_specular;
 }
 
 vec3 computeLight() {
-    // ---- Sample PBR textures -----------------------------------
-    //  Albedo: textures are stored in sRGB, but all PBR
-    //  math must be performed in linear space. Convert with:
-    //  albedo_linear = pow(albedo_sRGB, vec3(2.2))
-    vec3 albedo = pow(texture(textureMap[0], fragUV).rgb, vec3(2.2));
+    vec3 albedo = texture(textureMap[0], fragUV).rgb;
     float metallic = texture(textureMap[2], fragUV).r;
     float roughness = texture(textureMap[3], fragUV).r;
     float ao = texture(textureMap[4], fragUV).r;
@@ -284,7 +289,7 @@ vec3 computeLight() {
     // ---- Geometry setup ---------------------
     vec3 V = normalize(gubo.playerPos.xyz - fragPos);
     vec3 Ng = normalize(fragNorm); // geometric normal, used for shadows
-    float NdotV = max(dot(N, V), 0.0);
+    float NdotV = max(dot(N, V), 0.0001);
 
     vec3 F0 = computeF0(albedo, metallic);
 
@@ -332,10 +337,9 @@ vec3 computeLight() {
         direct += lightCol * fr * visibility;
     }
 
-    vec3 ambient = vec3(0.01) * ao * albedo;
+    vec3 ambient = vec3(0.03) * ao * albedo;
     vec3 color = direct + ambient;
     color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
     return color;
 }
 

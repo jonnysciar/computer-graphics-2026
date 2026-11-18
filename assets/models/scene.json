@@ -1,6 +1,16 @@
 {
-  "asset files": [],
+  "assetfiles": [],
   "models": [
+    {
+      "id": "arms",
+      "VD": "VDArms",
+      "model": "assets/models/ArmsMesh.gltf",
+      "format": "GLTF",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
     {
       "id": "floor",
       "VD": "VD",
@@ -643,7 +653,7 @@
     },
     {
       "id": "flame",
-      "VD": "VD",
+      "VD": "VDFlame",
       "model": "assets/models/torch/flame.gltf",
       "format": "GLTF",
       "collider": {
@@ -1389,6 +1399,41 @@
       "format": "D"
     },
     {
+      "id": "gold-albedo",
+      "texture": "assets/textures/gold/gold_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "gold-normal",
+      "texture": "assets/textures/gold/gold_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "gold-metallic",
+      "texture": "assets/textures/gold/gold_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "gold-roughness",
+      "texture": "assets/textures/gold/gold_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "gold-ao",
+      "texture": "assets/textures/gold/gold_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "arms-albedo",
+      "texture": "assets/textures/arms/arms_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "arms-uv",
+      "texture": "assets/textures/arms/arms_uv.png",
+      "format": "D"
+    },
+    {
       "id": "wood-door-albedo",
       "texture": "assets/textures/wood_door/wood_door_albedo.png",
       "format": "C"
@@ -2084,11 +2129,11 @@
           "scale": [0.25, 0.25, 0.25],
           "eulerAngles": [-90, 90, 0, 0],
           "texture": [
-            "clay-albedo",
-            "clay-normal",
-            "clay-metallic",
-            "clay-roughness",
-            "clay-ao"
+            "gold-albedo",
+            "gold-normal",
+            "gold-metallic",
+            "gold-roughness",
+            "gold-ao"
           ]
         },
         {
@@ -2099,11 +2144,11 @@
           "scale": [0.25, 0.25, 0.25],
           "eulerAngles": [0, 0, 0, 0],
           "texture": [
-            "clay-albedo",
-            "clay-normal",
-            "clay-metallic",
-            "clay-roughness",
-            "clay-ao"
+            "gold-albedo",
+            "gold-normal",
+            "gold-metallic",
+            "gold-roughness",
+            "gold-ao"
           ]
         },
         {
@@ -2114,11 +2159,11 @@
           "scale": [0.25, 0.25, 0.25],
           "eulerAngles": [0, 0, 0, 0],
           "texture": [
-            "clay-albedo",
-            "clay-normal",
-            "clay-metallic",
-            "clay-roughness",
-            "clay-ao"
+            "gold-albedo",
+            "gold-normal",
+            "gold-metallic",
+            "gold-roughness",
+            "gold-ao"
           ]
         },
         {
@@ -4578,6 +4623,29 @@
           "translate": [-19.9, 4.5, -37.5],
           "scale": [2.0, 2.0, 2.0],
           "texture": ["flame-albedo", "flame-opac"]
+        }
+      ]
+    },
+    {
+      "technique": "Arms",
+      "pipelines": [
+        {
+          "vertex": "shaders/arms.vert.spv",
+          "fragment": "shaders/arms.frag.spv"
+        }
+      ],
+      "elements": [
+        {
+          "id": "arms",
+          "solid": false,
+          "model": "arms",
+          "translate": [0.0, 2.1, 9.6],
+          "eulerAngles": [0, 180, 0],
+          "scale": [0.8, 0.8, 0.8],
+          "texture": [
+            "arms-albedo",
+            "arms-uv"
+          ]
         }
       ]
     }
