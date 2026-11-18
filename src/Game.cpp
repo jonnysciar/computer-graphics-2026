@@ -68,7 +68,7 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     std::ranges::for_each(sceneHandlers, [&](auto &handler) { handler->checkInteractionReach(gameStatus); });
 
-    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat, gameStatus, cameraController);
+    sceneLoader->updateUniformBuffer(currentImage, gameStatus, cameraController);
     hudManager->updateUniformBuffer(currentImage, deltaT);
 }
 
@@ -108,7 +108,7 @@ float Game::handleMovement() {
 
     glm::vec3 newPos = cameraController.computePos(gameStatus.player.pos, m, r, deltaT);
     gameStatus.player.pos = sceneLoader->getCollisionDetector()->resolveCollision(gameStatus.player, newPos);
-    viewPrjMat = cameraController.computeViewPrjMat(gameStatus.player.pos, CameraController::nearPlane);
+    cameraController.updateViewPrjMat(gameStatus.player.pos);
     gameStatus.player.updateColliders();
 
     return deltaT;

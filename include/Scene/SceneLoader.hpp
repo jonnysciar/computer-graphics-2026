@@ -25,6 +25,7 @@ class SceneLoader {
     std::vector<VertexDescriptorRef> vdrs;
     std::vector<TechniqueRef> prs;
     std::vector<Instance *> instances;
+    std::map<std::string, std::vector<Instance *>> techInstMap;
 
     std::unique_ptr<CollisionDetector> collisionDetector;
 
@@ -35,6 +36,10 @@ class SceneLoader {
     void generateDescriptorSetLayout(nlohmann::json &technique, int numTextures);
     void generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPhysicalDevice physicalDev);
 
+    void generalUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
+    void emissiveUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
+    void armsUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
+
   public:
     SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice dev, VkPhysicalDevice physicalDev, int w, int h);
 
@@ -44,8 +49,7 @@ class SceneLoader {
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
-    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus,
-                             CameraController &cameraController);
+    void updateUniformBuffer(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
 
     const std::vector<Instance *> &getInstances();
 

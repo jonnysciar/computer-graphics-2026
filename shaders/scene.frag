@@ -14,14 +14,14 @@ layout(location = 0) out vec4 outColor;
 // ------------------------------------------------------------
 //  UNIFORMS
 // ------------------------------------------------------------
-#define NUM_LIGHTS 19        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
+#define NUM_LIGHTS 8        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
 
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 lightColor[NUM_LIGHTS]; // rgb = colour of light i
     vec4 lightPos[NUM_LIGHTS]; // xyz = world position of light i
     vec4 lightParams[NUM_LIGHTS]; // x = on/off, y = g, z = beta
     vec4 playerPos;
-    vec4 extra;
+    vec4 settings; //x = enable shadows, y = shading technique
 } gubo;
 
 // ------------------------------------------------------------
@@ -41,11 +41,9 @@ vec3 pointLightColor(int light_i, vec3 fragPosition, out vec3 L) {
     L = toLight / dist;
 
     float g = gubo.lightParams[light_i].y;
-    float ratio = g / dist;
-    //float beta = gubo.lightParams[light_i].z;
+    float beta = gubo.lightParams[light_i].z;
 
-    float decay = ratio * ratio;
-    //float decay = pow(g / dist, beta);
+    float decay = pow(g / dist, beta);
     return gubo.lightColor[light_i].rgb * decay;
 }
 
@@ -108,7 +106,7 @@ vec3 computeF0(vec3 albedo, float metallic) {
 const float SHADOW_BIAS = 0.05; // world units along the face axis
 const float SHADOW_NORMAL_OFFSET = 0.05; // world units, applied at grazing angles
 const float SHADOW_PCF_TEXELS = 1.5; // tap offset; each tap is already a bilinear 2x2 comparison
-const float LIGHT_CUTOFF = 1e-4; // lights contributing less than this are skipped
+const float LIGHT_CUTOFF = 5e-3; // lights contributing less than this are skipped
 
 const float SHADOW_A = SHADOW_FAR / (SHADOW_FAR - SHADOW_NEAR); // stored depth = A + B / zf
 const float SHADOW_B = -SHADOW_FAR * SHADOW_NEAR / (SHADOW_FAR - SHADOW_NEAR);
@@ -170,44 +168,8 @@ float computeShadow(int li, vec3 lPos, vec3 Ng, vec3 L) {
     float guard = 1.0 - 2.0 * SHADOW_GUARD_TEXELS / res;
     vec2 uv = 0.5 * guard * vec2(sc, tc) / ma + 0.5;
     float layer = float(li * 6 + face);
-    float o = SHADOW_PCF_TEXELS / res;
 
-    // 4 taps, each a hardware bilinear depth comparison = 16 comparisons
-    float lit = texture(shadowMaps, vec4(uv + vec2(-o, -o), layer, ref))
-            + texture(shadowMaps, vec4(uv + vec2(o, -o), layer, ref))
-            + texture(shadowMaps, vec4(uv + vec2(-o, o), layer, ref))
-            + texture(shadowMaps, vec4(uv + vec2(o, o), layer, ref));
-    return lit * 0.25;
-}
-
-vec3 evalDiffuseOnlyLight(
-    vec3 albedo,
-    float ao,
-    vec3 fragPosition,
-    vec3 normalWorld,
-    vec4 tangentWorld,
-    vec2 uv
-) {
-    // 1. Decode normal map into world space
-    mat3 TBN = computeTBN(normalWorld, tangentWorld.xyz, tangentWorld.w);
-    vec3 N = normalize(computeNormalMap(TBN));
-
-    // 2. Accumulate diffuse contributions across active lights
-    vec3 direct = vec3(0.0);
-    for (int i = 0; i < NUM_LIGHTS; i++) {
-        if (gubo.lightParams[i].x < 1.0) continue;
-
-        vec3 L;
-        vec3 lightCol = pointLightColor(i, fragPosition, L);
-        float NdotL = max(dot(N, L), 0.0);
-        if (NdotL <= 0.0 || max(lightCol.r, max(lightCol.g, lightCol.b)) < LIGHT_CUTOFF) continue;
-
-        direct += lightCol * albedo * NdotL;
-    }
-
-    // 3. Add ambient floor modulated by AO
-    vec3 ambient = vec3(0.03) * ao * albedo;
-    return direct + ambient;
+    return texture(shadowMaps, vec4(uv, layer, ref));
 }
 
 // Normalized Blinn-Phong
@@ -295,7 +257,7 @@ vec3 computeLight() {
 
     // ---- Sum of the contributions of all the lights ------------
     vec3 direct = vec3(0.0);
-    for (int i = 0; i < NUM_LIGHTS; i++) {
+    for (int i = 0; i < gubo.settings.z; i++) {
         if (gubo.lightParams[i].x < 1.0) continue; //Light is off
 
         vec3 lPos = gubo.lightPos[i].xyz;
@@ -309,14 +271,14 @@ vec3 computeLight() {
         if (max(lightCol.r, max(lightCol.g, lightCol.b)) < LIGHT_CUTOFF) continue; // too far / too dim
 
         float visibility = 1.0;
-        if (gubo.extra.x > 0.0) {
+        if (gubo.settings.x > 0.0) {
             visibility = computeShadow(i, lPos, Ng, L);
         }
 
         if (visibility <= 0.0) continue;
 
         vec3 fr;
-        switch (int(gubo.extra.y)) {
+        switch (int(gubo.settings.y)) {
             case 1:
             {
                 fr = cookTorrance(albedo, metallic, roughness, F0, N, V, L, NdotL, NdotV);

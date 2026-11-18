@@ -2,9 +2,17 @@
 
 #include "CameraController.hpp"
 #include "GameStatus.hpp"
+#include "Player.hpp"
 #include "uniform_buffers.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstdlib>
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 std::vector<PipelineAndTexturesDefs>
 SceneLoader::generateTextureDef(std::string_view tech_name, std::vector<Pipeline> &pipelines, int numTextures) {
@@ -62,12 +70,16 @@ void SceneLoader::generateDescriptorSetLayout(nlohmann::json &technique, int num
              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures},
              {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 5, 1}});
 
-    } else {
+    } else if (tech_name == "Emissive") {
         dsl.init(
             this->bp,
             {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
-             {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject), 1},
+             {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightUniformBufferObject), 1},
              {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
+    } else {
+        dsl.init(this->bp,
+                 {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject), 1},
+                  {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0, numTextures}});
     }
     dslMap.insert({std::move(tech_name), std::move(dsl)});
 }
@@ -107,8 +119,10 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPh
             Pipeline P{};
             P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)});
             if (tech_name != "General") {
-                P.setTransparency(true);
                 P.setCullMode(VK_CULL_MODE_NONE);
+            }
+            if (tech_name == "Emissive") {
+                P.setTransparency(true);
             }
 
             pipelines.push_back(std::move(P));
@@ -124,6 +138,85 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPh
             smMap[tech_name].init(this->bp, &vd, dev, physicalDev,
                                   {.vertShader = shadow.at("vertex"), .fragShader = shadow.at("fragment")});
         }
+    }
+}
+
+void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController) {
+    UniformBufferObject ubo{};
+    GlobalUniformBufferObject gubo{};
+
+    std::vector<Torch *> validTs;
+    for (auto &t : gameStatus.torches) {
+        if (!t.on || !cameraController.frustumIntersect(t.pos, t.radius()))
+            continue;
+        if (collisionDetector->isOccluded(t.pos, gameStatus.player.pos, 0.0f))
+            continue;
+
+        validTs.push_back(&t);
+    }
+
+    std::ranges::sort(validTs, [&gameStatus](auto *lhs, auto *rhs) -> bool {
+        return glm::distance(gameStatus.player.pos, lhs->pos) < glm::distance(gameStatus.player.pos, rhs->pos);
+    });
+
+    gubo.playerPos = glm::vec4(gameStatus.player.pos, 1.0f);
+    gubo.settings.z = NUM_LIGHTS > validTs.size() ? validTs.size() : NUM_LIGHTS;
+    if (validTs.size() < NUM_LIGHTS) {
+        std::cout << "Valid Lights are less than NUM_LIGHTS: " << validTs.size() << "\n";
+    }
+    for (int i = 0; i < gubo.settings.z; i++) {
+        gubo.lightColor[i] = glm::vec4(validTs[i]->color, 1.0f);
+        gubo.lightPos[i] = glm::vec4(validTs[i]->pos, 1.0f);
+        gubo.lightParams[i] = glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->beta, 1.0f);
+    }
+
+    gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
+    gubo.settings.y = gameStatus.settings.cookTorrance;
+
+    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
+    for (auto *instance : techInstMap["General"]) {
+        ubo.mMat = instance->Wm;
+        ubo.mvpMat = cameraController.viewPrjMat * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+        instance->DS[0][0]->map(currentImage, &ubo, 0);
+        instance->DS[0][0]->map(currentImage, &gubo, 1);
+    }
+
+    smMap["General"].updateUniformBuffer(currentImage, {std::begin(gubo.lightPos), std::end(gubo.lightPos)});
+}
+
+void SceneLoader::emissiveUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController) {
+    UniformBufferObject ubo{};
+    LightUniformBufferObject lubo{};
+
+    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
+    for (auto *instance : techInstMap["Emissive"]) {
+        ubo.mMat = instance->Wm;
+        ubo.mvpMat = cameraController.viewPrjMat * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+        instance->DS[0][0]->map(currentImage, &ubo, 0);
+
+        auto t_it =
+            std::ranges::find_if(gameStatus.torches, [instance](const auto &t) { return *instance->id == t.id; });
+
+        if (t_it != gameStatus.torches.end()) {
+            lubo.lightColor = glm::vec4(t_it->color, t_it->on ? 1.0f : 0.0f);
+            instance->DS[0][0]->map(currentImage, &lubo, 1);
+        }
+    }
+}
+
+void SceneLoader::armsUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController) {
+    UniformBufferObject ubo{};
+
+    for (auto *instance : techInstMap["Arms"]) {
+        ubo.mMat = cameraController.computeAttachedModelMat(gameStatus.player.pos, gameStatus.player.armsOffset);
+        ubo.mvpMat = cameraController.viewPrjMat * ubo.mMat;
+        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+
+        instance->DS[0][0]->map(currentImage, &ubo, 0);
     }
 }
 
@@ -167,6 +260,7 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
         for (int i = 0; i < scene.TI[ti].InstanceCount; i++) {
             auto *inst = &scene.TI[ti].I[i];
             instances.push_back(inst);
+            techInstMap[*scene.TI[ti].T->id].push_back(inst);
             if (inst->C) {
                 collisionDetector->addCollider(inst->C, !unsolid.contains(*inst->id));
             }
@@ -211,51 +305,13 @@ void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
     rp.end(commandBuffer);
 }
 
-void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus,
-                                      CameraController &cameraController) {
-
-    UniformBufferObject ubo{};
-    GlobalUniformBufferObject gubo{};
-
-    gubo.playerPos = glm::vec4(gameStatus.player.pos, 1.0f);
-    for (int i = 0; i < NUM_LIGHTS; i++) {
-        gubo.lightColor[i] = glm::vec4(gameStatus.torches[i].color, 1.0f);
-        gubo.lightPos[i] = glm::vec4(gameStatus.torches[i].pos, 1.0f);
-        gubo.lightParams[i] = glm::vec4(gameStatus.torches[i].on ? 1.0f : 0.0f, gameStatus.torches[i].g,
-                                        gameStatus.torches[i].beta, 1.0f);
-    }
-
-    // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
-    for (auto *instance : instances) {
-        if (*instance->id == "arms") {
-            ubo.mMat = cameraController.computeAttachedModelMat(gameStatus.player.pos, glm::vec3(0.0f, -1.7f, -0.5f));
-            ubo.mvpMat = cameraController.computeViewPrjMat(gameStatus.player.pos, 0.6f) * ubo.mMat;
-        } else {
-            ubo.mMat = instance->Wm;
-            ubo.mvpMat = viewPrjMat * ubo.mMat;
-        }
-        ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
-
-        gubo.extra = glm::vec4(0.0f);
-        gubo.extra.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
-        gubo.extra.y = gameStatus.settings.cookTorrance;
-        for (int i = 0; i < NUM_LIGHTS; i++) {
-            if (gameStatus.torches[i].id == *instance->id) {
-                gubo.extra = glm::vec4(gameStatus.torches[i].color, gameStatus.torches[i].on ? 1.0f : 0.0f);
-                break;
-            }
-        }
-
-        instance->DS[0][0]->map(currentImage, &ubo, 0);
-        instance->DS[0][0]->map(currentImage, &gubo, 1);
-    }
-
-    for (auto &sm : smMap | std::views::values) {
-        sm.updateUniformBuffer(currentImage, {std::begin(gubo.lightPos), std::end(gubo.lightPos)});
-    }
+void SceneLoader::updateUniformBuffer(int currentImage, GameStatus &gameStatus, CameraController &cameraController) {
+    generalUpdateUB(currentImage, gameStatus, cameraController);
+    emissiveUpdateUB(currentImage, gameStatus, cameraController);
+    armsUpdateUB(currentImage, gameStatus, cameraController);
 
     // updates the view-projection matrix used to draw the colliders' wireframes
-    scene.updateColliderVisualizer(currentImage, viewPrjMat);
+    scene.updateColliderVisualizer(currentImage, cameraController.viewPrjMat);
 }
 
 const std::vector<Instance *> &SceneLoader::getInstances() { return instances; }

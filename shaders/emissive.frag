@@ -8,15 +8,12 @@ layout(location = 3) in vec4 fragTan;
 
 layout(location = 0) out vec4 outColor;
 
-#define NUM_LIGHTS 19
+#define NUM_LIGHTS 8
 
-layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
-    vec4 lightColor[NUM_LIGHTS];   // rgb = colour of light i
-    vec4 lightPos[NUM_LIGHTS];     // xyz = world position of light i
-    vec4 lightParams[NUM_LIGHTS];  // x = on/off, y = g, z = beta
+layout(binding = 1, set = 0) uniform LightUniformBufferObject {
+    vec4 lightColor;   // rgb = colour of light i, a = on/off
     vec4 playerPos;
-    vec4 extra;
-} gubo;
+} lubo;
 
 layout(binding = 2, set = 0) uniform sampler2D textureMap[2];
 
@@ -26,11 +23,11 @@ layout(binding = 2, set = 0) uniform sampler2D textureMap[2];
 // Unlit: the model glows with its light color and ignores the light it contains
 void main() {
     vec3 N = normalize(fragNorm);
-    vec3 V = normalize(gubo.playerPos.xyz - fragPos);
+    vec3 V = normalize(lubo.playerPos.xyz - fragPos);
     float facing = max(dot(N, V), 0.0);
 
     vec3 texColor = texture(textureMap[0], fragUV).rgb;
-    float alpha = texture(textureMap[1], fragUV).r * gubo.extra.a;
-    vec3 color = mix(gubo.extra.rgb, vec3(1.0), WHITE_CORE * facing * facing) * texColor;
+    float alpha = texture(textureMap[1], fragUV).r * lubo.lightColor.a;
+    vec3 color = mix(lubo.lightColor.rgb, vec3(1.0), WHITE_CORE * facing * facing) * texColor;
     outColor = vec4(color, alpha);
 }

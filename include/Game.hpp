@@ -16,9 +16,6 @@ class Game : public BaseProject {
     std::unique_ptr<InputManager> inputManager;
 
     CameraController cameraController;
-
-    glm::mat4 viewPrjMat = glm::mat4(0.0f);
-
     GameStatus gameStatus;
 
     // What to do when the window changes size

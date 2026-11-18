@@ -5,6 +5,7 @@
 #include "Door.hpp"
 
 struct Torch {
+    static constexpr float CUTOFF = 5e-3f;
     std::string id;
     glm::vec3 pos;
     glm::vec3 color;
@@ -13,6 +14,11 @@ struct Torch {
     bool on;
     int room;
     bool interactable;
+
+    float radius() {
+        float maxC = glm::max(color.r, glm::max(color.g, color.b));
+        return g * std::pow(maxC / CUTOFF, 1.0f / beta);
+    }
 };
 
 class GameStatus {
