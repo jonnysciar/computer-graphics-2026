@@ -1387,6 +1387,31 @@
       "id": "wall-decor-ao",
       "texture": "assets/textures/room_1/wall_decor/wall_decor_ao.png",
       "format": "D"
+    },
+    {
+      "id": "wood-door-albedo",
+      "texture": "assets/textures/wood_door/wood_door_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "wood-door-normal",
+      "texture": "assets/textures/wood_door/wood_door_normal-ogl.png",
+      "format": "D"
+    },
+    {
+      "id": "wood-door-metallic",
+      "texture": "assets/textures/wood_door/wood_door_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "wood-door-roughness",
+      "texture": "assets/textures/wood_door/wood_door_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "wood-door-ao",
+      "texture": "assets/textures/wood_door/wood_door_ao.png",
+      "format": "D"
     }
   ],
   "instances": [
@@ -2104,11 +2129,11 @@
           "eulerAngles": [0, 0, 0],
           "translate": [16.1, 0, 1.9],
           "texture": [
-            "wooden-panels-albedo",
-            "wooden-panels-normal",
-            "wooden-panels-metallic",
-            "wooden-panels-roughness",
-            "wooden-panels-ao"
+            "wood-door-albedo",
+            "wood-door-normal",
+            "wood-door-metallic",
+            "wood-door-roughness",
+            "wood-door-ao"
           ]
         },
         {
@@ -2134,11 +2159,11 @@
           "eulerAngles": [0, 90, 0],
           "translate": [1.9, 0, -16.1],
           "texture": [
-            "wooden-panels-albedo",
-            "wooden-panels-normal",
-            "wooden-panels-metallic",
-            "wooden-panels-roughness",
-            "wooden-panels-ao"
+            "wood-door-albedo",
+            "wood-door-normal",
+            "wood-door-metallic",
+            "wood-door-roughness",
+            "wood-door-ao"
           ]
         },
         {
@@ -2149,11 +2174,11 @@
           "eulerAngles": [0, 0, 0],
           "translate": [47.9, 0, 1.9],
           "texture": [
-            "wooden-panels-albedo",
-            "wooden-panels-normal",
-            "wooden-panels-metallic",
-            "wooden-panels-roughness",
-            "wooden-panels-ao"
+            "wood-door-albedo",
+            "wood-door-normal",
+            "wood-door-metallic",
+            "wood-door-roughness",
+            "wood-door-ao"
           ]
         },
         {
@@ -2164,11 +2189,11 @@
           "eulerAngles": [0, 90, 0],
           "translate": [1.9, 0, -31.9],
           "texture": [
-            "wooden-panels-albedo",
-            "wooden-panels-normal",
-            "wooden-panels-metallic",
-            "wooden-panels-roughness",
-            "wooden-panels-ao"
+            "wood-door-albedo",
+            "wood-door-normal",
+            "wood-door-metallic",
+            "wood-door-roughness",
+            "wood-door-ao"
           ]
         },
         {
@@ -2179,11 +2204,11 @@
           "eulerAngles": [0, 0, 0],
           "translate": [-4.1, 0, -34.1],
           "texture": [
-            "wooden-panels-albedo",
-            "wooden-panels-normal",
-            "wooden-panels-metallic",
-            "wooden-panels-roughness",
-            "wooden-panels-ao"
+            "wood-door-albedo",
+            "wood-door-normal",
+            "wood-door-metallic",
+            "wood-door-roughness",
+            "wood-door-ao"
           ]
         },
         {
@@ -2194,11 +2219,11 @@
           "eulerAngles": [0, 0, 0],
           "translate": [-35.9, 0, -34.1],
           "texture": [
-            "wooden-panels-albedo",
-            "wooden-panels-normal",
-            "wooden-panels-metallic",
-            "wooden-panels-roughness",
-            "wooden-panels-ao"
+            "wood-door-albedo",
+            "wood-door-normal",
+            "wood-door-metallic",
+            "wood-door-roughness",
+            "wood-door-ao"
           ]
         },
         {

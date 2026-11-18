@@ -62,8 +62,8 @@
 	"images":[
 		{
 			"mimeType":"image/png",
-			"name":"wooden_panels_albedo",
-			"uri":"wooden_panels_albedo.png"
+			"name":"Wood_Door_albedo",
+			"uri":"Wood_Door_albedo.png"
 		}
 	],
 	"accessors":[
