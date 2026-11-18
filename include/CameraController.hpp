@@ -36,5 +36,5 @@ class CameraController {
 
   private:
     glm::mat4 computeViewMat(glm::vec3 pos) const;
-    void updateFrustum(glm::mat4 viewPrjMat);
+    void updateFrustum();
 };

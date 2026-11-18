@@ -6,14 +6,14 @@ layout(location = 1) in float fragDepth;
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1, set = 0) uniform sampler2D textureMap[2];
+layout(binding = 1, set = 0) uniform sampler2D textureMap;
 
 const float ARMS_CUT_DISTANCE = 0.6;
 
 void main() {
     if (fragDepth < ARMS_CUT_DISTANCE) discard;
 
-    float uv = texture(textureMap[1], fragUV).r;
-    vec3 albedo = pow(texture(textureMap[0], fragUV).rgb, vec3(2.2));
-    outColor = vec4(albedo, 1.0);
+    vec3 albedo = texture(textureMap, fragUV).rgb;
+
+    outColor = vec4(albedo, texture(textureMap, fragUV).a) * 0.5;
 }

@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#define NUM_LIGHTS 8
+#define NUM_LIGHTS 19
 
 // The uniform buffer object used in this example
 struct UniformBufferObject {
@@ -26,7 +26,7 @@ struct ShadowUBO {
 };
 
 struct LightUniformBufferObject {
-    alignas(16) glm::vec4 lightColor;   // rgb = colour of light i, a = on/off
+    alignas(16) glm::vec4 lightColor; // rgb = colour of light i, a = on/off
     alignas(16) glm::vec4 playerPos;
 };
 

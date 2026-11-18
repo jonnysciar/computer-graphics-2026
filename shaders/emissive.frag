@@ -8,8 +8,6 @@ layout(location = 3) in vec4 fragTan;
 
 layout(location = 0) out vec4 outColor;
 
-#define NUM_LIGHTS 8
-
 layout(binding = 1, set = 0) uniform LightUniformBufferObject {
     vec4 lightColor;   // rgb = colour of light i, a = on/off
     vec4 playerPos;

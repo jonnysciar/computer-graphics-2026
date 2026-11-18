@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
+#include <iostream>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -147,28 +148,36 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
 
     std::vector<Torch *> validTs;
     for (auto &t : gameStatus.torches) {
-        if (!t.on || !cameraController.frustumIntersect(t.pos, t.radius()))
+        if (!gameStatus.settings.dynamicLight) {
+            validTs.push_back(&t);
             continue;
-        if (collisionDetector->isOccluded(t.pos, gameStatus.player.pos, 0.0f))
+        }
+
+        const float r = t.radius() * 1.5f;
+        if (!collisionDetector->isLightVisible(gameStatus.player.pos, t.pos, r))
+            continue;
+        if (!t.on || !cameraController.frustumIntersect(t.pos, r))
             continue;
 
         validTs.push_back(&t);
     }
 
-    std::ranges::sort(validTs, [&gameStatus](auto *lhs, auto *rhs) -> bool {
-        return glm::distance(gameStatus.player.pos, lhs->pos) < glm::distance(gameStatus.player.pos, rhs->pos);
-    });
+    if (gameStatus.settings.dynamicLight) {
+        std::ranges::sort(validTs, [&gameStatus](auto *lhs, auto *rhs) -> bool {
+            return glm::distance(gameStatus.player.pos, lhs->pos) < glm::distance(gameStatus.player.pos, rhs->pos);
+        });
+    }
 
     gubo.playerPos = glm::vec4(gameStatus.player.pos, 1.0f);
     gubo.settings.z = NUM_LIGHTS > validTs.size() ? validTs.size() : NUM_LIGHTS;
-    if (validTs.size() < NUM_LIGHTS) {
-        std::cout << "Valid Lights are less than NUM_LIGHTS: " << validTs.size() << "\n";
-    }
+    std::cout << "[ ";
     for (int i = 0; i < gubo.settings.z; i++) {
+        std::cout << validTs[i]->id << " r: " << ", ";
         gubo.lightColor[i] = glm::vec4(validTs[i]->color, 1.0f);
         gubo.lightPos[i] = glm::vec4(validTs[i]->pos, 1.0f);
         gubo.lightParams[i] = glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->beta, 1.0f);
     }
+    std::cout << " ]\n";
 
     gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
     gubo.settings.y = gameStatus.settings.cookTorrance;

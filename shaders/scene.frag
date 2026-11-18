@@ -14,14 +14,14 @@ layout(location = 0) out vec4 outColor;
 // ------------------------------------------------------------
 //  UNIFORMS
 // ------------------------------------------------------------
-#define NUM_LIGHTS 8        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
+#define NUM_LIGHTS 19        // = ShadowMapperParams::lightCount (light i <-> shadow layers 6i..6i+5)
 
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 lightColor[NUM_LIGHTS]; // rgb = colour of light i
     vec4 lightPos[NUM_LIGHTS]; // xyz = world position of light i
     vec4 lightParams[NUM_LIGHTS]; // x = on/off, y = g, z = beta
     vec4 playerPos;
-    vec4 settings; //x = enable shadows, y = shading technique
+    vec4 settings; //x = enable shadows, y = shading technique, z = num of usable lights
 } gubo;
 
 // ------------------------------------------------------------
@@ -105,8 +105,7 @@ vec3 computeF0(vec3 albedo, float metallic) {
 // tune to your scene scale
 const float SHADOW_BIAS = 0.05; // world units along the face axis
 const float SHADOW_NORMAL_OFFSET = 0.05; // world units, applied at grazing angles
-const float SHADOW_PCF_TEXELS = 1.5; // tap offset; each tap is already a bilinear 2x2 comparison
-const float LIGHT_CUTOFF = 5e-3; // lights contributing less than this are skipped
+const float LIGHT_CUTOFF = 1e-4; // lights contributing less than this are skipped
 
 const float SHADOW_A = SHADOW_FAR / (SHADOW_FAR - SHADOW_NEAR); // stored depth = A + B / zf
 const float SHADOW_B = -SHADOW_FAR * SHADOW_NEAR / (SHADOW_FAR - SHADOW_NEAR);
@@ -241,7 +240,7 @@ vec3 cookTorrance(
 vec3 computeLight() {
     vec3 albedo = texture(textureMap[0], fragUV).rgb;
     float metallic = texture(textureMap[2], fragUV).r;
-    float roughness = texture(textureMap[3], fragUV).r;
+    float roughness = clamp(texture(textureMap[3], fragUV).r, 0.04, 1.0);
     float ao = texture(textureMap[4], fragUV).r;
 
     // ---- Build TBN and decode the normal map ------
@@ -299,9 +298,23 @@ vec3 computeLight() {
         direct += lightCol * fr * visibility;
     }
 
-    vec3 ambient = vec3(0.03) * ao * albedo;
-    vec3 color = direct + ambient;
-    color = color / (color + vec3(1.0));
+    // Inside computeLight(), after computing N, V, metallic, roughness, F0, ao:
+    vec3 R = reflect(-V, N);
+    
+    // Simple sky/ground gradient based on reflection direction
+    float skyFactor = clamp(R.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 skyColor = vec3(0.45, 0.55, 0.70);
+    vec3 groundColor = vec3(0.18, 0.16, 0.15);
+    vec3 fakeEnv = mix(groundColor, skyColor, skyFactor);
+    
+    // Smooth metals reflect environment more sharply than rough metals
+    float specStrength = mix(1.0, 0.15, roughness);
+    vec3 envSpecular = fakeEnv * F0 * specStrength * ao;
+    
+    // Diffuse ambient only applies to non-metals (dielectrics)
+    vec3 envDiffuse = vec3(0.03) * ao * albedo * (1.0 - metallic);
+
+    vec3 color = direct + envDiffuse + envSpecular;
     return color;
 }
 
@@ -309,5 +322,5 @@ vec3 computeLight() {
 //  MAIN
 // ============================================================
 void main() {
-    outColor = vec4(computeLight(), 1.0);
+    outColor = vec4(computeLight(), texture(textureMap[0], fragUV).a);
 }

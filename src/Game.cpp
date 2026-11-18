@@ -4,7 +4,6 @@
 
 #include "CameraController.hpp"
 #include "uniform_buffers.hpp"
-#include "Scene/MainSceneHandler.hpp"
 #include "Scene/Room1Handler.hpp"
 #include "Scene/Room2Handler.hpp"
 #include "Scene/Room3Handler.hpp"
@@ -38,7 +37,6 @@ void Game::localInit() {
         // std::exit(1);
     }
 
-    sceneHandlers.push_back(std::make_unique<MainSceneHandler>(sceneLoader.get(), hudManager.get()));
     sceneHandlers.push_back(std::make_unique<Room1Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
     sceneHandlers.push_back(std::make_unique<Room2Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
     sceneHandlers.push_back(std::make_unique<Room3Handler>(sceneLoader.get(), hudManager.get()));

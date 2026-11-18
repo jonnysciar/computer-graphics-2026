@@ -5,9 +5,7 @@
 const float CameraController::nearPlane = 0.1f;
 const float CameraController::farPlane = 100.0f;
 
-CameraController::CameraController() {
-    updateFrustum(viewPrjMat);
-}
+CameraController::CameraController() { updateFrustum(); }
 
 glm::vec3 CameraController::computePos(glm::vec3 pos, glm::vec3 m, glm::vec3 r, float deltaT) {
     Yaw += ROT_SPEED * deltaT * r.y;   // y
@@ -28,6 +26,7 @@ void CameraController::updateViewPrjMat(glm::vec3 pos) {
     Prj[1][1] *= -1;
 
     viewPrjMat = Prj * computeViewMat(pos);
+    updateFrustum();
 }
 
 glm::mat4 CameraController::computeViewMat(glm::vec3 pos) const {
@@ -43,8 +42,7 @@ glm::mat4 CameraController::computeAttachedModelMat(glm::vec3 pos, glm::vec3 off
     return cameraWorld * localOffset;
 }
 
-
-void CameraController::updateFrustum(glm::mat4 viewPrjMat) {
+void CameraController::updateFrustum() {
     auto row = [&](int r) { return glm::vec4(viewPrjMat[0][r], viewPrjMat[1][r], viewPrjMat[2][r], viewPrjMat[3][r]); };
 
     frustum[0] = row(3) + row(0); // left
@@ -54,7 +52,8 @@ void CameraController::updateFrustum(glm::mat4 viewPrjMat) {
     frustum[4] = row(2);          // near  (Vulkan: 0 <= z <= w)
     frustum[5] = row(3) - row(2); // far
 
-    for (auto& p : frustum) p /= glm::length(glm::vec3(p)); // normalize so w is a real distance
+    for (auto &p : frustum)
+        p /= glm::length(glm::vec3(p)); // normalize so w is a real distance
 }
 
 bool CameraController::frustumIntersect(const glm::vec3 &c, float r) const {

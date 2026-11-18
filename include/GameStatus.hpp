@@ -5,7 +5,7 @@
 #include "Door.hpp"
 
 struct Torch {
-    static constexpr float CUTOFF = 5e-3f;
+    static constexpr float CUTOFF = 1e-4f;
     std::string id;
     glm::vec3 pos;
     glm::vec3 color;

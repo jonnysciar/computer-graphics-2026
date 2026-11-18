@@ -1,6 +1,8 @@
 #include "CollisionDetector.hpp"
 #include "Player.hpp"
+#include "modules/Colliders.hpp"
 
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace {
@@ -33,30 +35,50 @@ bool segmentIntersectsAABB(const glm::vec3 &a, const glm::vec3 &b, const AABBext
     }
     return true;
 }
-}
+} // namespace
 
-bool CollisionDetector::isOccluded(const glm::vec3 &lightPos, const glm::vec3 &viewerPos, float startOffset) const {
-    const glm::vec3 delta = viewerPos - lightPos;
-    const float len = glm::length(delta);
-    if (len <= startOffset)
-        return false; // light is practically on top of the viewer
-
-    // Skip the first startOffset meters so the light's own holder or wall does not hide it
-    const glm::vec3 start = lightPos + delta * (startOffset / len);
-
+bool CollisionDetector::isOccluded(const glm::vec3 &playerPos, const glm::vec3 &lightPos) const {
     return std::ranges::any_of(colliders, [&](const auto &pair) {
         auto *collider = pair.first;
         if (!pair.second || !collider)
             return false; // only solid colliders can hide a light
 
-        const AABBextents box = collider->getExtents(); // computed now, no cache
+        const AABBextents box = collider->getExtents();
 
-        // A box that contains an endpoint cannot be "in between": this covers the floor under the player
-        // and a torch embedded in its wall
-        if (containsPoint(box, start) || containsPoint(box, viewerPos))
+        // A box that contains an endpoint cannot be "in between"
+        if (containsPoint(box, lightPos) || containsPoint(box, playerPos))
             return false;
-        return segmentIntersectsAABB(start, viewerPos, box);
+        return segmentIntersectsAABB(lightPos, playerPos, box);
     });
+}
+
+bool CollisionDetector::isLightVisible(const glm::vec3 &playerPos, const glm::vec3 &lightPos,
+                                       const float radius) const {
+    const glm::vec3 toCenter = lightPos - playerPos;
+    const float dist = glm::length(toCenter);
+
+    // Orthonormal basis around the view direction
+    const glm::vec3 dir = toCenter / dist;
+    const glm::vec3 helper = std::abs(dir.y) < 0.99f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+    const glm::vec3 right = glm::normalize(glm::cross(dir, helper));
+    const glm::vec3 up = glm::cross(right, dir);
+
+    const float r = radius;              // stay inside the silhouette
+    const float diagR = r * 0.70710678f; // scaled for diagonals to maintain radius r
+
+    // Expanded sample set (9 points: center, 4 cardinal, 4 diagonal)
+    const glm::vec3 samples[9] = {lightPos,
+                                  lightPos + right * r,
+                                  lightPos - right * r,
+                                  lightPos + up * r,
+                                  lightPos - up * r,
+                                  lightPos + (right + up) * diagR,
+                                  lightPos + (right - up) * diagR,
+                                  lightPos + (-right + up) * diagR,
+                                  lightPos + (-right - up) * diagR};
+
+    // Visible if at least one sample can be seen from the eye.
+    return std::ranges::any_of(samples, [&](const glm::vec3 &p) { return !isOccluded(p, playerPos); });
 }
 
 bool CollisionDetector::collidesWithSolids(Collider &body, const glm::vec3 &pos) {
