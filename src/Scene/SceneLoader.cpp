@@ -1,5 +1,6 @@
 #include "Scene/SceneLoader.hpp"
 
+#include "CameraController.hpp"
 #include "GameStatus.hpp"
 #include "uniform_buffers.hpp"
 
@@ -105,7 +106,7 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPh
             std::string frag_shader = pipeline.at("fragment");
             Pipeline P{};
             P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)});
-            if (tech_name == "Emissive") {
+            if (tech_name != "General") {
                 P.setTransparency(true);
                 P.setCullMode(VK_CULL_MODE_NONE);
             }
@@ -210,7 +211,7 @@ void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int curre
     rp.end(commandBuffer);
 }
 
-void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus) {
+void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus, CameraController &cameraController) {
 
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};
@@ -225,8 +226,13 @@ void SceneLoader::updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMa
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
     for (auto *instance : instances) {
-        ubo.mMat = instance->Wm;
-        ubo.mvpMat = viewPrjMat * ubo.mMat;
+        if (*instance->id == "arms") {
+            ubo.mMat = cameraController.computeAttachedModelMat(gameStatus.player.pos, glm::vec3(0.0f, -1.7f, -0.5f));
+            ubo.mvpMat = cameraController.computeViewPrjMat(gameStatus.player.pos, 0.6f) * ubo.mMat;
+        } else {
+            ubo.mMat = instance->Wm;
+            ubo.mvpMat = viewPrjMat * ubo.mMat;
+        }
         ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 
         gubo.extra = glm::vec4(0.0f);

@@ -2,6 +2,7 @@
 
 #include "Listener/Listener.hpp"
 #include "InputManager.hpp"
+#include <iostream>
 
 class Settings : public Listener<Key> {
 
@@ -17,9 +18,9 @@ class Settings : public Listener<Key> {
             enableShadows = !enableShadows;
             break;
         case GLFW_KEY_2:
-            cookTorrance = (++cookTorrance) % 3;
+            cookTorrance = (cookTorrance + 1) % 3;
+            std::cout << "Shading is " << cookTorrance << std::endl;
             break;
-
         default:
             break;
         }

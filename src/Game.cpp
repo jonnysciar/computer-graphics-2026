@@ -2,6 +2,7 @@
 
 #include "Game.hpp"
 
+#include "CameraController.hpp"
 #include "uniform_buffers.hpp"
 #include "Scene/MainSceneHandler.hpp"
 #include "Scene/Room1Handler.hpp"
@@ -67,7 +68,7 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
     std::ranges::for_each(sceneHandlers, [&](auto &handler) { handler->checkInteractionReach(gameStatus); });
 
-    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat, gameStatus);
+    sceneLoader->updateUniformBuffer(currentImage, viewPrjMat, gameStatus, cameraController);
     hudManager->updateUniformBuffer(currentImage, deltaT);
 }
 
@@ -107,7 +108,7 @@ float Game::handleMovement() {
 
     glm::vec3 newPos = cameraController.computePos(gameStatus.player.pos, m, r, deltaT);
     gameStatus.player.pos = sceneLoader->getCollisionDetector()->resolveCollision(gameStatus.player, newPos);
-    viewPrjMat = cameraController.computeViewPrjMat(gameStatus.player.pos);
+    viewPrjMat = cameraController.computeViewPrjMat(gameStatus.player.pos, CameraController::nearPlane);
     gameStatus.player.updateColliders();
 
     return deltaT;

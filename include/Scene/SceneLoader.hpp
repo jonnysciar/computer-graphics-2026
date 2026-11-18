@@ -3,6 +3,7 @@
 #include <modules/Starter.hpp>
 #include <modules/Scene.hpp>
 
+#include "CameraController.hpp"
 #include "GameStatus.hpp"
 #include "CollisionDetector.hpp"
 #include "ShadowMapper.hpp"
@@ -43,7 +44,7 @@ class SceneLoader {
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
-    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus);
+    void updateUniformBuffer(uint32_t currentImage, glm::mat4 viewPrjMat, GameStatus &gameStatus, CameraController &cameraController);
 
     const std::vector<Instance *> &getInstances();
 
