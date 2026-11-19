@@ -300,16 +300,12 @@ vec3 computeLight() {
 
     // Inside computeLight(), after computing N, V, metallic, roughness, F0, ao:
     vec3 R = reflect(-V, N);
-    
-    // Simple sky/ground gradient based on reflection direction
-    float skyFactor = clamp(R.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 skyColor = vec3(0.45, 0.55, 0.70);
-    vec3 groundColor = vec3(0.18, 0.16, 0.15);
-    vec3 fakeEnv = mix(groundColor, skyColor, skyFactor);
-    
+
+    vec3 ambColor = vec3(1.0, 0.2, 0.0);
+
     // Smooth metals reflect environment more sharply than rough metals
     float specStrength = mix(1.0, 0.15, roughness);
-    vec3 envSpecular = fakeEnv * F0 * specStrength * ao;
+    vec3 envSpecular = ambColor * F0 * specStrength * ao;
     
     // Diffuse ambient only applies to non-metals (dielectrics)
     vec3 envDiffuse = vec3(0.03) * ao * albedo * (1.0 - metallic);

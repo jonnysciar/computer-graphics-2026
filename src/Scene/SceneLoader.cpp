@@ -170,14 +170,12 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
 
     gubo.playerPos = glm::vec4(gameStatus.player.pos, 1.0f);
     gubo.settings.z = NUM_LIGHTS > validTs.size() ? validTs.size() : NUM_LIGHTS;
-    std::cout << "[ ";
+
     for (int i = 0; i < gubo.settings.z; i++) {
-        std::cout << validTs[i]->id << " r: " << ", ";
         gubo.lightColor[i] = glm::vec4(validTs[i]->color, 1.0f);
         gubo.lightPos[i] = glm::vec4(validTs[i]->pos, 1.0f);
         gubo.lightParams[i] = glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->beta, 1.0f);
     }
-    std::cout << " ]\n";
 
     gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
     gubo.settings.y = gameStatus.settings.cookTorrance;
