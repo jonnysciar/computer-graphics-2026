@@ -1,0 +1,185 @@
+{
+ "accessors": [
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 52,
+   "max": [
+    87.93157958984375,
+    84.40565490722656,
+    0
+   ],
+   "min": [
+    -89.08898162841797,
+    -89.22419738769531,
+    0
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "byteOffset": 624,
+   "componentType": 5126,
+   "count": 52,
+   "max": [
+    0,
+    0,
+    1
+   ],
+   "min": [
+    0,
+    0,
+    1
+   ],
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5126,
+   "count": 52,
+   "max": [
+    1,
+    0.000004704202638095012,
+    0,
+    1
+   ],
+   "min": [
+    1,
+    -0.000006752793524356093,
+    0,
+    1
+   ],
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 52,
+   "max": [
+    0.939657986164093,
+    0.9220280051231384
+   ],
+   "min": [
+    0.05455499887466431,
+    0.05387900024652481
+   ],
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 0,
+   "componentType": 5125,
+   "count": 153,
+   "type": "SCALAR"
+  }
+ ],
+ "asset": {
+  "extras": {
+   "author": "ahmagh2e (https://sketchfab.com/ahmagh2e)",
+   "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+   "source": "https://sketchfab.com/3d-models/carpet-31e0b1bf4a6c4fce88648b4edea321ab",
+   "title": "Carpet"
+  },
+  "generator": "Sketchfab-15.58.0",
+  "version": "2.0"
+ },
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteLength": 612,
+   "name": "floatBufferViews",
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteLength": 416,
+   "byteOffset": 612,
+   "byteStride": 8,
+   "name": "floatBufferViews",
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 1248,
+   "byteOffset": 1028,
+   "byteStride": 12,
+   "name": "floatBufferViews",
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteLength": 832,
+   "byteOffset": 2276,
+   "byteStride": 16,
+   "name": "floatBufferViews",
+   "target": 34962
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 3108,
+   "uri": "carpet.bin"
+  }
+ ],
+ "meshes": [
+  {
+   "name": "Object_0",
+   "primitives": [
+    {
+     "attributes": {
+      "NORMAL": 1,
+      "POSITION": 0,
+      "TANGENT": 2,
+      "TEXCOORD_0": 3
+     },
+     "indices": 4,
+     "mode": 4
+    }
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "children": [
+    1
+   ],
+   "matrix": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    2.220446049250313e-16,
+    -1,
+    0,
+    0,
+    1,
+    2.220446049250313e-16,
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "name": "Sketchfab_model"
+  },
+  {
+   "children": [
+    2
+   ],
+   "name": "31cb2a4642084e41b5ebfabb72500de6.obj.cleaner.materialmerger.gles"
+  },
+  {
+   "mesh": 0,
+   "name": "Object_2"
+  }
+ ],
+ "scene": 0,
+ "scenes": [
+  {
+   "name": "Sketchfab_Scene",
+   "nodes": [
+    0
+   ]
+  }
+ ]
+}
