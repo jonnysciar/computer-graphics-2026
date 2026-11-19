@@ -5,32 +5,33 @@
 
 #include <modules/Scene.hpp>
 
-Room6Handler::Room6Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
-    : SceneHandler(sceneLoader, hudManager) {
-    interMap = {{"door_5_6", Interactable{.instance = nullptr,
-                                          .callback =
-                                              [this](Interactable &i, GameStatus &gs) {
-                                                  if (!gs.door_5_6.getIsLocked()) {
-                                                      if (gs.door_5_6.getIsOpen()) {
-                                                          gs.door_5_6.rotateInstanceY(i.instance, +90.0f);
-                                                          gs.door_5_6.setIsOpen(false);
-                                                      } else {
-                                                          gs.door_5_6.rotateInstanceY(i.instance, -90.0f);
-                                                          gs.door_5_6.setIsOpen(true);
-                                                      }
-                                                  }
-                                              }}},
-                {"door_6_7", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
-                                              if (!gs.door_6_7.getIsLocked()) {
-                                                  if (gs.door_6_7.getIsOpen()) {
-                                                      gs.door_6_7.rotateInstanceY(i.instance, +90.0f);
-                                                      gs.door_6_7.setIsOpen(false);
-                                                  } else {
-                                                      gs.door_6_7.rotateInstanceY(i.instance, -90.0f);
-                                                      gs.door_6_7.setIsOpen(true);
-                                                  }
-                                              }
-                                          }}}};
+Room6Handler::Room6Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs) : SceneHandler(sceneLoader, hudManager) {
+    interMap = {{"door_5_6", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+        if ( gs.door_2_3.getIsLocked() && !gs.player.hasItem("key_2")) {
+            this->hudManager->setPrompt("The door is locked");
+        }
+        if (!gs.door_5_6.getIsLocked()) {
+            if (gs.door_5_6.getIsOpen()) {
+                gs.door_5_6.rotateInstanceY(i.instance, +90.0f);
+                gs.door_5_6.setIsOpen(false);
+            }
+            else {
+                gs.door_5_6.rotateInstanceY(i.instance, -90.0f);
+                gs.door_5_6.setIsOpen(true);
+            }
+        }
+    }}},
+    {"door_6_7", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+        if (!gs.door_6_7.getIsLocked()) {
+            if (gs.door_6_7.getIsOpen()) {
+                gs.door_6_7.rotateInstanceY(i.instance, +90.0f);
+                gs.door_6_7.setIsOpen(false);
+            } else {
+                gs.door_6_7.rotateInstanceY(i.instance, -90.0f);
+                gs.door_6_7.setIsOpen(true);
+            }
+        }
+    }}}};
 
     for (auto &torch : gs.torches) {
         if (torch.room != 6 || !torch.interactable)
@@ -54,6 +55,11 @@ void Room6Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
 
     if (id == "door_5_6" || id == "door_6_7") {
         hudManager->setPrompt("Press E to open/close");
+        if (id == "door_5_6" && gs.door_5_6.getIsLocked()) {
+            if (gs.player.hasItem("key_2")) {
+                gs.door_5_6.setIsLocked(false);
+            }
+        }
     } else {
         hudManager->setPrompt("Press E to pick up");
     }

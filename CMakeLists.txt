@@ -13,7 +13,9 @@ set(NAME main)
 file(GLOB_RECURSE SRCS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 file(GLOB_RECURSE HDRS "${CMAKE_SOURCE_DIR}/include/*.hpp")
 
-add_executable(${NAME} ${HDRS} ${SRCS})
+add_executable(${NAME} ${HDRS} ${SRCS}
+        src/Scene/Room7Handler.cpp
+        include/Scene/Room7Handler.hpp)
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 # Starter

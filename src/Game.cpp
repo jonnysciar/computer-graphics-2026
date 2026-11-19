@@ -10,6 +10,7 @@
 #include "Scene/Room3Handler.hpp"
 #include "Scene/Room4Handler.hpp"
 #include "Scene/Room6Handler.hpp"
+#include "Scene/Room7Handler.hpp"
 
 // What to do when the window changes size
 void Game::onWindowResize(int w, int h) {
@@ -44,6 +45,7 @@ void Game::localInit() {
     sceneHandlers.push_back(std::make_unique<Room3Handler>(sceneLoader.get(), hudManager.get()));
     sceneHandlers.push_back(std::make_unique<Room4Handler>(sceneLoader.get(), hudManager.get()));
     sceneHandlers.push_back(std::make_unique<Room6Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
+    sceneHandlers.push_back(std::make_unique<Room7Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Key>::addListener(gameStatus.player.getPtr());
