@@ -11,13 +11,14 @@
 #include <unordered_set>
 
 class Player : public Listener<Key> {
-    static constexpr float BODY_HALF_WIDTH = 0.4f;
+    static constexpr float BODY_HALF_WIDTH = 1.0f;
     static constexpr float BODY_BELOW = 4.0f;
     static constexpr float BODY_ABOVE = 0.4f;
     static constexpr float REACH_RADIUS = 3.0f;
 
   public:
     glm::vec3 pos = glm::vec3(0.0f, 4.5f, 10.0f);
+    const glm::vec3 armsOffset = glm::vec3(0.0f, -1.7f, -0.5f);
     Collider bodyCollider;
     Collider reachCollider;
     std::unordered_set<std::string> collectedItems;
