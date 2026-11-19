@@ -5,15 +5,17 @@
 
 #include <modules/Scene.hpp>
 
-Room7Handler::Room7Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs) : SceneHandler(sceneLoader, hudManager) {
+Room7Handler::Room7Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
+    : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"door_7_o", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
-        if ( gs.door_7_o.getIsLocked() && !gs.player.hasItem("key_3")) {
-            this->hudManager->setPrompt("The door is locked");
-        }
-        if (!gs.door_7_o.getIsLocked()) {
-            this->hudManager->setPrompt("CONGRATULATIONS!\nYou completed the Hunted Castle Game");
-        }
-    }}}};
+                                              if (gs.door_7_o.getIsLocked() && !gs.player.hasItem("key_3")) {
+                                                  this->hudManager->setPrompt("The door is locked");
+                                              }
+                                              if (!gs.door_7_o.getIsLocked()) {
+                                                  this->hudManager->setPrompt(
+                                                      "CONGRATULATIONS!\nYou completed the Hunted Castle Game");
+                                              }
+                                          }}}};
 
     for (auto &torch : gs.torches) {
         if (torch.room != 6 || !torch.interactable)
@@ -23,7 +25,6 @@ Room7Handler::Room7Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                     .callback = [&torch](Interactable &, GameStatus &) { torch.on = !torch.on; }}});
     }
     setupInteractionController();
-
 }
 
 void Room7Handler::onInteractionReach(std::string_view id, GameStatus &gs) {

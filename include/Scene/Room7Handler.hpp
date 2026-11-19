@@ -3,7 +3,7 @@
 #include "SceneHandler.hpp"
 
 class Room7Handler : public SceneHandler {
-public:
+  public:
     Room7Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs);
     ~Room7Handler() override = default;
 

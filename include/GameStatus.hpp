@@ -28,12 +28,12 @@ class GameStatus {
     std::vector<Torch> torches;
 
     Door door_1_2{"door_1_2", false, false};
-    Door door_1_4{"door_1_4", true , false}; //secret mechanism
+    Door door_1_4{"door_1_4", true, false}; // secret mechanism
     Door door_1_5{"door_1_5", false, false};
-    Door door_2_3{"door_2_3", true,  false}; //key_1
-    Door door_5_6{"door_5_6", true,  false}; //key_2
+    Door door_2_3{"door_2_3", true, false}; // key_1
+    Door door_5_6{"door_5_6", true, false}; // key_2
     Door door_6_7{"door_6_7", false, false};
-    Door door_7_o{"door_7_o", true,  false}; //key_3
+    Door door_7_o{"door_7_o", true, false}; // key_3
 
     void loadLights(std::string_view jsonFile) {
         std::ifstream ifs(jsonFile.data());

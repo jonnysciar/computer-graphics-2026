@@ -3,6 +3,6 @@
 struct Instance;
 
 namespace HandlerHelper {
-    void hideInstance(Instance *instance);
-    bool isTorchPuzzleSatisfied();
-}
+void hideInstance(Instance *instance);
+bool isTorchPuzzleSatisfied();
+} // namespace HandlerHelper
