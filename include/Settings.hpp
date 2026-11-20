@@ -2,6 +2,7 @@
 
 #include "Listener/Listener.hpp"
 #include "InputManager.hpp"
+#include <GLFW/glfw3.h>
 #include <iostream>
 
 class Settings : public Listener<Key> {
@@ -10,11 +11,18 @@ class Settings : public Listener<Key> {
     bool enableShadows = false;
     int cookTorrance = 0;
     int dynamicLight = false;
+    bool paused = false;
+    bool populate = false;
 
     Settings() = default;
 
     void onEvent(Key key) override {
         switch (key.glfw_key) {
+        case GLFW_KEY_ESCAPE:
+            paused = !paused;
+            std::cout << "ESC pressed!\n";
+            populate = true;
+            break;
         case GLFW_KEY_1:
             enableShadows = !enableShadows;
             break;

@@ -3,6 +3,7 @@
 #include "Game.hpp"
 
 #include "CameraController.hpp"
+#include "HUDManagerNew.hpp"
 #include "uniform_buffers.hpp"
 #include "Scene/Room1Handler.hpp"
 #include "Scene/Room2Handler.hpp"
@@ -26,6 +27,7 @@ void Game::onWindowResize(int w, int h) {
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
     hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
+    hudManagerNew = std::make_unique<HUDManagerNew>(this, windowWidth, windowHeight);
     sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", device, physicalDevice, windowWidth,
                                                 windowHeight);
 
@@ -58,10 +60,21 @@ void Game::localInit() {
 void Game::pipelinesAndDescriptorSetsInit() {
     sceneLoader->pipelinesAndDescriptorSetsInit();
     hudManager->pipelinesAndDescriptorSetsInit();
+    hudManagerNew->pipelinesAndDescriptorSetsInit();
 }
 
 // Here is where you update the uniforms.
 void Game::updateUniformBuffer(uint32_t currentImage) {
+    if (gameStatus.settings.populate) {
+        submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
+        gameStatus.settings.populate = false;
+        if (gameStatus.settings.paused) {
+            hudManager->setPrompt("Game is paused!");
+        } else {
+            hudManager->setPrompt("");
+        }
+    }
+
     float deltaT = handleMovement();
 
     inputManager->update(gameStatus, deltaT);
@@ -75,11 +88,13 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 void Game::localCleanup() {
     sceneLoader->cleanUp();
     hudManager->cleanUp();
+    hudManagerNew->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
     sceneLoader->pipelinesAndDescriptorSetsCleanup();
     hudManager->pipelinesAndDescriptorSetsCleanup();
+    hudManagerNew->pipelinesAndDescriptorSetsCleanup();
 }
 
 void Game::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params) {
@@ -97,6 +112,9 @@ void Game::setWindowParameters() {
 
 void Game::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     sceneLoader->populateCommandBuffer(commandBuffer, currentImage);
+    if (gameStatus.settings.paused) {
+        hudManagerNew->populateCommandBuffer(commandBuffer, currentImage);
+    }
 }
 
 float Game::handleMovement() {
@@ -106,10 +124,12 @@ float Game::handleMovement() {
     bool fire = false;
     getSixAxis(deltaT, m, r, fire);
 
-    glm::vec3 newPos = cameraController.computePos(gameStatus.player.pos, m, r, deltaT);
-    gameStatus.player.pos = sceneLoader->getCollisionDetector()->resolveCollision(gameStatus.player, newPos);
-    cameraController.updateViewPrjMat(gameStatus.player.pos);
-    gameStatus.player.updateColliders();
+    if (!gameStatus.settings.paused) {
+        glm::vec3 newPos = cameraController.computePos(gameStatus.player.pos, m, r, deltaT);
+        gameStatus.player.pos = sceneLoader->getCollisionDetector()->resolveCollision(gameStatus.player, newPos);
+        cameraController.updateViewPrjMat(gameStatus.player.pos);
+        gameStatus.player.updateColliders();
+    }
 
     return deltaT;
 }
