@@ -25,12 +25,12 @@ Room7Handler::Room7Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                     .callback = [&torch](Interactable &, GameStatus &) { torch.on = !torch.on; }}});
     }
     setupInteractionController();
+
 }
 
 void Room7Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
     if (!interMap.contains(id))
         return;
-
     auto torch = gs.torches | std::views::filter([id](auto &torch) { return torch.room == 6 && torch.id == id; });
     if (!torch.empty()) {
         hudManager->setPrompt(torch.front().on ? "Press E to extinguish" : "Press E to light");

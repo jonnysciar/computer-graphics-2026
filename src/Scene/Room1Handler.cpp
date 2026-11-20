@@ -77,9 +77,12 @@ void Room1Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
         return;
     }
     if (id == "door_1_4") {
-        if (HandlerHelper::isTorchPuzzleSatisfied()) {
+        if (HandlerHelper::isTorchPuzzleSatisfied(gs.torches)) {
             gs.door_1_4.setIsLocked(false);
             hudManager->setPrompt("Press E to open/close");
+        }
+        else {
+            gs.door_1_4.setIsLocked(true);
         }
         return;
     }
