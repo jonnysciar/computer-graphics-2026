@@ -35,4 +35,5 @@ struct Vertex {
     glm::vec3 norm;
     glm::vec2 UV;
     glm::vec4 tan;
+    glm::vec2 UV2;
 };

@@ -48,7 +48,9 @@ void SceneLoader::generateVertexDescriptors(nlohmann::json &jsonFile) {
                 {{0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos), sizeof(glm::vec3), POSITION},
                  {0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm), sizeof(glm::vec3), NORMAL},
                  {0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV), sizeof(glm::vec2), UV},
-                 {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tan), sizeof(glm::vec4), TANGENT}});
+                 {0, 3, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, tan), sizeof(glm::vec4), TANGENT},
+                 {0, 4, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV2), sizeof(glm::vec2),
+                  UV}}); // UV2 For static light map
         vdMap.insert({vd_name, std::move(vd)});
         VertexDescriptorRef vdr{};
         vdr.init(vd_name.c_str(), &vdMap.at(vd_name));
@@ -118,10 +120,15 @@ void SceneLoader::generatePipelines(nlohmann::json &jsonFile, VkDevice dev, VkPh
             std::string vert_shader = pipeline.at("vertex");
             std::string frag_shader = pipeline.at("fragment");
             Pipeline P{};
-            P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)});
-            if (tech_name != "General") {
+
+            if (tech_name == "General") {
+                P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)},
+                       {{VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float)}});
+            } else {
+                P.init(this->bp, &vd, vert_shader, frag_shader, {&dslMap.at(tech_name)});
                 P.setCullMode(VK_CULL_MODE_NONE);
             }
+
             if (tech_name == "Emissive") {
                 P.setTransparency(true);
             }
@@ -170,6 +177,7 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
 
     gubo.playerPos = glm::vec4(gameStatus.player.pos, 1.0f);
     gubo.settings.z = NUM_LIGHTS > validTs.size() ? validTs.size() : NUM_LIGHTS;
+    gubo.settings.w = 4.0f;
 
     for (int i = 0; i < gubo.settings.z; i++) {
         gubo.lightColor[i] = glm::vec4(validTs[i]->color, 1.0f);
