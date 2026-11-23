@@ -146,20 +146,19 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};
 
+    updatePlayerRoom(gameStatus);
+
+    // dynamic light: only the torches of the player's room and of the rooms seen through open doors
+    const std::vector<int> rooms = gameStatus.litRooms();
+    auto isLit = [&](const Torch &t) {
+        return gameStatus.playerRoom == 0 || std::ranges::find(rooms, t.room) != rooms.end();
+    };
+
     std::vector<Torch *> validTs;
     for (auto &t : gameStatus.torches) {
-        if (!gameStatus.settings.dynamicLight) {
+        if (!gameStatus.settings.dynamicLight || (t.on && isLit(t))) {
             validTs.push_back(&t);
-            continue;
         }
-
-        const float r = t.radius() * 1.5f;
-        if (!collisionDetector->isLightVisible(gameStatus.player.pos, t.pos, r))
-            continue;
-        if (!t.on || !cameraController.frustumIntersect(t.pos, r))
-            continue;
-
-        validTs.push_back(&t);
     }
 
     if (gameStatus.settings.dynamicLight) {
@@ -274,7 +273,48 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
         }
     }
 
+    computeRoomBounds();
     rp.init(this->bp);
+}
+
+void SceneLoader::computeRoomBounds() {
+    for (auto *inst : instances) {
+        const std::string &id = *inst->id;
+        if (!inst->C || !(id.starts_with("Wall_") || id.starts_with("Roof_")))
+            continue;
+
+        const int room = std::atoi(id.c_str() + 5); // "Wall_<room>_..." / "Roof_<room>"
+        const AABBextents e = inst->C->getExtents();
+        auto [it, isNew] = roomBounds.try_emplace(room, e);
+        if (isNew)
+            continue;
+
+        auto &b = it->second;
+        b.xMin = std::min(b.xMin, e.xMin);
+        b.xMax = std::max(b.xMax, e.xMax);
+        b.yMin = std::min(b.yMin, e.yMin);
+        b.yMax = std::max(b.yMax, e.yMax);
+        b.zMin = std::min(b.zMin, e.zMin);
+        b.zMax = std::max(b.zMax, e.zMax);
+    }
+}
+
+void SceneLoader::updatePlayerRoom(GameStatus &gameStatus) const {
+    const glm::vec3 &p = gameStatus.player.pos;
+    auto inside = [&p](const AABBextents &b) {
+        return p.x >= b.xMin && p.x <= b.xMax && p.z >= b.zMin && p.z <= b.zMax;
+    };
+
+    // rooms overlap at the shared walls: keep the current one while the player is still in it
+    if (auto it = roomBounds.find(gameStatus.playerRoom); it != roomBounds.end() && inside(it->second))
+        return;
+
+    for (const auto &[room, bounds] : roomBounds) {
+        if (inside(bounds)) {
+            gameStatus.playerRoom = room;
+            return;
+        }
+    }
 }
 
 void SceneLoader::onResize(int newW, int newH) {
