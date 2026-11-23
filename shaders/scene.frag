@@ -19,7 +19,7 @@ layout(location = 0) out vec4 outColor;
 layout(binding = 1, set = 0) uniform GlobalUniformBufferObject {
     vec4 lightColor[NUM_LIGHTS]; // rgb = colour of light i
     vec4 lightPos[NUM_LIGHTS]; // xyz = world position of light i
-    vec4 lightParams[NUM_LIGHTS]; // x = on/off, y = g, z = beta
+    vec4 lightParams[NUM_LIGHTS]; // x = on/off, y = g, z = beta, w = torch index (shadow layers 6w..6w+5)
     vec4 playerPos;
     vec4 settings; //x = enable shadows, y = shading technique, z = num of usable lights
 } gubo;
@@ -270,8 +270,9 @@ vec3 computeLight() {
         if (max(lightCol.r, max(lightCol.g, lightCol.b)) < LIGHT_CUTOFF) continue; // too far / too dim
 
         float visibility = 1.0;
-        if (gubo.settings.x > 0.0) {
-            visibility = computeShadow(i, lPos, Ng, L);
+        int torch = int(gubo.lightParams[i].w); // shadow maps are indexed by torch, not by slot
+        if (gubo.settings.x > 0.0 && torch < textureSize(shadowMaps, 0).z / 6) {
+            visibility = computeShadow(torch, lPos, Ng, L);
         }
 
         if (visibility <= 0.0) continue;

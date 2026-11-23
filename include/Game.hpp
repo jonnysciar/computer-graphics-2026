@@ -18,6 +18,9 @@ class Game : public BaseProject {
     CameraController cameraController;
     GameStatus gameStatus;
 
+    // true only in the frame whose "shadows" command buffer renders the shadow maps
+    bool shadowPassQueued = false;
+
     // What to do when the window changes size
     void onWindowResize(int w, int h) override;
 
@@ -37,6 +40,7 @@ class Game : public BaseProject {
 
   public:
     static void populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params);
+    static void populateShadowCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params);
 
     // Here you set the main application parameters
     void setWindowParameters() override;
@@ -45,4 +49,5 @@ class Game : public BaseProject {
   private:
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
     float handleMovement();
+    void updateShadows(uint32_t currentImage);
 };

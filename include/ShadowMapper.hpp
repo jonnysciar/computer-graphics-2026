@@ -100,8 +100,8 @@ class ShadowMapper {
     }
 
     // ------------------------------------------------ updateUniformBuffer
-    // Call every frame with the world-space position of every shadow-casting light, in the
-    // same order as the lights in your GUBO (light i here = shadow layers 6i..6i+5).
+    // Call before rendering the shadow maps with the world-space position of every shadow-casting
+    // light (light i here = shadow layers 6i..6i+5, matched in the GUBO by lightParams.w).
     void updateUniformBuffer(int currentImage, const std::vector<glm::vec4> &lightPos) {
         if (lightPos.size() != prm.lightCount)
             throw std::runtime_error("ShadowMapper: updateUniformBuffer needs one position per light");

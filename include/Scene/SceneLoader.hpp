@@ -53,7 +53,12 @@ class SceneLoader {
 
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
+    void populateShadowCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
+
     void updateUniformBuffer(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
+
+    // Chooses the shadow casters of each torch and writes the uniforms of the shadow pass
+    void prepareShadowPass(int currentImage, GameStatus &gameStatus);
 
     const std::vector<Instance *> &getInstances();
 

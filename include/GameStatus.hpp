@@ -27,6 +27,8 @@ class GameStatus {
     Settings settings{};
     std::vector<Torch> torches;
 
+    // the shadow maps must be rendered again (start, window resize, an object moved)
+    bool shadowsDirty = true;
 
     // room the player is in (0 = not known yet), updated by SceneLoader
     int playerRoom = 0;

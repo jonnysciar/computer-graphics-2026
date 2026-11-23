@@ -173,7 +173,9 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
     for (int i = 0; i < gubo.settings.z; i++) {
         gubo.lightColor[i] = glm::vec4(validTs[i]->color, 1.0f);
         gubo.lightPos[i] = glm::vec4(validTs[i]->pos, 1.0f);
-        gubo.lightParams[i] = glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->beta, 1.0f);
+        // w = index of the torch, i.e. which shadow map layers belong to this light
+        gubo.lightParams[i] = glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->beta,
+                                        static_cast<float>(validTs[i] - gameStatus.torches.data()));
     }
 
     gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
@@ -188,8 +190,19 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
         instance->DS[0][0]->map(currentImage, &ubo, 0);
         instance->DS[0][0]->map(currentImage, &gubo, 1);
     }
+}
 
-    smMap["General"].updateUniformBuffer(currentImage, {std::begin(gubo.lightPos), std::end(gubo.lightPos)});
+void SceneLoader::prepareShadowPass(int currentImage, GameStatus &gameStatus) {
+
+    for (auto &sm : smMap | std::views::values) {
+
+        // light k of the shadow maps is always torch k, whatever GUBO slot it takes
+        std::vector<glm::vec4> lightPos(sm.getLightCount(), glm::vec4(0.0f, -1000.0f, 0.0f, 1.0f));
+        for (std::size_t k = 0; k < lightPos.size() && k < gameStatus.torches.size(); k++) {
+            lightPos[k] = glm::vec4(gameStatus.torches[k].pos, 1.0f);
+        }
+        sm.updateUniformBuffer(currentImage, lightPos);
+    }
 }
 
 void SceneLoader::emissiveUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController) {
@@ -341,10 +354,13 @@ void SceneLoader::pipelinesAndDescriptorSetsInit() {
     scene.pipelinesAndDescriptorSetsInit();
 }
 
-void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+void SceneLoader::populateShadowCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     for (auto &sm : smMap | std::views::values) {
         sm.populateCommandBuffer(commandBuffer, currentImage);
     }
+}
+
+void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     rp.begin(commandBuffer, currentImage);
     for (int i = 0; i < pMap.begin()->second.size(); i++) {
         scene.populateCommandBuffer(commandBuffer, i, currentImage);
