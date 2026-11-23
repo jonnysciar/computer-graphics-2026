@@ -31,6 +31,10 @@ class SceneLoader {
 
     // footprint of each room, from the colliders of its walls and roof
     std::map<int, AABBextents> roomBounds;
+
+    // world matrix of each instance at the last check, to detect the objects that moved
+    std::vector<glm::mat4> lastWm;
+
     static std::vector<PipelineAndTexturesDefs> generateTextureDef(std::string_view tech_name,
                                                                    std::vector<Pipeline> &pipelines, int numTextures);
 
@@ -40,6 +44,8 @@ class SceneLoader {
 
     void computeRoomBounds();
     void updatePlayerRoom(GameStatus &gameStatus) const;
+    std::vector<int> roomsOf(const Instance &instance) const;
+
     void generalUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
     void emissiveUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
     void armsUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
@@ -56,6 +62,9 @@ class SceneLoader {
     void populateShadowCommandBuffer(VkCommandBuffer commandBuffer, int currentImage);
 
     void updateUniformBuffer(int currentImage, GameStatus &gameStatus, CameraController &cameraController);
+
+    // True if an object moved since the last call
+    bool geometryChanged();
 
     // Chooses the shadow casters of each torch and writes the uniforms of the shadow pass
     void prepareShadowPass(int currentImage, GameStatus &gameStatus);

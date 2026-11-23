@@ -27,6 +27,5 @@ void InteractionController::interact(GameStatus &gs) {
             continue;
 
         in.callback(in, gs);
-        gs.shadowsDirty = true;
     }
 }

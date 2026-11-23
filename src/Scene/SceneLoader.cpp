@@ -11,6 +11,7 @@
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <iostream>
+#include <iterator>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -193,8 +194,32 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
 }
 
 void SceneLoader::prepareShadowPass(int currentImage, GameStatus &gameStatus) {
+    // a torch only draws the objects of its own room and of the rooms next to it
+    std::vector<std::vector<int>> torchRooms;
+    for (const auto &t : gameStatus.torches) {
+        torchRooms.push_back(gameStatus.roomsAround(t.room, 1, false));
+    }
+
+    std::map<const Instance *, std::vector<int>> instanceRooms;
+    for (const auto *inst : instances) {
+        instanceRooms[inst] = roomsOf(*inst);
+    }
+
+    auto isCaster = [&](uint32_t light, const Instance &inst) {
+        const std::string &id = *inst.id;
+        // walls, roofs, doors and floor always block the light, or it would leak into the far rooms
+        if (id.starts_with("Wall_") || id.starts_with("Roof_") || id.starts_with("door_") || id == "floor")
+            return true;
+        if (light >= torchRooms.size() || gameStatus.torches[light].room == 0)
+            return true;
+
+        return std::ranges::any_of(instanceRooms[&inst], [&](int room) {
+            return std::ranges::find(torchRooms[light], room) != torchRooms[light].end();
+        });
+    };
 
     for (auto &sm : smMap | std::views::values) {
+        sm.selectCasters(isCaster);
 
         // light k of the shadow maps is always torch k, whatever GUBO slot it takes
         std::vector<glm::vec4> lightPos(sm.getLightCount(), glm::vec4(0.0f, -1000.0f, 0.0f, 1.0f));
@@ -287,7 +312,35 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
     }
 
     computeRoomBounds();
+    std::ranges::transform(instances, std::back_inserter(lastWm), [](const Instance *inst) { return inst->Wm; });
+
     rp.init(this->bp);
+}
+
+bool SceneLoader::geometryChanged() {
+    bool changed = false;
+    for (std::size_t i = 0; i < instances.size(); i++) {
+        if (instances[i]->Wm != lastWm[i]) {
+            lastWm[i] = instances[i]->Wm;
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+std::vector<int> SceneLoader::roomsOf(const Instance &instance) const {
+    const glm::vec3 p = instance.Wm[3];
+    const AABBextents box = instance.C ? instance.C->getExtents() : AABBextents{p.x, p.x, p.y, p.y, p.z, p.z};
+    constexpr float margin = 0.5f; // objects on a shared wall (doors) belong to both rooms
+
+    std::vector<int> rooms;
+    for (const auto &[room, b] : roomBounds) {
+        if (box.xMin <= b.xMax + margin && box.xMax >= b.xMin - margin && box.yMin <= b.yMax + margin &&
+            box.yMax >= b.yMin - margin && box.zMin <= b.zMax + margin && box.zMax >= b.zMin - margin) {
+            rooms.push_back(room);
+        }
+    }
+    return rooms;
 }
 
 void SceneLoader::computeRoomBounds() {

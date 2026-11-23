@@ -71,6 +71,7 @@ class ShadowMapper {
     void attachScene(Scene *sc, CasterFilter filter = nullptr) {
         scene = sc;
         casters.clear();
+        lightCasters.clear();
         for (int k = 0; k < scene->TechniqueInstanceCount; k++) {
             for (int j = 0; j < scene->TI[k].InstanceCount; j++) {
                 Instance &in = scene->TI[k].I[j];
@@ -119,19 +120,41 @@ class ShadowMapper {
         }
     }
 
+    // ------------------------------------------------ caster selection
+    // Return true if the instance must be drawn in the shadow maps of the given light.
+    using LightCasterFilter = std::function<bool(uint32_t light, const Instance &)>;
+
+    // Chooses the casters drawn for each light (until called, every light draws every caster).
+    // Call before recording the command buffer.
+    void selectCasters(const LightCasterFilter &filter) {
+        lightCasters.assign(prm.lightCount, {});
+        for (uint32_t l = 0; l < prm.lightCount; l++)
+            for (uint32_t c = 0; c < casters.size(); c++)
+                if (filter(l, *casters[c].inst))
+                    lightCasters[l].push_back(c);
+    }
+
     // ------------------------------------------------ command buffer
     // Record the shadow pass. Call BEFORE RP.begin(...) of your main pass,
     // inside the same command buffer (or in a command buffer with a lower order).
     void populateCommandBuffer(VkCommandBuffer cb, int currentImage) {
+        auto draw = [&](Caster &c) {
+            c.ds.bind(cb, pipeline, 0, currentImage);
+            c.model->bind(cb);
+            vkCmdDrawIndexed(cb, static_cast<uint32_t>(c.model->indices.size()), 1, 0, 0, 0);
+        };
+
         for (uint32_t layer = 0; layer < layerCount; layer++) {
             renderPass.begin(cb, layer); // framebuffer #layer renders into shadow layer #layer
 
             pipeline.bind(cb);
             vkCmdPushConstants(cb, pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(uint32_t), &layer);
-            for (auto &c : casters) {
-                c.ds.bind(cb, pipeline, 0, currentImage);
-                c.model->bind(cb);
-                vkCmdDrawIndexed(cb, static_cast<uint32_t>(c.model->indices.size()), 1, 0, 0, 0);
+            if (lightCasters.empty()) {
+                for (auto &c : casters)
+                    draw(c);
+            } else {
+                for (uint32_t c : lightCasters[layer / 6])
+                    draw(casters[c]);
             }
 
             renderPass.end(cb);
@@ -177,6 +200,7 @@ class ShadowMapper {
     };
     Scene *scene = nullptr;
     std::vector<Caster> casters;
+    std::vector<std::vector<uint32_t>> lightCasters; // casters drawn by each light (indices in casters)
 
     BaseProject *BP = nullptr;
     VkDevice device = VK_NULL_HANDLE;

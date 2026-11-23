@@ -78,6 +78,10 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
 
 // The shadow maps are kept between frames: they are rendered again only in the frame after the geometry changed
 void Game::updateShadows(uint32_t currentImage) {
+    // e.g. a door opened or a key picked up; switching a torch on or off does not change the shadow maps
+    if (sceneLoader->geometryChanged())
+        gameStatus.shadowsDirty = true;
+
     if (gameStatus.shadowsDirty) {
         gameStatus.shadowsDirty = false;
         shadowPassQueued = true;
