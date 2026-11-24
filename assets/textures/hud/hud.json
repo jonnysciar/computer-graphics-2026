@@ -1,0 +1,165 @@
+{
+  "frames": [
+    {
+      "filename": "main_dialog.png",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1448,
+        "h": 1086
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1448,
+        "h": 1086
+      },
+      "sourceSize": {
+        "w": 1448,
+        "h": 1086
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "golden_key.png",
+      "frame": {
+        "x": 1448,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "exit_button.png",
+      "frame": {
+        "x": 1448,
+        "y": 512,
+        "w": 512,
+        "h": 170
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 170
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 170
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "play_button.png",
+      "frame": {
+        "x": 1448,
+        "y": 682,
+        "w": 512,
+        "h": 170
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 170
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 170
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "settings_button.png",
+      "frame": {
+        "x": 1448,
+        "y": 852,
+        "w": 512,
+        "h": 170
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 170
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 170
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "interaction_dialog.png",
+      "frame": {
+        "x": 1448,
+        "y": 1022,
+        "w": 512,
+        "h": 127
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 127
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 127
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ],
+  "meta": {
+    "app": "https://free-tex-packer.org",
+    "version": "0.7.0",
+    "image": "hud.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2048,
+      "h": 2048
+    },
+    "scale": 1
+  }
+}

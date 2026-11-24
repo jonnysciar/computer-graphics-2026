@@ -1,11 +1,9 @@
 #include "Scene/Room7Handler.hpp"
-
-#include "HUDManager.hpp"
-#include "Scene/HandlerHelper.hpp"
+#include "Hud/HudManager.hpp"
 
 #include <modules/Scene.hpp>
 
-Room7Handler::Room7Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
+Room7Handler::Room7Handler(SceneLoader *sceneLoader, HudManager *hudManager, GameStatus &gs)
     : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"door_7_o", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
                                               if (gs.door_7_o.getIsLocked() && !gs.player.hasItem("key_3")) {

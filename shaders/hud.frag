@@ -1,11 +1,12 @@
-//glsl version 4.5
 #version 450
 
-//output write
-layout (location = 0) out vec4 outFragColor;
+layout (location = 0) in vec2 fragUV;
+
+layout (location = 0) out vec4 outColor;
+
+layout(binding = 0, set = 0) uniform sampler2D tex;
 
 void main()
 {
-	//return red
-	outFragColor = vec4(1.f,0.f,0.f,0.5f);
+	outColor = texture(tex, fragUV);
 }

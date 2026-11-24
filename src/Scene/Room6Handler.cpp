@@ -1,11 +1,9 @@
 #include "Scene/Room6Handler.hpp"
-
-#include "HUDManager.hpp"
-#include "Scene/HandlerHelper.hpp"
+#include "Hud/HudManager.hpp"
 
 #include <modules/Scene.hpp>
 
-Room6Handler::Room6Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
+Room6Handler::Room6Handler(SceneLoader *sceneLoader, HudManager *hudManager, GameStatus &gs)
     : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"door_5_6", Interactable{.instance = nullptr,
                                           .callback =

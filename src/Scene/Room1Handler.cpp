@@ -1,9 +1,8 @@
 #include "Scene/Room1Handler.hpp"
-
-#include "HUDManager.hpp"
 #include "Scene/HandlerHelper.hpp"
+#include "Hud/HudManager.hpp"
 
-Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
+Room1Handler::Room1Handler(SceneLoader *sceneLoader, HudManager *hudManager, GameStatus &gs)
     : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"key_1", Interactable{.instance = nullptr,
                                        .callback =

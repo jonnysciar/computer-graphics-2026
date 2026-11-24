@@ -9,14 +9,14 @@
 #include <vector>
 
 struct Instance;
-class HUDManager;
+class HudManager;
 
 class SceneHandler : public Listener<GameStatus &, Key>, Listener<GameStatus &, MouseState> {
   protected:
     using InteractableMap = std::map<std::string_view, Interactable>;
     InteractableMap interMap;
     SceneLoader *sceneLoader;
-    HUDManager *hudManager;
+    HudManager *hudManager;
     std::vector<Instance *> instances;
     CollisionDetector *collisionDetector;
     std::unique_ptr<InteractionController> interactionController;
@@ -38,7 +38,7 @@ class SceneHandler : public Listener<GameStatus &, Key>, Listener<GameStatus &, 
     }
 
   public:
-    SceneHandler(SceneLoader *sceneLoader, HUDManager *hudManager)
+    SceneHandler(SceneLoader *sceneLoader, HudManager *hudManager)
         : sceneLoader(sceneLoader), hudManager(hudManager), instances(this->sceneLoader->getInstances()),
           collisionDetector(this->sceneLoader->getCollisionDetector()) {}
     ~SceneHandler() override = default;

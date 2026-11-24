@@ -1,8 +1,7 @@
 #pragma once
 
 #include "CameraController.hpp"
-#include "HUDManager.hpp"
-#include "HUDManagerNew.hpp"
+#include "Hud/HudManager.hpp"
 #include "InputManager.hpp"
 #include "Scene/SceneLoader.hpp"
 #include "Scene/SceneHandler.hpp"
@@ -12,8 +11,7 @@ class Game : public BaseProject {
     std::unique_ptr<SceneLoader> sceneLoader;
     std::vector<std::unique_ptr<SceneHandler>> sceneHandlers;
 
-    std::unique_ptr<HUDManager> hudManager;
-    std::unique_ptr<HUDManagerNew> hudManagerNew;
+    std::unique_ptr<HudManager> hudManager;
     std::unique_ptr<InputManager> inputManager;
 
     CameraController cameraController;

@@ -1,16 +1,12 @@
-//we will be using glsl version 4.5 syntax
 #version 450
+
+layout (location = 0) in vec2 inPos;
+layout (location = 1) in vec2 inUV;
+
+layout (location = 0) out vec2 fragUV;
 
 void main()
 {
-    //const array of positions for the triangle
-    const vec3 positions[4] = vec3[4](
-            vec3(-1.f, 1.f, 0.0f),
-            vec3(1.f, 1.f, 0.0f),
-            vec3(1.f, -1.f, 0.0f),
-            vec3(-1.f, -1.f, 0.0f)
-        );
-
-    //output the position of each vertex
-    gl_Position = vec4(positions[gl_VertexIndex], 1.0f);
+    gl_Position = vec4(inPos, 0.0f, 1.0f);
+    fragUV = inUV;
 }

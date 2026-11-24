@@ -1,11 +1,10 @@
 #include "Scene/Room3Handler.hpp"
-
-#include "HUDManager.hpp"
 #include "Scene/HandlerHelper.hpp"
+#include "Hud/HudManager.hpp"
 
 #include <modules/Scene.hpp>
 
-Room3Handler::Room3Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
+Room3Handler::Room3Handler(SceneLoader *sceneLoader, HudManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"key_2", Interactable{.instance = nullptr,
                                        .callback =
                                            [this](Interactable &i, GameStatus &gs) {

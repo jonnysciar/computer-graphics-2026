@@ -1,10 +1,9 @@
 #include "Scene/Room2Handler.hpp"
-
-#include "HUDManager.hpp"
+#include "Hud/HudManager.hpp"
 
 #include <modules/Scene.hpp>
 
-Room2Handler::Room2Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
+Room2Handler::Room2Handler(SceneLoader *sceneLoader, HudManager *hudManager, GameStatus &gs)
     : SceneHandler(sceneLoader, hudManager) {
     for (auto &torch : gs.torches) {
         if (torch.room != 2 || !torch.interactable)

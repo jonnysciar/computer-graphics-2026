@@ -12,7 +12,6 @@ class Settings : public Listener<Key> {
     int cookTorrance = 0;
     int dynamicLight = false;
     bool paused = false;
-    bool populate = false;
 
     Settings() = default;
 
@@ -20,8 +19,6 @@ class Settings : public Listener<Key> {
         switch (key.glfw_key) {
         case GLFW_KEY_ESCAPE:
             paused = !paused;
-            std::cout << "ESC pressed!\n";
-            populate = true;
             break;
         case GLFW_KEY_1:
             enableShadows = !enableShadows;

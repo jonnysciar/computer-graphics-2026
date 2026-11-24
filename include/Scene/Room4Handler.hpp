@@ -4,7 +4,7 @@
 
 class Room4Handler : public SceneHandler {
   public:
-    Room4Handler(SceneLoader *sceneLoader, HUDManager *hudManager);
+    Room4Handler(SceneLoader *sceneLoader, HudManager *hudManager);
     ~Room4Handler() override = default;
 
     void onInteractionReach(std::string_view id, GameStatus &gs) override;

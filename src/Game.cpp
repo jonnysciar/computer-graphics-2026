@@ -3,8 +3,6 @@
 #include "Game.hpp"
 
 #include "CameraController.hpp"
-#include "HUDManagerNew.hpp"
-#include "uniform_buffers.hpp"
 #include "Scene/Room1Handler.hpp"
 #include "Scene/Room2Handler.hpp"
 #include "Scene/Room3Handler.hpp"
@@ -26,19 +24,13 @@ void Game::onWindowResize(int w, int h) {
 // Here you load and setup all your Vulkan Models and Texutures.
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
-    hudManager = std::make_unique<HUDManager>(this, windowWidth, windowHeight);
-    hudManagerNew = std::make_unique<HUDManagerNew>(this, windowWidth, windowHeight);
+    hudManager = std::make_unique<HudManager>(this, windowWidth, windowHeight);
     sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", device, physicalDevice, windowWidth,
                                                 windowHeight);
 
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
 
     gameStatus.loadLights("assets/models/lights.json");
-
-    if (gameStatus.torches.size() != NUM_LIGHTS) {
-        std::cout << "Number of torch lights: " << gameStatus.torches.size() << " mismatches " << NUM_LIGHTS << "\n";
-        // std::exit(1);
-    }
 
     sceneHandlers.push_back(std::make_unique<Room1Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
     sceneHandlers.push_back(std::make_unique<Room2Handler>(sceneLoader.get(), hudManager.get(), gameStatus));
@@ -60,21 +52,10 @@ void Game::localInit() {
 void Game::pipelinesAndDescriptorSetsInit() {
     sceneLoader->pipelinesAndDescriptorSetsInit();
     hudManager->pipelinesAndDescriptorSetsInit();
-    hudManagerNew->pipelinesAndDescriptorSetsInit();
 }
 
 // Here is where you update the uniforms.
 void Game::updateUniformBuffer(uint32_t currentImage) {
-    if (gameStatus.settings.populate) {
-        submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
-        gameStatus.settings.populate = false;
-        if (gameStatus.settings.paused) {
-            hudManager->setPrompt("Game is paused!");
-        } else {
-            hudManager->setPrompt("");
-        }
-    }
-
     float deltaT = handleMovement();
 
     inputManager->update(gameStatus, deltaT);
@@ -82,19 +63,17 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     std::ranges::for_each(sceneHandlers, [&](auto &handler) { handler->checkInteractionReach(gameStatus); });
 
     sceneLoader->updateUniformBuffer(currentImage, gameStatus, cameraController);
-    hudManager->updateUniformBuffer(currentImage, deltaT);
+    hudManager->updateUniformBuffer(currentImage, gameStatus, deltaT);
 }
 
 void Game::localCleanup() {
     sceneLoader->cleanUp();
     hudManager->cleanUp();
-    hudManagerNew->cleanUp();
 }
 
 void Game::pipelinesAndDescriptorSetsCleanup() {
     sceneLoader->pipelinesAndDescriptorSetsCleanup();
     hudManager->pipelinesAndDescriptorSetsCleanup();
-    hudManagerNew->pipelinesAndDescriptorSetsCleanup();
 }
 
 void Game::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params) {
@@ -112,9 +91,7 @@ void Game::setWindowParameters() {
 
 void Game::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     sceneLoader->populateCommandBuffer(commandBuffer, currentImage);
-    if (gameStatus.settings.paused) {
-        hudManagerNew->populateCommandBuffer(commandBuffer, currentImage);
-    }
+    hudManager->populateCommandBuffer(commandBuffer, currentImage);
 }
 
 float Game::handleMovement() {
@@ -127,9 +104,9 @@ float Game::handleMovement() {
     if (!gameStatus.settings.paused) {
         glm::vec3 newPos = cameraController.computePos(gameStatus.player.pos, m, r, deltaT);
         gameStatus.player.pos = sceneLoader->getCollisionDetector()->resolveCollision(gameStatus.player, newPos);
-        cameraController.updateViewPrjMat(gameStatus.player.pos);
         gameStatus.player.updateColliders();
     }
+    cameraController.updateViewPrjMat(gameStatus.player.pos);
 
     return deltaT;
 }

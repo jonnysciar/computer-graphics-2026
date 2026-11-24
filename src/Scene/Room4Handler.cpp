@@ -1,11 +1,10 @@
 #include "Scene/Room4Handler.hpp"
-
-#include "HUDManager.hpp"
 #include "Scene/HandlerHelper.hpp"
+#include "Hud/HudManager.hpp"
 
 #include <modules/Scene.hpp>
 
-Room4Handler::Room4Handler(SceneLoader *sceneLoader, HUDManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
+Room4Handler::Room4Handler(SceneLoader *sceneLoader, HudManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"key_3", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
                                            HandlerHelper::hideInstance(i.instance);
                                            gs.player.pickUp(*i.instance->id);
