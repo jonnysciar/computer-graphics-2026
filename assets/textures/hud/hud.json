@@ -1,7 +1,7 @@
 {
   "frames": [
     {
-      "filename": "main_dialog.png",
+      "filename": "main_dialog",
       "frame": {
         "x": 0,
         "y": 0,
@@ -26,7 +26,7 @@
       }
     },
     {
-      "filename": "golden_key.png",
+      "filename": "golden_key",
       "frame": {
         "x": 1448,
         "y": 0,
@@ -51,7 +51,7 @@
       }
     },
     {
-      "filename": "exit_button.png",
+      "filename": "exit_button",
       "frame": {
         "x": 1448,
         "y": 512,
@@ -76,7 +76,7 @@
       }
     },
     {
-      "filename": "play_button.png",
+      "filename": "interaction_dialog",
       "frame": {
         "x": 1448,
         "y": 682,
@@ -101,7 +101,7 @@
       }
     },
     {
-      "filename": "settings_button.png",
+      "filename": "play_button",
       "frame": {
         "x": 1448,
         "y": 852,
@@ -126,12 +126,12 @@
       }
     },
     {
-      "filename": "interaction_dialog.png",
+      "filename": "settings_button",
       "frame": {
         "x": 1448,
         "y": 1022,
         "w": 512,
-        "h": 127
+        "h": 170
       },
       "rotated": false,
       "trimmed": false,
@@ -139,11 +139,11 @@
         "x": 0,
         "y": 0,
         "w": 512,
-        "h": 127
+        "h": 170
       },
       "sourceSize": {
         "w": 512,
-        "h": 127
+        "h": 170
       },
       "pivot": {
         "x": 0.5,
@@ -161,5 +161,62 @@
       "h": 2048
     },
     "scale": 1
-  }
+  },
+  "elements": [
+    {
+      "frame": "golden_key",
+      "name": "key_1",
+      "pos": {
+        "x": -0.98,
+        "y": -0.98
+      },
+      "scale": 0.5,
+      "visible": false,
+      "centered": false
+    },
+    {
+      "frame": "golden_key",
+      "name": "key_2",
+      "pos": {
+        "x": -0.855,
+        "y": -0.98
+      },
+      "scale": 0.5,
+      "visible": false,
+      "centered": false
+    },
+    {
+      "frame": "golden_key",
+      "name": "key_3",
+      "pos": {
+        "x": -0.73,
+        "y": -0.98
+      },
+      "scale": 0.5,
+      "visible": false,
+      "centered": false
+    },
+    {
+      "frame": "interaction_dialog",
+      "name": "prompt",
+      "pos": {
+        "x": 0.0,
+        "y": 0.9
+      },
+      "scale": 4.0,
+      "visible": false,
+      "centered": true
+    },
+    {
+      "frame": "main_dialog",
+      "name": "menu",
+      "pos": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "scale": 2.5,
+      "visible": false,
+      "centered": true
+    }
+  ]
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "nlohmann/json.hpp"
-#include "nlohmann/json_fwd.hpp"
 
 #include <array>
 #include <glm/fwd.hpp>
@@ -16,12 +15,14 @@ struct HudVertex {
     glm::vec2 uv;
 };
 
-struct HudSprite {
+struct HudFrame {
     std::string name;
     glm::vec2 pos;
     glm::vec2 size;
 
-    HudSprite(json::json &json, int w, int h) {
+    HudFrame() = default;
+
+    HudFrame(json::json &json, int w, int h) {
         name = json.at("filename").get<std::string>();
         auto &frame = json.at("frame");
 
@@ -56,9 +57,22 @@ struct HudSprite {
 };
 
 struct HudElement {
-    HudSprite *sprite;
+    HudFrame *sprite;
+    std::string name;
     glm::vec2 pos{0.0f, 0.0f};
     float scale{1.0f};
     bool visible{true};
     bool centered{false};
+
+    HudElement() = default;
+
+    HudElement(json::json &json, std::map<std::string, HudFrame> &frames) {
+        sprite = &frames[json.at("frame").get<std::string>()];
+        name = json.at("name").get<std::string>();
+        pos.x = json.at("pos").at("x").get<float>();
+        pos.y = json.at("pos").at("y").get<float>();
+        scale = json.at("scale").get<float>();
+        visible = json.at("visible").get<bool>();
+        centered = json.at("centered").get<bool>();
+    }
 };

@@ -1,11 +1,12 @@
 #pragma once
 
 #include "GameStatus.hpp"
-#include "HudStructs.hpp"
+#include "Hud/HudStructs.hpp"
+#include "Hud/HudText.hpp"
 #include <modules/Starter.hpp>
 #include <modules/TextMaker.hpp>
+#include <string>
 #include <string_view>
-#include <vector>
 
 class HudManager {
   private:
@@ -24,16 +25,23 @@ class HudManager {
     Model *m;
     Texture tex;
 
-    std::vector<HudSprite> sprites;
-    std::map<std::string_view, HudElement> elements;
+    std::map<std::string, HudFrame> frames;
+    std::map<std::string, HudElement> elements;
 
+    HudText hudText{"assets/textures/hud/font/font.json"};
     bool dirty = false;
+
+    uint32_t countedFrame = 0;
+    float elapsed = 0.0;
 
     static void populateCmdBufferAccess(VkCommandBuffer cmdBuf, int i, void *params);
     static void freeCmdBufferAccess(void *params);
 
-    void generateHudSprite(std::string_view jsonFile);
+    void parseHudFrames(nlohmann::json &json);
+    void parseHudElements(nlohmann::json &json);
     void buildMesh();
+
+    void computeFPS(float deltaT);
 
   public:
     HudManager(BaseProject *bp, int w, int h);

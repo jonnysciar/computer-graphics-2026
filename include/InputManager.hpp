@@ -38,7 +38,7 @@ class InputManager : public Listenable<Key>,
     MouseState mouseState;
 
     std::vector<Key> keys = {Key{GLFW_KEY_ESCAPE}, Key{GLFW_KEY_E}, Key{GLFW_KEY_M}, Key{GLFW_KEY_Q}, Key{GLFW_KEY_Z},
-                             Key{GLFW_KEY_L},      Key{GLFW_KEY_1}, Key{GLFW_KEY_2}, Key{GLFW_KEY_3}};
+                             Key{GLFW_KEY_L},      Key{GLFW_KEY_1}, Key{GLFW_KEY_2}, Key{GLFW_KEY_3}, Key{GLFW_KEY_4}};
 
     // Updates mouse position and button states
     void updateMouseInput(GameStatus &p);

@@ -1,10 +1,15 @@
 #include "Hud/HudManager.hpp"
 
 #include "GameStatus.hpp"
+#include "Hud/HudStructs.hpp"
+#include "Hud/HudText.hpp"
 #include "modules/Starter.hpp"
+#include "nlohmann/json_fwd.hpp"
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <glm/fwd.hpp>
 #include <ranges>
 #include <vulkan/vulkan_core.h>
@@ -23,16 +28,20 @@ void HudManager::freeCmdBufferAccess(void *params) {
     delete s;
 }
 
-void HudManager::generateHudSprite(std::string_view jsonFile) {
-    std::ifstream ifs(jsonFile.data());
-    nlohmann::json json = nlohmann::json::parse(ifs);
-
+void HudManager::parseHudFrames(nlohmann::json &json) {
     int w = json.at("meta").at("size").at("w").get<int>();
     int h = json.at("meta").at("size").at("h").get<int>();
 
-    this->sprites.reserve(json.at("frames").size());
-    for (auto &spriteJson : json.at("frames")) {
-        this->sprites.emplace_back(spriteJson, w, h);
+    for (auto &frameJson : json.at("frames")) {
+        auto frame = HudFrame{frameJson, w, h};
+        this->frames[frame.name] = std::move(frame);
+    }
+}
+
+void HudManager::parseHudElements(nlohmann::json &json) {
+    for (auto &elemJson : json.at("elements")) {
+        auto elem = HudElement{elemJson, this->frames};
+        this->elements[elem.name] = std::move(elem);
     }
 }
 
@@ -41,6 +50,20 @@ void HudManager::buildMesh() {
     std::vector<uint32_t> idxs;
 
     for (const auto &elem : elements | std::views::values) {
+        if (!elem.visible)
+            continue;
+
+        int baseVertex = verts.size();
+        auto quadVerts = elem.centered ? elem.sprite->getCenteredQuad(elem.pos.x, elem.pos.y, elem.scale)
+                                       : elem.sprite->getQuad(elem.pos.x, elem.pos.y, elem.scale);
+
+        verts.insert(verts.end(), quadVerts.begin(), quadVerts.end());
+        for (int i : {0u, 1u, 2u, 2u, 3u, 0u}) {
+            idxs.push_back(baseVertex + i);
+        }
+    }
+
+    for (const auto &elem : hudText.getElements()) {
         if (!elem.visible)
             continue;
 
@@ -67,6 +90,18 @@ void HudManager::buildMesh() {
     m->initMesh(bp, &vd, false);
 }
 
+void HudManager::computeFPS(float deltaT) {
+    static char str[15] = {0};
+    countedFrame++;
+    elapsed += deltaT;
+    if (elapsed > 1.0f) {
+        float fps = (float)countedFrame / elapsed;
+        std::snprintf(str, 14, "FPS: %.1f", fps);
+        hudText.addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
+        dirty = true;
+    }
+}
+
 HudManager::HudManager(BaseProject *basep, int w, int h) : bp(basep) {
     vd.init(bp, {{0, sizeof(HudVertex), VK_VERTEX_INPUT_RATE_VERTEX}},
             {{0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(HudVertex, pos), sizeof(glm::vec3), UV},
@@ -78,18 +113,11 @@ HudManager::HudManager(BaseProject *basep, int w, int h) : bp(basep) {
     p.setCullMode(VK_CULL_MODE_NONE);
     p.setTransparency(true);
 
-    generateHudSprite("assets/textures/hud/hud.json");
+    std::ifstream ifs("assets/textures/hud/hud.json");
+    nlohmann::json json = nlohmann::json::parse(ifs);
+    parseHudFrames(json);
+    parseHudElements(json);
 
-    // Key 1
-    elements["key_1"] = {&sprites[1], glm::vec2{-0.98f, -0.98f}, 0.5f, false};
-    // Key 2
-    elements["key_2"] = {&sprites[1], glm::vec2{-0.98f + sprites[1].size.x * 0.5f, -0.98f}, 0.5f, false};
-    // Key 3
-    elements["key_3"] = {&sprites[1], glm::vec2{-0.98f + 2.0f * sprites[1].size.x * 0.5f, -0.98f}, 0.5f, false};
-    // Dialog
-    elements["dialog"] = {&sprites[5], glm::vec2{0.0f, 0.8f}, 3.5f, false, true};
-    // Menu
-    elements["menu"] = {&sprites[0], glm::vec2{0.0f, 0.0f}, 2.5f, false, true};
     buildMesh();
 
     tex.init(bp, "assets/textures/hud/hud.png");
@@ -134,8 +162,22 @@ void HudManager::populateCommandBuffer(VkCommandBuffer cmdBuf, int currentImage)
 }
 
 void HudManager::updateUniformBuffer(int currentImage, GameStatus gameStatus, float deltaT) {
+    if (gameStatus.settings.showFps) {
+        computeFPS(deltaT);
+    } else if (hudText.isTextPresent("fps")) {
+        hudText.removeText("fps");
+        countedFrame = 0;
+        elapsed = 0.0f;
+        dirty = true;
+    }
     if (elements["menu"].visible != gameStatus.settings.paused) {
         elements["menu"].visible = gameStatus.settings.paused;
+        hudText.addText("pause", {"Game is paused!", glm::vec4(0.0f, 0.0f, 6.0f, 1.0f)});
+        dirty = true;
+    }
+
+    if (!gameStatus.settings.paused && hudText.isTextPresent("pause")) {
+        hudText.removeText("pause");
         dirty = true;
     }
 
@@ -159,7 +201,14 @@ void HudManager::updateUniformBuffer(int currentImage, GameStatus gameStatus, fl
 }
 
 void HudManager::setPrompt(std::string_view text) {
-    elements["dialog"].visible = !text.empty();
+    elements["prompt"].visible = !text.empty();
+    if (text.empty()) {
+        hudText.removeText("prompt");
+    } else {
+        hudText.addText("prompt",
+                        {text, glm::vec4(elements["prompt"].pos, 4.0f, elements["prompt"].centered ? 1.0f : 0.0f)});
+    }
+
     dirty = true;
 }
 

@@ -12,6 +12,7 @@ class Settings : public Listener<Key> {
     int cookTorrance = 0;
     int dynamicLight = false;
     bool paused = false;
+    bool showFps = true;
 
     Settings() = default;
 
@@ -30,6 +31,10 @@ class Settings : public Listener<Key> {
         case GLFW_KEY_3:
             dynamicLight = !dynamicLight;
             std::cout << "Dynamic light is " << (dynamicLight ? "enabled" : "disabled") << std::endl;
+            break;
+        case GLFW_KEY_4:
+            showFps = !showFps;
+            std::cout << "Show FPS is " << (showFps ? "enabled" : "disabled") << std::endl;
             break;
         default:
             break;
