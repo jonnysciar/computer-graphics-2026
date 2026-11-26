@@ -1,6 +1,4 @@
 #include "Hud/HudText.hpp"
-#include "Hud/HudStructs.hpp"
-#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <ranges>
 #include <string_view>
@@ -24,7 +22,7 @@ HudText::HudText(std::string_view jsonFile, glm::vec2 offset) {
 }
 
 void HudText::genElements() {
-    clean();
+    elements.clear();
     for (const auto &text : texts | std::views::values) {
         elements.reserve(elements.size() + text.str.size());
 
@@ -73,6 +71,9 @@ void HudText::removeText(std::string_view id) {
     genElements();
 }
 
-bool HudText::isTextPresent(std::string_view id) { return texts.count(id) > 0; }
+void HudText::removeAllTexts() {
+    texts.clear();
+    genElements();
+}
 
-void HudText::clean() { elements.clear(); }
+bool HudText::isTextPresent(std::string_view id) { return texts.count(id) > 0; }

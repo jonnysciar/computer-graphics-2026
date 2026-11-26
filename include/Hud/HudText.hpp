@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Hud/HudStructs.hpp"
+#include "Hud/HudHelper.hpp"
 #include <glm/fwd.hpp>
 #include <string_view>
 #include <vector>
@@ -26,6 +26,6 @@ class HudText {
     std::vector<HudElement> &getElements();
     void addText(std::string_view id, Text text);
     void removeText(std::string_view id);
+    void removeAllTexts();
     bool isTextPresent(std::string_view id);
-    void clean();
 };

@@ -1,19 +1,14 @@
 #include "Hud/HudManager.hpp"
 
-#include "GameStatus.hpp"
-#include "Hud/HudStructs.hpp"
-#include "Hud/HudText.hpp"
+#include "Hud/HudHelper.hpp"
 #include "modules/Starter.hpp"
-#include "nlohmann/json_fwd.hpp"
+
+#include <glm/glm.hpp>
+
 #include <array>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
 #include <fstream>
-#include <glm/fwd.hpp>
 #include <memory>
 #include <ranges>
-#include <vulkan/vulkan_core.h>
 
 void HudManager::populateCmdBufferAccess(VkCommandBuffer cmdBuf, int i, void *params) {
     auto *s = static_cast<HudManager::CmdBufStruct *>(params);
@@ -144,7 +139,7 @@ void HudManager::buildUI(GameStatus &gs) {
         elements["z_play"].visible = true;
         elements["z_settings"].visible = true;
         elements["z_exit"].visible = true;
-        hudText->addText("menu", {"Welcome to Haunted Castle", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
+        hudText->addText("menu", {"Welcome to Haunted Castle", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
         break;
     case GameStatus::State::GAME:
         break;
@@ -153,12 +148,23 @@ void HudManager::buildUI(GameStatus &gs) {
         elements["z_resume"].visible = true;
         elements["z_settings"].visible = true;
         elements["z_exit"].visible = true;
-        hudText->addText("menu", {"Game is paused", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
+        hudText->addText("menu", {"Game is paused", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
+        break;
+    case GameStatus::State::SETTINGS:
+        elements["menu"].visible = true;
+        hudText->addText("menu", {"Settings", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
         break;
     case GameStatus::State::END:
+        hudText->removeAllTexts();
+        elements["menu"].visible = true;
+        elements["prompt"].visible = false;
+        elements["z_exit"].visible = true;
+        hudText->addText("menu", {"CONGRATULATIONS!", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
+        hudText->addText("menu_2", {"You completed the ", glm::vec4(0.0f, -0.15f, 5.5f, 1.0f)});
+        hudText->addText("menu_3", {"Hunted Castle Game!", glm::vec4(0.0f, 0.0f, 6.5f, 1.0f)});
         break;
     default:
-        return;
+        break;
     }
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameStatus.hpp"
-#include "Hud/HudStructs.hpp"
+#include "Hud/HudHelper.hpp"
 #include "Hud/HudText.hpp"
 #include "InputManager.hpp"
 #include "Listener/Listenable.hpp"
