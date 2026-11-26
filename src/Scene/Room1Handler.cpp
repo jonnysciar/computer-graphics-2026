@@ -2,6 +2,7 @@
 
 #include "HUDManager.hpp"
 #include "Scene/HandlerHelper.hpp"
+#include "CollisionDetector.hpp"
 
 Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, GameStatus &gs)
     : SceneHandler(sceneLoader, hudManager) {
@@ -20,24 +21,11 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                                       if (gs.door_1_2.getIsOpen()) {
                                                           gs.door_1_2.rotateInstanceY(i.instance, +90.0f);
                                                           gs.door_1_2.setIsOpen(false);
+                                                          //glm::vec3 newPos = gs.player.pos + glm::vec3(1.0f, 0.0f, 0.0f);
+                                                          //CollisionDetector::resolveCollision(gs.player, newPos);
                                                       } else {
                                                           gs.door_1_2.rotateInstanceY(i.instance, -90.0f);
                                                           gs.door_1_2.setIsOpen(true);
-                                                      }
-                                                  }
-                                              }}},
-                {"door_1_4", Interactable{.instance = nullptr,
-                                          .callback =
-                                              [](Interactable &i, GameStatus &gs) {
-                                                  if (!gs.door_1_4.getIsLocked()) {
-                                                      if (gs.door_1_4.getIsOpen()) {
-                                                          //gs.door_1_4.rotateInstanceY(i.instance, +90.0f);
-                                                          //HandlerHelper::hideInstance(i.instance);
-                                                          gs.door_1_4.setIsOpen(false);
-                                                      } else {
-                                                          //gs.door_1_4.rotateInstanceY(i.instance, -90.0f);
-                                                          //HandlerHelper::sendInstanceToCoordinates(i.instance, -16.1f, 0.0f, 1.9f);
-                                                          gs.door_1_4.setIsOpen(true);
                                                       }
                                                   }
                                               }}},

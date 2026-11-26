@@ -19,10 +19,14 @@ Room2Handler::Room2Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                         if(HandlerHelper::isTorchPuzzleSatisfied(gs.torches)){
                             //std::cout << "[DEBUG] hideInstance next line\n" << std::endl;
                             HandlerHelper::hideInstance(d14);
+                            gs.door_1_4.setIsOpen(true);
+                            gs.door_1_4.setIsLocked(false);
                         }
                         else {
                             //std::cout << "[DEBUG] sendInstanceToCoordinates next line\n" << std::endl;
                             HandlerHelper::sendInstanceToCoordinates(d14, -16.1f, 0.0f, 1.9f);
+                            gs.door_1_4.setIsOpen(false);
+                            gs.door_1_4.setIsLocked(true);
                         }
                     }
                 }
