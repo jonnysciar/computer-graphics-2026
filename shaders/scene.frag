@@ -194,7 +194,7 @@ vec3 computeLight(vec3 albedo) {
         vec3 lPos = gubo.lightPos[i].xyz;
         vec3 toLight = lPos - fragPos;
         float d2 = dot(toLight, toLight);
-        if (lp.w > 0.0 && d2 > lp.w) continue;
+        if (lp.z > 0.0 && d2 > lp.z) continue;
 
         float invD = inversesqrt(max(d2, 1e-8));
         vec3 L = toLight * invD;
@@ -204,7 +204,7 @@ vec3 computeLight(vec3 albedo) {
         if (NdotL <= 0.0) continue;
 
         // 3) attenuation (only for surviving lights); pow(g/d, beta)
-        vec3 lightCol = gubo.lightColor[i].rgb * pow(lp.y * invD, lp.z);
+        vec3 lightCol = gubo.lightColor[i].rgb * pow(lp.y * invD, 2.0f);
         if (max(lightCol.r, max(lightCol.g, lightCol.b)) < LIGHT_CUTOFF) continue;
 
         // 4) shadow lookup: the most expensive step, so it comes last

@@ -1,5 +1,6 @@
 #include "Hud/HudManager.hpp"
 
+#include "Game.hpp"
 #include "GameStatus.hpp"
 #include "Hud/HudStructs.hpp"
 #include "Hud/HudText.hpp"
@@ -93,15 +94,21 @@ void HudManager::buildMesh() {
     dirty = false;
 }
 
-void HudManager::computeFPS(float deltaT) {
+void HudManager::buildFPS(GameStatus &gs, float deltaT) {
     static char str[15] = {0};
     countedFrame++;
     elapsed += deltaT;
     if (elapsed > 1.0f) {
-        float fps = (float)countedFrame / elapsed;
-        std::snprintf(str, 14, "FPS: %.1f", fps);
-        hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
-        dirty = true;
+        if (gs.settings.showFps) {
+            float fps = (float)countedFrame / elapsed;
+            std::snprintf(str, 14, "FPS: %.1f", fps);
+            hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
+            dirty = true;
+        } else {
+            dirty = hudText->isTextPresent("fps");
+            hudText->removeText("fps");
+        }
+
         elapsed = 0;
         countedFrame = 0;
     }
@@ -175,21 +182,15 @@ void HudManager::populateCommandBuffer(VkCommandBuffer cmdBuf, int currentImage)
     rp.end(cmdBuf);
 }
 
-void HudManager::updateUniformBuffer(int currentImage, GameStatus gameStatus, float deltaT) {
-    if (gameStatus.settings.showFps) {
-        computeFPS(deltaT);
-    } else if (hudText->isTextPresent("fps")) {
-        hudText->removeText("fps");
-        countedFrame = 0;
-        elapsed = 0.0f;
-        dirty = true;
-    }
+void HudManager::updateUniformBuffer(int currentImage, GameStatus &gameStatus, float deltaT) {
+    buildFPS(gameStatus, deltaT);
+
     if (elements["menu"].visible != gameStatus.settings.paused) {
         elements["menu"].visible = gameStatus.settings.paused;
-        // elements["z_play"].visible = gameStatus.settings.paused;
+        elements["z_play"].visible = gameStatus.settings.paused;
         elements["z_settings"].visible = gameStatus.settings.paused;
         elements["z_exit"].visible = gameStatus.settings.paused;
-        elements["z_resume"].visible = gameStatus.settings.paused;
+        // elements["z_resume"].visible = gameStatus.settings.paused;
         hudText->addText("pause", {"Game is paused", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
         dirty = true;
     }

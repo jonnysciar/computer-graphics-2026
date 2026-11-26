@@ -6,18 +6,18 @@
 
 struct Torch {
     static constexpr float CUTOFF = 1e-4f;
+    static constexpr float BETA = 2.0f;
     std::string id;
     glm::vec3 pos;
     glm::vec3 color;
     float g;
-    float beta;
     bool on;
     int room;
     bool interactable;
 
     float radius() {
         float maxC = glm::max(color.r, glm::max(color.g, color.b));
-        return g * std::pow(maxC / CUTOFF, 1.0f / beta);
+        return g * std::pow(maxC / CUTOFF, 1.0f / BETA);
     }
 };
 
@@ -78,7 +78,6 @@ class GameStatus {
                                     .pos = glm::vec3(p[0], p[1], p[2]),
                                     .color = glm::vec3(c[0], c[1], c[2]),
                                     .g = l.value("g", 10.0f),
-                                    .beta = l.value("beta", 2.0f),
                                     .on = l.value("on", true),
                                     .room = l.value("room", 0),
                                     .interactable = l.value("interactable", true)});

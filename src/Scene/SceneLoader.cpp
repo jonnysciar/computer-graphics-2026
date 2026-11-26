@@ -174,8 +174,8 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
     for (int i = 0; i < gubo.settings.z; i++) {
         gubo.lightColor[i] = glm::vec4(validTs[i]->color, 1.0f);
         gubo.lightPos[i] = glm::vec4(validTs[i]->pos, 1.0f);
-        gubo.lightParams[i] =
-            glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->beta, validTs[i]->radius());
+        gubo.lightParams[i] = glm::vec4(validTs[i]->on ? 1.0f : 0.0f, validTs[i]->g, validTs[i]->radius(),
+                                        static_cast<float>(validTs[i] - gameStatus.torches.data()));
     }
 
     gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;

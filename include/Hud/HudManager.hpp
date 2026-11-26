@@ -45,7 +45,7 @@ class HudManager {
     void parseHudElements(nlohmann::json &json);
     void buildMesh();
 
-    void computeFPS(float deltaT);
+    void buildFPS(GameStatus &gs, float deltaT);
 
   public:
     HudManager(BaseProject *bp, int w, int h);
@@ -53,7 +53,7 @@ class HudManager {
     void onResize(int w, int h);
     void pipelinesAndDescriptorSetsInit();
     void populateCommandBuffer(VkCommandBuffer cmdBuf, int currentImage);
-    void updateUniformBuffer(int currentImage, GameStatus gameStatus, float deltaT);
+    void updateUniformBuffer(int currentImage, GameStatus &gameStatus, float deltaT);
     void setPrompt(std::string_view text);
     void setStatus(std::string_view text);
 
