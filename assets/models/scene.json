@@ -804,7 +804,7 @@
     {
       "id": "chair_arm",
       "VD": "VD",
-      "model": "assets/models/room_1/chairs/chair_arm.mgcg",
+      "model": "assets/models/chairs/chair_arm.mgcg",
       "format": "MGCG",
       "collider": {
         "type": "AABB",
@@ -864,7 +864,7 @@
     {
       "id": "crate",
       "VD": "VD",
-      "model": "assets/models/room_1/boxes/crate.mgcg",
+      "model": "assets/models/boxes/crate.mgcg",
       "format": "MGCG",
       "collider": {
         "type": "AABB",
@@ -934,7 +934,7 @@
     {
       "id": "barrel",
       "VD": "VD",
-      "model": "assets/models/room_1/barrels/barrel.mgcg",
+      "model": "assets/models/barrels/barrel.mgcg",
       "format": "MGCG",
       "collider": {
         "type": "AABB",
@@ -1095,6 +1095,166 @@
       "id": "r3_jug",
       "VD": "VD",
       "model": "assets/models/room_3/jugs/jug.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_torture_chair",
+      "VD": "VD",
+      "model": "assets/models/room_4/torture/torture_chair.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_rack",
+      "VD": "VD",
+      "model": "assets/models/room_4/torture/rack.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_skeleton_sitting",
+      "VD": "VD",
+      "model": "assets/models/room_4/skeletons/skeleton_sitting.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_trapdoor",
+      "VD": "VD",
+      "model": "assets/models/room_4/trapdoor/trapdoor.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_skeleton_lying",
+      "VD": "VD",
+      "model": "assets/models/room_4/skeletons/skeleton_lying.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_skull",
+      "VD": "VD",
+      "model": "assets/models/room_4/bones/skull.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_crossed_bones",
+      "VD": "VD",
+      "model": "assets/models/room_4/bones/crossed_bones.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_remains",
+      "VD": "VD",
+      "model": "assets/models/room_4/bones/remains.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_crate_plain",
+      "VD": "VD",
+      "model": "assets/models/room_4/boxes/crate_plain.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_bucket",
+      "VD": "VD",
+      "model": "assets/models/room_4/buckets/bucket.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_barrel_broken",
+      "VD": "VD",
+      "model": "assets/models/room_4/barrels/barrel_broken.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_skeleton_chained",
+      "VD": "VD",
+      "model": "assets/models/room_4/skeletons/skeleton_chained.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_skeleton_hanging",
+      "VD": "VD",
+      "model": "assets/models/room_4/skeletons/skeleton_hanging.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_wall_chains",
+      "VD": "VD",
+      "model": "assets/models/room_4/chains/wall_chains.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_chain_bracket",
+      "VD": "VD",
+      "model": "assets/models/room_4/chains/chain_bracket.mgcg",
+      "format": "MGCG",
+      "collider": {
+        "type": "AABB",
+        "visible": false
+      }
+    },
+    {
+      "id": "r4_wall_shackles",
+      "VD": "VD",
+      "model": "assets/models/room_4/chains/wall_shackles.mgcg",
       "format": "MGCG",
       "collider": {
         "type": "AABB",
@@ -1390,27 +1550,27 @@
     },
     {
       "id": "chairs-albedo",
-      "texture": "assets/textures/room_1/chairs/chairs_albedo.png",
+      "texture": "assets/textures/chairs/chairs_albedo.png",
       "format": "C"
     },
     {
       "id": "chairs-normal",
-      "texture": "assets/textures/room_1/chairs/chairs_normal.png",
+      "texture": "assets/textures/chairs/chairs_normal.png",
       "format": "D"
     },
     {
       "id": "chairs-metallic",
-      "texture": "assets/textures/room_1/chairs/chairs_metallic.png",
+      "texture": "assets/textures/chairs/chairs_metallic.png",
       "format": "D"
     },
     {
       "id": "chairs-roughness",
-      "texture": "assets/textures/room_1/chairs/chairs_roughness.png",
+      "texture": "assets/textures/chairs/chairs_roughness.png",
       "format": "D"
     },
     {
       "id": "chairs-ao",
-      "texture": "assets/textures/room_1/chairs/chairs_ao.png",
+      "texture": "assets/textures/chairs/chairs_ao.png",
       "format": "D"
     },
     {
@@ -1465,52 +1625,52 @@
     },
     {
       "id": "barrels-albedo",
-      "texture": "assets/textures/room_1/barrels/barrels_albedo.png",
+      "texture": "assets/textures/barrels/barrels_albedo.png",
       "format": "C"
     },
     {
       "id": "barrels-normal",
-      "texture": "assets/textures/room_1/barrels/barrels_normal.png",
+      "texture": "assets/textures/barrels/barrels_normal.png",
       "format": "D"
     },
     {
       "id": "barrels-metallic",
-      "texture": "assets/textures/room_1/barrels/barrels_metallic.png",
+      "texture": "assets/textures/barrels/barrels_metallic.png",
       "format": "D"
     },
     {
       "id": "barrels-roughness",
-      "texture": "assets/textures/room_1/barrels/barrels_roughness.png",
+      "texture": "assets/textures/barrels/barrels_roughness.png",
       "format": "D"
     },
     {
       "id": "barrels-ao",
-      "texture": "assets/textures/room_1/barrels/barrels_ao.png",
+      "texture": "assets/textures/barrels/barrels_ao.png",
       "format": "D"
     },
     {
       "id": "boxes-albedo",
-      "texture": "assets/textures/room_1/boxes/boxes_albedo.png",
+      "texture": "assets/textures/boxes/boxes_albedo.png",
       "format": "C"
     },
     {
       "id": "boxes-normal",
-      "texture": "assets/textures/room_1/boxes/boxes_normal.png",
+      "texture": "assets/textures/boxes/boxes_normal.png",
       "format": "D"
     },
     {
       "id": "boxes-metallic",
-      "texture": "assets/textures/room_1/boxes/boxes_metallic.png",
+      "texture": "assets/textures/boxes/boxes_metallic.png",
       "format": "D"
     },
     {
       "id": "boxes-roughness",
-      "texture": "assets/textures/room_1/boxes/boxes_roughness.png",
+      "texture": "assets/textures/boxes/boxes_roughness.png",
       "format": "D"
     },
     {
       "id": "boxes-ao",
-      "texture": "assets/textures/room_1/boxes/boxes_ao.png",
+      "texture": "assets/textures/boxes/boxes_ao.png",
       "format": "D"
     },
     {
@@ -1766,6 +1926,156 @@
     {
       "id": "r3-jugs-ao",
       "texture": "assets/textures/room_3/jugs/jugs_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-torture-albedo",
+      "texture": "assets/textures/room_4/torture/torture_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "r4-torture-normal",
+      "texture": "assets/textures/room_4/torture/torture_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-torture-metallic",
+      "texture": "assets/textures/room_4/torture/torture_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-torture-roughness",
+      "texture": "assets/textures/room_4/torture/torture_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-torture-ao",
+      "texture": "assets/textures/room_4/torture/torture_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-skeletons-albedo",
+      "texture": "assets/textures/room_4/skeletons/skeletons_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "r4-skeletons-normal",
+      "texture": "assets/textures/room_4/skeletons/skeletons_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-skeletons-metallic",
+      "texture": "assets/textures/room_4/skeletons/skeletons_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-skeletons-roughness",
+      "texture": "assets/textures/room_4/skeletons/skeletons_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-skeletons-ao",
+      "texture": "assets/textures/room_4/skeletons/skeletons_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-trapdoor-albedo",
+      "texture": "assets/textures/room_4/trapdoor/trapdoor_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "r4-trapdoor-normal",
+      "texture": "assets/textures/room_4/trapdoor/trapdoor_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-trapdoor-metallic",
+      "texture": "assets/textures/room_4/trapdoor/trapdoor_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-trapdoor-roughness",
+      "texture": "assets/textures/room_4/trapdoor/trapdoor_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-trapdoor-ao",
+      "texture": "assets/textures/room_4/trapdoor/trapdoor_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-bones-albedo",
+      "texture": "assets/textures/room_4/bones/bones_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "r4-bones-normal",
+      "texture": "assets/textures/room_4/bones/bones_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-bones-metallic",
+      "texture": "assets/textures/room_4/bones/bones_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-bones-roughness",
+      "texture": "assets/textures/room_4/bones/bones_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-bones-ao",
+      "texture": "assets/textures/room_4/bones/bones_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-buckets-albedo",
+      "texture": "assets/textures/room_4/buckets/buckets_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "r4-buckets-normal",
+      "texture": "assets/textures/room_4/buckets/buckets_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-buckets-metallic",
+      "texture": "assets/textures/room_4/buckets/buckets_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-buckets-roughness",
+      "texture": "assets/textures/room_4/buckets/buckets_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-buckets-ao",
+      "texture": "assets/textures/room_4/buckets/buckets_ao.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-chains-albedo",
+      "texture": "assets/textures/room_4/chains/chains_albedo.png",
+      "format": "C"
+    },
+    {
+      "id": "r4-chains-normal",
+      "texture": "assets/textures/room_4/chains/chains_normal.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-chains-metallic",
+      "texture": "assets/textures/room_4/chains/chains_metallic.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-chains-roughness",
+      "texture": "assets/textures/room_4/chains/chains_roughness.png",
+      "format": "D"
+    },
+    {
+      "id": "r4-chains-ao",
+      "texture": "assets/textures/room_4/chains/chains_ao.png",
       "format": "D"
     }
   ],
@@ -5471,6 +5781,396 @@
             "red-rug-metallic",
             "red-rug-roughness",
             "red-rug-ao"
+          ]
+        },
+        {
+          "id": "room4_torture_chair",
+          "solid": true,
+          "model": "r4_torture_chair",
+          "translate": [-24.42, 0.0, 5.877],
+          "eulerAngles": [0.0, 180.0, 0.0],
+          "scale": [2.357, 2.357, 2.357],
+          "texture": [
+            "r4-torture-albedo",
+            "r4-torture-normal",
+            "r4-torture-metallic",
+            "r4-torture-roughness",
+            "r4-torture-ao"
+          ]
+        },
+        {
+          "id": "room4_rack_S",
+          "solid": true,
+          "model": "r4_rack",
+          "translate": [-21.97, 0.0, -5.368],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [1.964, 2.9, 1.964],
+          "texture": [
+            "r4-torture-albedo",
+            "r4-torture-normal",
+            "r4-torture-metallic",
+            "r4-torture-roughness",
+            "r4-torture-ao"
+          ]
+        },
+        {
+          "id": "room4_skeleton_E_sitting",
+          "solid": false,
+          "model": "r4_skeleton_sitting",
+          "translate": [-30.286, 0.067, -3.774],
+          "eulerAngles": [0.0, 97.919, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-skeletons-albedo",
+            "r4-skeletons-normal",
+            "r4-skeletons-metallic",
+            "r4-skeletons-roughness",
+            "r4-skeletons-ao"
+          ]
+        },
+        {
+          "id": "room4_trapdoor",
+          "solid": false,
+          "model": "r4_trapdoor",
+          "translate": [-29.065, 0.282, 0.0],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [4.0, 4.0, 4.0],
+          "texture": [
+            "r4-trapdoor-albedo",
+            "r4-trapdoor-normal",
+            "r4-trapdoor-metallic",
+            "r4-trapdoor-roughness",
+            "r4-trapdoor-ao"
+          ]
+        },
+        {
+          "id": "room4_skeleton_lying_N",
+          "solid": false,
+          "model": "r4_skeleton_lying",
+          "translate": [-20.45, 0.12, 6.6],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-skeletons-albedo",
+            "r4-skeletons-normal",
+            "r4-skeletons-metallic",
+            "r4-skeletons-roughness",
+            "r4-skeletons-ao"
+          ]
+        },
+        {
+          "id": "room4_skull_N",
+          "solid": false,
+          "model": "r4_skull",
+          "translate": [-22.475, 0.036, 5.006],
+          "eulerAngles": [0.0, -35.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-bones-albedo",
+            "r4-bones-normal",
+            "r4-bones-metallic",
+            "r4-bones-roughness",
+            "r4-bones-ao"
+          ]
+        },
+        {
+          "id": "room4_crossed_bones",
+          "solid": false,
+          "model": "r4_crossed_bones",
+          "translate": [-27.305, 0.093, 3.408],
+          "eulerAngles": [0.0, 60.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-bones-albedo",
+            "r4-bones-normal",
+            "r4-bones-metallic",
+            "r4-bones-roughness",
+            "r4-bones-ao"
+          ]
+        },
+        {
+          "id": "room4_remains_S",
+          "solid": false,
+          "model": "r4_remains",
+          "translate": [-24.844, 0.082, 1.53],
+          "eulerAngles": [0.0, 75.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-bones-albedo",
+            "r4-bones-normal",
+            "r4-bones-metallic",
+            "r4-bones-roughness",
+            "r4-bones-ao"
+          ]
+        },
+        {
+          "id": "room4_crate_NE",
+          "solid": true,
+          "model": "crate",
+          "translate": [-17.05, 0.595, -6.55],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [2.0, 2.0, 2.0],
+          "texture": [
+            "boxes-albedo",
+            "boxes-normal",
+            "boxes-metallic",
+            "boxes-roughness",
+            "boxes-ao"
+          ]
+        },
+        {
+          "id": "room4_crate_S",
+          "solid": true,
+          "model": "r4_crate_plain",
+          "translate": [-30.85, 0.714, 6.75],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [2.4, 2.4, 2.4],
+          "texture": [
+            "boxes-albedo",
+            "boxes-normal",
+            "boxes-metallic",
+            "boxes-roughness",
+            "boxes-ao"
+          ]
+        },
+        {
+          "id": "room4_crate_S_top",
+          "solid": false,
+          "model": "crate",
+          "translate": [-30.9, 1.966, 6.75],
+          "eulerAngles": [0.0, 20.0, 0.0],
+          "scale": [1.8, 1.8, 1.8],
+          "texture": [
+            "boxes-albedo",
+            "boxes-normal",
+            "boxes-metallic",
+            "boxes-roughness",
+            "boxes-ao"
+          ]
+        },
+        {
+          "id": "room4_barrel_SW",
+          "solid": true,
+          "model": "barrel",
+          "translate": [-30.65, 0.882, -6.7],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "barrels-albedo",
+            "barrels-normal",
+            "barrels-metallic",
+            "barrels-roughness",
+            "barrels-ao"
+          ]
+        },
+        {
+          "id": "room4_barrel_W",
+          "solid": true,
+          "model": "barrel",
+          "translate": [-17.2, 0.882, 6.7],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "barrels-albedo",
+            "barrels-normal",
+            "barrels-metallic",
+            "barrels-roughness",
+            "barrels-ao"
+          ]
+        },
+        {
+          "id": "room4_crate_small_SW",
+          "solid": true,
+          "model": "r4_crate_plain",
+          "translate": [-16.95, 0.417, -5.25],
+          "eulerAngles": [0.0, 15.0, 0.0],
+          "scale": [1.4, 1.4, 1.4],
+          "texture": [
+            "boxes-albedo",
+            "boxes-normal",
+            "boxes-metallic",
+            "boxes-roughness",
+            "boxes-ao"
+          ]
+        },
+        {
+          "id": "room4_barrel_small_W",
+          "solid": true,
+          "model": "barrel",
+          "translate": [-16.9, 0.601, 5.15],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [1.5, 1.5, 1.5],
+          "texture": [
+            "barrels-albedo",
+            "barrels-normal",
+            "barrels-metallic",
+            "barrels-roughness",
+            "barrels-ao"
+          ]
+        },
+        {
+          "id": "room4_bucket",
+          "solid": false,
+          "model": "r4_bucket",
+          "translate": [-17.05, 1.625, -6.55],
+          "eulerAngles": [0.0, 0.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-buckets-albedo",
+            "r4-buckets-normal",
+            "r4-buckets-metallic",
+            "r4-buckets-roughness",
+            "r4-buckets-ao"
+          ]
+        },
+        {
+          "id": "room4_barrel",
+          "solid": true,
+          "model": "r4_barrel_broken",
+          "translate": [-28.067, 0.06, -6.007],
+          "eulerAngles": [0.0, 63.78, 0.0],
+          "scale": [2.0, 2.0, 2.0],
+          "texture": [
+            "barrels-albedo",
+            "barrels-normal",
+            "barrels-metallic",
+            "barrels-roughness",
+            "barrels-ao"
+          ]
+        },
+        {
+          "id": "room4_skeleton_N",
+          "solid": false,
+          "model": "r4_skeleton_chained",
+          "translate": [-28.65, 2.797, 7.567],
+          "eulerAngles": [0.0, 180.0, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-skeletons-albedo",
+            "r4-skeletons-normal",
+            "r4-skeletons-metallic",
+            "r4-skeletons-roughness",
+            "r4-skeletons-ao"
+          ]
+        },
+        {
+          "id": "room4_skeleton_E",
+          "solid": false,
+          "model": "r4_skeleton_hanging",
+          "translate": [-31.265, 0.311, 4.746],
+          "eulerAngles": [0.0, 104.6, 0.0],
+          "scale": [2.2, 2.2, 2.2],
+          "texture": [
+            "r4-skeletons-albedo",
+            "r4-skeletons-normal",
+            "r4-skeletons-metallic",
+            "r4-skeletons-roughness",
+            "r4-skeletons-ao"
+          ]
+        },
+        {
+          "id": "room4_chains_N",
+          "solid": false,
+          "model": "r4_wall_chains",
+          "translate": [-28.677, 4.626, 7.788],
+          "eulerAngles": [0.0, 180.0, 0.0],
+          "scale": [1.242, 1.242, 1.242],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
+          ]
+        },
+        {
+          "id": "room4_bracket_E_A",
+          "solid": false,
+          "model": "r4_chain_bracket",
+          "translate": [-31.611, 6.268, 5.184],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [0.534, 0.534, 0.534],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
+          ]
+        },
+        {
+          "id": "room4_bracket_E_B",
+          "solid": false,
+          "model": "r4_chain_bracket",
+          "translate": [-31.611, 6.268, 4.357],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [0.534, 0.534, 0.534],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
+          ]
+        },
+        {
+          "id": "room4_bracket_E_sitting",
+          "solid": false,
+          "model": "r4_chain_bracket",
+          "translate": [-31.588, 3.549, -4.491],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [0.565, 0.565, 0.565],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
+          ]
+        },
+        {
+          "id": "room4_bracket_E_sitting_2",
+          "solid": false,
+          "model": "r4_chain_bracket",
+          "translate": [-31.588, 3.549, -3.25],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [0.565, 0.565, 0.565],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
+          ]
+        },
+        {
+          "id": "room4_chains_N_W",
+          "solid": false,
+          "model": "r4_wall_chains",
+          "translate": [-20.19, 5.021, 7.829],
+          "eulerAngles": [0.0, 180.0, 0.0],
+          "scale": [1.0, 1.0, 1.0],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
+          ]
+        },
+        {
+          "id": "room4_shackles_E",
+          "solid": false,
+          "model": "r4_wall_shackles",
+          "translate": [-31.344, 5.474, 0.0],
+          "eulerAngles": [0.0, 90.0, 0.0],
+          "scale": [0.9, 0.9, 0.9],
+          "texture": [
+            "r4-chains-albedo",
+            "r4-chains-normal",
+            "r4-chains-metallic",
+            "r4-chains-roughness",
+            "r4-chains-ao"
           ]
         }
       ]
