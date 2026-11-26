@@ -19,6 +19,15 @@ class Door {
     void setIsLocked(bool islocked) { isLocked = islocked; }
     bool getIsOpen() { return isOpen; }
     void setIsOpen(bool isopen) { isOpen = isopen; }
+
+    // room on the other side of the door, -1 if the door does not touch room (its id is "door_<a>_<b>")
+    int otherRoom(int room) const {
+        const int r1 = id[5] - '0';
+        const int r2 = id[7] - '0';
+        const int other = r1 == room ? r2 : r2 == room ? r1 : -1;
+        return other >= 1 && other <= 9 ? other : -1; // "o" = outside
+    }
+
     void rotateInstanceY(Instance *instance, float angle) {
         if (instance == nullptr || instance->C == nullptr) {
             return;

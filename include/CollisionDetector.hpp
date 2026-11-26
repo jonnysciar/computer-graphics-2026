@@ -15,9 +15,6 @@ class CollisionDetector {
     CollisionDetector() = default;
     explicit CollisionDetector(std::map<Collider *, bool> colliders);
 
-    bool isOccluded(const glm::vec3 &lightPos, const glm::vec3 &viewerPos) const;
-    bool isLightVisible(const glm::vec3 &playerPos, const glm::vec3 &lightPos, const float radius) const;
-
     // Given the position before and after a movement, returns the position the player can actually reach.
     // Axes are tried one at a time, so the player slides along the surfaces instead of stopping.
     glm::vec3 resolveCollision(Player &player, const glm::vec3 &to);
