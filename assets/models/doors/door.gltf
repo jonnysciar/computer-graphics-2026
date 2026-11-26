@@ -62,8 +62,8 @@
 	"images":[
 		{
 			"mimeType":"image/png",
-			"name":"rock-wall-mortar_albedo",
-			"uri":"rock-wall-mortar_albedo.png"
+			"name":"Wood_Door_albedo",
+			"uri":"Wood_Door_albedo.png"
 		}
 	],
 	"accessors":[
@@ -149,7 +149,7 @@
 	"buffers":[
 		{
 			"byteLength":1224,
-			"uri":"Door_1_4.bin"
+			"uri":"door.bin"
 		}
 	]
 }
