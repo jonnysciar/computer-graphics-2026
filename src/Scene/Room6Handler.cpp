@@ -13,10 +13,10 @@ Room6Handler::Room6Handler(SceneLoader *sceneLoader, HudManager *hudManager, Gam
                                                   }
                                                   if (!gs.door_5_6.getIsLocked()) {
                                                       if (gs.door_5_6.getIsOpen()) {
-                                                          gs.door_5_6.rotateInstanceY(i.instance, +90.0f);
+                                                          gs.door_5_6.rotateInstanceY(i.instance, -90.0f);
                                                           gs.door_5_6.setIsOpen(false);
                                                       } else {
-                                                          gs.door_5_6.rotateInstanceY(i.instance, -90.0f);
+                                                          gs.door_5_6.rotateInstanceY(i.instance, +90.0f);
                                                           gs.door_5_6.setIsOpen(true);
                                                       }
                                                   }

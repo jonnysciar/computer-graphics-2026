@@ -27,6 +27,12 @@ class GameStatus {
     Settings settings{};
     std::vector<Torch> torches;
 
+    // the shadow maps must be rendered again (start, window resize, an object moved)
+    bool shadowsDirty = true;
+
+    // room the player is in (0 = not known yet), updated by SceneLoader
+    int playerRoom = 0;
+
     Door door_1_2{"door_1_2", false, false};
     Door door_1_4{"door_1_4", true, false}; // secret mechanism
     Door door_1_5{"door_1_5", false, false};
@@ -34,6 +40,29 @@ class GameStatus {
     Door door_5_6{"door_5_6", true, false}; // key_2
     Door door_6_7{"door_6_7", false, false};
     Door door_7_o{"door_7_o", true, false}; // key_3
+
+    // how many open doors the light of a torch can go through and still be seen by the player
+    static constexpr int LIGHT_DOOR_DEPTH = 2;
+
+    // rooms reachable from room through at most depth doors (only the open ones if onlyOpen)
+    std::vector<int> roomsAround(int room, int depth, bool onlyOpen) {
+        std::vector<int> rooms{room};
+        std::size_t next = 0;
+        for (int d = 0; d < depth; d++) {
+            for (const std::size_t end = rooms.size(); next < end; next++) {
+                for (Door *door : {&door_1_2, &door_1_4, &door_1_5, &door_2_3, &door_5_6, &door_6_7, &door_7_o}) {
+                    const int other = door->otherRoom(rooms[next]);
+                    const bool passable = door->getIsOpen() || !onlyOpen;
+                    if (passable && other != -1 && std::ranges::find(rooms, other) == rooms.end())
+                        rooms.push_back(other);
+                }
+            }
+        }
+        return rooms;
+    }
+
+    // rooms whose torches can light what the player sees: reachable through at most LIGHT_DOOR_DEPTH open doors
+    std::vector<int> litRooms() { return roomsAround(playerRoom, LIGHT_DOOR_DEPTH, true); }
 
     void loadLights(std::string_view jsonFile) {
         std::ifstream ifs(jsonFile.data());

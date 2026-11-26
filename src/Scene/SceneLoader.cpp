@@ -11,6 +11,7 @@
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <iostream>
+#include <iterator>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -146,20 +147,19 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
     UniformBufferObject ubo{};
     GlobalUniformBufferObject gubo{};
 
+    updatePlayerRoom(gameStatus);
+
+    // dynamic light: only the torches of the player's room and of the rooms seen through open doors
+    const std::vector<int> rooms = gameStatus.litRooms();
+    auto isLit = [&](const Torch &t) {
+        return gameStatus.playerRoom == 0 || std::ranges::find(rooms, t.room) != rooms.end();
+    };
+
     std::vector<Torch *> validTs;
     for (auto &t : gameStatus.torches) {
-        if (!gameStatus.settings.dynamicLight) {
+        if (!gameStatus.settings.dynamicLight || (t.on && isLit(t))) {
             validTs.push_back(&t);
-            continue;
         }
-
-        const float r = t.radius() * 1.5f;
-        if (!collisionDetector->isLightVisible(gameStatus.player.pos, t.pos, r))
-            continue;
-        if (!t.on || !cameraController.frustumIntersect(t.pos, r))
-            continue;
-
-        validTs.push_back(&t);
     }
 
     if (gameStatus.settings.dynamicLight) {
@@ -190,8 +190,43 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
         instance->DS[0][0]->map(currentImage, &ubo, 0);
         instance->DS[0][0]->map(currentImage, &gubo, 1);
     }
+}
 
-    smMap["General"].updateUniformBuffer(currentImage, {std::begin(gubo.lightPos), std::end(gubo.lightPos)});
+void SceneLoader::prepareShadowPass(int currentImage, GameStatus &gameStatus) {
+    // a torch only draws the objects of its own room and of the rooms next to it
+    std::vector<std::vector<int>> torchRooms;
+    for (const auto &t : gameStatus.torches) {
+        torchRooms.push_back(gameStatus.roomsAround(t.room, 1, false));
+    }
+
+    std::map<const Instance *, std::vector<int>> instanceRooms;
+    for (const auto *inst : instances) {
+        instanceRooms[inst] = roomsOf(*inst);
+    }
+
+    auto isCaster = [&](uint32_t light, const Instance &inst) {
+        const std::string &id = *inst.id;
+        // walls, roofs, doors and floor always block the light, or it would leak into the far rooms
+        if (id.starts_with("Wall_") || id.starts_with("Roof_") || id.starts_with("door_") || id == "floor")
+            return true;
+        if (light >= torchRooms.size() || gameStatus.torches[light].room == 0)
+            return true;
+
+        return std::ranges::any_of(instanceRooms[&inst], [&](int room) {
+            return std::ranges::find(torchRooms[light], room) != torchRooms[light].end();
+        });
+    };
+
+    for (auto &sm : smMap | std::views::values) {
+        sm.selectCasters(isCaster);
+
+        // light k of the shadow maps is always torch k, whatever GUBO slot it takes
+        std::vector<glm::vec4> lightPos(sm.getLightCount(), glm::vec4(0.0f, -1000.0f, 0.0f, 1.0f));
+        for (std::size_t k = 0; k < lightPos.size() && k < gameStatus.torches.size(); k++) {
+            lightPos[k] = glm::vec4(gameStatus.torches[k].pos, 1.0f);
+        }
+        sm.updateUniformBuffer(currentImage, lightPos);
+    }
 }
 
 void SceneLoader::emissiveUpdateUB(int currentImage, GameStatus &gameStatus, CameraController &cameraController) {
@@ -275,7 +310,76 @@ SceneLoader::SceneLoader(BaseProject *bp, std::string_view scene_json, VkDevice 
         }
     }
 
+    computeRoomBounds();
+    std::ranges::transform(instances, std::back_inserter(lastWm), [](const Instance *inst) { return inst->Wm; });
+
     rp.init(this->bp);
+}
+
+bool SceneLoader::geometryChanged() {
+    bool changed = false;
+    for (std::size_t i = 0; i < instances.size(); i++) {
+        if (instances[i]->Wm != lastWm[i]) {
+            lastWm[i] = instances[i]->Wm;
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+std::vector<int> SceneLoader::roomsOf(const Instance &instance) const {
+    const glm::vec3 p = instance.Wm[3];
+    const AABBextents box = instance.C ? instance.C->getExtents() : AABBextents{p.x, p.x, p.y, p.y, p.z, p.z};
+    constexpr float margin = 0.5f; // objects on a shared wall (doors) belong to both rooms
+
+    std::vector<int> rooms;
+    for (const auto &[room, b] : roomBounds) {
+        if (box.xMin <= b.xMax + margin && box.xMax >= b.xMin - margin && box.yMin <= b.yMax + margin &&
+            box.yMax >= b.yMin - margin && box.zMin <= b.zMax + margin && box.zMax >= b.zMin - margin) {
+            rooms.push_back(room);
+        }
+    }
+    return rooms;
+}
+
+void SceneLoader::computeRoomBounds() {
+    for (auto *inst : instances) {
+        const std::string &id = *inst->id;
+        if (!inst->C || !(id.starts_with("Wall_") || id.starts_with("Roof_")))
+            continue;
+
+        const int room = std::atoi(id.c_str() + 5); // "Wall_<room>_..." / "Roof_<room>"
+        const AABBextents e = inst->C->getExtents();
+        auto [it, isNew] = roomBounds.try_emplace(room, e);
+        if (isNew)
+            continue;
+
+        auto &b = it->second;
+        b.xMin = std::min(b.xMin, e.xMin);
+        b.xMax = std::max(b.xMax, e.xMax);
+        b.yMin = std::min(b.yMin, e.yMin);
+        b.yMax = std::max(b.yMax, e.yMax);
+        b.zMin = std::min(b.zMin, e.zMin);
+        b.zMax = std::max(b.zMax, e.zMax);
+    }
+}
+
+void SceneLoader::updatePlayerRoom(GameStatus &gameStatus) const {
+    const glm::vec3 &p = gameStatus.player.pos;
+    auto inside = [&p](const AABBextents &b) {
+        return p.x >= b.xMin && p.x <= b.xMax && p.z >= b.zMin && p.z <= b.zMax;
+    };
+
+    // rooms overlap at the shared walls: keep the current one while the player is still in it
+    if (auto it = roomBounds.find(gameStatus.playerRoom); it != roomBounds.end() && inside(it->second))
+        return;
+
+    for (const auto &[room, bounds] : roomBounds) {
+        if (inside(bounds)) {
+            gameStatus.playerRoom = room;
+            return;
+        }
+    }
 }
 
 void SceneLoader::onResize(int newW, int newH) {
@@ -302,10 +406,13 @@ void SceneLoader::pipelinesAndDescriptorSetsInit() {
     scene.pipelinesAndDescriptorSetsInit();
 }
 
-void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+void SceneLoader::populateShadowCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     for (auto &sm : smMap | std::views::values) {
         sm.populateCommandBuffer(commandBuffer, currentImage);
     }
+}
+
+void SceneLoader::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     rp.begin(commandBuffer, currentImage);
     for (int i = 0; i < pMap.begin()->second.size(); i++) {
         scene.populateCommandBuffer(commandBuffer, i, currentImage);

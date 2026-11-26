@@ -54,6 +54,9 @@ void Game::localInit() {
 void Game::pipelinesAndDescriptorSetsInit() {
     sceneLoader->pipelinesAndDescriptorSetsInit();
     hudManager->pipelinesAndDescriptorSetsInit();
+
+    // the shadow casters' descriptor sets are recreated: their uniforms must be written again
+    gameStatus.shadowsDirty = true;
 }
 
 // Here is where you update the uniforms.
@@ -65,7 +68,27 @@ void Game::updateUniformBuffer(uint32_t currentImage) {
     std::ranges::for_each(sceneHandlers, [&](auto &handler) { handler->checkInteractionReach(gameStatus); });
 
     sceneLoader->updateUniformBuffer(currentImage, gameStatus, cameraController);
+    updateShadows(currentImage);
+
     hudManager->updateUniformBuffer(currentImage, gameStatus, deltaT);
+}
+
+// The shadow maps are kept between frames: they are rendered again only in the frame after the geometry changed
+void Game::updateShadows(uint32_t currentImage) {
+    // e.g. a door opened or a key picked up; switching a torch on or off does not change the shadow maps
+    if (sceneLoader->geometryChanged())
+        gameStatus.shadowsDirty = true;
+
+    if (gameStatus.shadowsDirty) {
+        gameStatus.shadowsDirty = false;
+        shadowPassQueued = true;
+        sceneLoader->prepareShadowPass(currentImage, gameStatus);
+        submitCommandBuffer("shadows", -1, populateShadowCommandBufferAccess, this);
+    } else if (shadowPassQueued) {
+        // re-submitted empty: the Starter's removeBuffer() would leave a null buffer that drawFrame dereferences
+        shadowPassQueued = false;
+        submitCommandBuffer("shadows", -1, populateShadowCommandBufferAccess, this);
+    }
 }
 
 void Game::localCleanup() {
@@ -81,6 +104,13 @@ void Game::pipelinesAndDescriptorSetsCleanup() {
 void Game::populateCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params) {
     auto *game = static_cast<Game *>(params);
     game->populateCommandBuffer(commandBuffer, currentImage);
+}
+
+void Game::populateShadowCommandBufferAccess(VkCommandBuffer commandBuffer, int currentImage, void *params) {
+    auto *game = static_cast<Game *>(params);
+    if (game->shadowPassQueued) {
+        game->sceneLoader->populateShadowCommandBuffer(commandBuffer, currentImage);
+    }
 }
 
 void Game::setWindowParameters() {
