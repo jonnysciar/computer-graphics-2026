@@ -75,7 +75,7 @@ void HudText::removeText(std::string_view id) {
 }
 
 bool HudText::isTextPresent(std::string_view id) {
-    std::cout << "id: " << id << " count " << texts.count(id) << std::endl;
+    //std::cout << "id: " << id << " count " << texts.count(id) << std::endl;
     return texts.count(id) > 0;
 }
 

@@ -13,7 +13,7 @@ Room3Handler::Room3Handler(SceneLoader *sceneLoader, HudManager *hudManager) : S
                                                this->hudManager->setStatus("Keys: " +
                                                                            std::to_string(gs.player.countItems()));
                                            }}},
-                {"door_2_3", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+                {"door_2_3", Interactable{.instance = nullptr, .callback = [this, sceneLoader](Interactable &i, GameStatus &gs) {
                                               if (gs.door_2_3.getIsLocked() && !gs.player.hasItem("key_1")) {
                                                   this->hudManager->setPrompt("The door is locked");
                                               }
@@ -21,9 +21,15 @@ Room3Handler::Room3Handler(SceneLoader *sceneLoader, HudManager *hudManager) : S
                                                   if (gs.door_2_3.getIsOpen()) {
                                                       gs.door_2_3.rotateInstanceY(i.instance, -90.0f);
                                                       gs.door_2_3.setIsOpen(false);
+
+                                                      glm::vec3 newPos = gs.player.pos + glm::vec3(2.0f, 0.0f, 0.0f);
+                                                      gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
                                                   } else {
                                                       gs.door_2_3.rotateInstanceY(i.instance, +90.0f);
                                                       gs.door_2_3.setIsOpen(true);
+
+                                                      glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, -2.0f);
+                                                      gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
                                                   }
                                               }
                                           }}}};

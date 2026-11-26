@@ -14,28 +14,38 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HudManager *hudManager, Gam
                                            }}},
                 {"door_1_2", Interactable{.instance = nullptr,
                                           .callback =
-                                              [](Interactable &i, GameStatus &gs) {
+                                              [sceneLoader](Interactable &i, GameStatus &gs) {
                                                   if (!gs.door_1_2.getIsLocked()) {
                                                       if (gs.door_1_2.getIsOpen()) {
                                                           gs.door_1_2.rotateInstanceY(i.instance, +90.0f);
                                                           gs.door_1_2.setIsOpen(false);
-                                                          // glm::vec3 newPos = gs.player.pos + glm::vec3(1.0f, 0.0f,
-                                                          // 0.0f); CollisionDetector::resolveCollision(gs.player,
-                                                          // newPos);
+
+                                                          glm::vec3 newPos = gs.player.pos + glm::vec3(-2.0f, 0.0f, 0.0f);
+                                                          gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
                                                       } else {
                                                           gs.door_1_2.rotateInstanceY(i.instance, -90.0f);
                                                           gs.door_1_2.setIsOpen(true);
+
+                                                          glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, -2.0f);
+                                                          gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
+
                                                       }
                                                   }
                                               }}},
-                {"door_1_5", Interactable{.instance = nullptr, .callback = [](Interactable &i, GameStatus &gs) {
+                {"door_1_5", Interactable{.instance = nullptr, .callback = [sceneLoader](Interactable &i, GameStatus &gs) {
                                               if (!gs.door_1_5.getIsLocked()) {
                                                   if (gs.door_1_5.getIsOpen()) {
                                                       gs.door_1_5.rotateInstanceY(i.instance, -90.0f);
                                                       gs.door_1_5.setIsOpen(false);
+
+                                                      glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, -2.0f);
+                                                      gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
                                                   } else {
                                                       gs.door_1_5.rotateInstanceY(i.instance, +90.0f);
                                                       gs.door_1_5.setIsOpen(true);
+
+                                                      glm::vec3 newPos = gs.player.pos + glm::vec3(-2.0f, 0.0f, 0.0f);
+                                                      gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
                                                   }
                                               }
                                           }}}};
