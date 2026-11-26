@@ -26,10 +26,10 @@ Room6Handler::Room6Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                 {"door_6_7", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
                                               if (!gs.door_6_7.getIsLocked()) {
                                                   if (gs.door_6_7.getIsOpen()) {
-                                                      gs.door_6_7.rotateInstanceY(i.instance, +90.0f);
+                                                      gs.door_6_7.rotateInstanceY(i.instance, -90.0f);
                                                       gs.door_6_7.setIsOpen(false);
                                                   } else {
-                                                      gs.door_6_7.rotateInstanceY(i.instance, -90.0f);
+                                                      gs.door_6_7.rotateInstanceY(i.instance, +90.0f);
                                                       gs.door_6_7.setIsOpen(true);
                                                   }
                                               }

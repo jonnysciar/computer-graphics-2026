@@ -31,10 +31,12 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HUDManager *hudManager, Gam
                                               [](Interactable &i, GameStatus &gs) {
                                                   if (!gs.door_1_4.getIsLocked()) {
                                                       if (gs.door_1_4.getIsOpen()) {
-                                                          gs.door_1_4.rotateInstanceY(i.instance, +90.0f);
+                                                          //gs.door_1_4.rotateInstanceY(i.instance, +90.0f);
+                                                          //HandlerHelper::hideInstance(i.instance);
                                                           gs.door_1_4.setIsOpen(false);
                                                       } else {
-                                                          gs.door_1_4.rotateInstanceY(i.instance, -90.0f);
+                                                          //gs.door_1_4.rotateInstanceY(i.instance, -90.0f);
+                                                          //HandlerHelper::sendInstanceToCoordinates(i.instance, -16.1f, 0.0f, 1.9f);
                                                           gs.door_1_4.setIsOpen(true);
                                                       }
                                                   }
@@ -79,7 +81,7 @@ void Room1Handler::onInteractionReach(std::string_view id, GameStatus &gs) {
     if (id == "door_1_4") {
         if (HandlerHelper::isTorchPuzzleSatisfied(gs.torches)) {
             gs.door_1_4.setIsLocked(false);
-            hudManager->setPrompt("Press E to open/close");
+            //hudManager->setPrompt("Press E to open/close");
         }
         else {
             gs.door_1_4.setIsLocked(true);
