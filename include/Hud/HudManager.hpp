@@ -3,6 +3,10 @@
 #include "GameStatus.hpp"
 #include "Hud/HudStructs.hpp"
 #include "Hud/HudText.hpp"
+#include "InputManager.hpp"
+#include "Listener/Listenable.hpp"
+#include <glm/fwd.hpp>
+#include <memory>
 #include <modules/Starter.hpp>
 #include <modules/TextMaker.hpp>
 #include <string>
@@ -28,8 +32,8 @@ class HudManager {
     std::map<std::string, HudFrame> frames;
     std::map<std::string, HudElement> elements;
 
-    HudText hudText{"assets/textures/hud/font/font.json"};
-    bool dirty = false;
+    std::unique_ptr<HudText> hudText;
+    bool dirty = true;
 
     uint32_t countedFrame = 0;
     float elapsed = 0.0;
@@ -37,7 +41,7 @@ class HudManager {
     static void populateCmdBufferAccess(VkCommandBuffer cmdBuf, int i, void *params);
     static void freeCmdBufferAccess(void *params);
 
-    void parseHudFrames(nlohmann::json &json);
+    void parseHudFrames(nlohmann::json &json, int w, int h);
     void parseHudElements(nlohmann::json &json);
     void buildMesh();
 
@@ -52,6 +56,8 @@ class HudManager {
     void updateUniformBuffer(int currentImage, GameStatus gameStatus, float deltaT);
     void setPrompt(std::string_view text);
     void setStatus(std::string_view text);
+
+    void subscribeElements(Listenable<GameStatus &, MouseState> &listenable);
 
     void cleanUp();
     void pipelinesAndDescriptorSetsCleanup();

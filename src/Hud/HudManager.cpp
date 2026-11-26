@@ -11,6 +11,7 @@
 #include <cstring>
 #include <fstream>
 #include <glm/fwd.hpp>
+#include <memory>
 #include <ranges>
 #include <vulkan/vulkan_core.h>
 
@@ -28,10 +29,7 @@ void HudManager::freeCmdBufferAccess(void *params) {
     delete s;
 }
 
-void HudManager::parseHudFrames(nlohmann::json &json) {
-    int w = json.at("meta").at("size").at("w").get<int>();
-    int h = json.at("meta").at("size").at("h").get<int>();
-
+void HudManager::parseHudFrames(nlohmann::json &json, int w, int h) {
     for (auto &frameJson : json.at("frames")) {
         auto frame = HudFrame{frameJson, w, h};
         this->frames[frame.name] = std::move(frame);
@@ -54,8 +52,7 @@ void HudManager::buildMesh() {
             continue;
 
         int baseVertex = verts.size();
-        auto quadVerts = elem.centered ? elem.sprite->getCenteredQuad(elem.pos.x, elem.pos.y, elem.scale)
-                                       : elem.sprite->getQuad(elem.pos.x, elem.pos.y, elem.scale);
+        auto quadVerts = elem.getQuad();
 
         verts.insert(verts.end(), quadVerts.begin(), quadVerts.end());
         for (int i : {0u, 1u, 2u, 2u, 3u, 0u}) {
@@ -63,13 +60,12 @@ void HudManager::buildMesh() {
         }
     }
 
-    for (const auto &elem : hudText.getElements()) {
+    for (const auto &elem : hudText->getElements()) {
         if (!elem.visible)
             continue;
 
         int baseVertex = verts.size();
-        auto quadVerts = elem.centered ? elem.sprite->getCenteredQuad(elem.pos.x, elem.pos.y, elem.scale)
-                                       : elem.sprite->getQuad(elem.pos.x, elem.pos.y, elem.scale);
+        auto quadVerts = elem.getQuad();
 
         verts.insert(verts.end(), quadVerts.begin(), quadVerts.end());
         for (int i : {0u, 1u, 2u, 2u, 3u, 0u}) {
@@ -88,6 +84,13 @@ void HudManager::buildMesh() {
     m->indices = std::move(idxs);
 
     m->initMesh(bp, &vd, false);
+
+    auto *cmdBuf = new HudManager::CmdBufStruct();
+    cmdBuf->hudManager = this;
+    cmdBuf->mesh = this->m;
+
+    bp->submitCommandBuffer("hud", 1, HudManager::populateCmdBufferAccess, cmdBuf, HudManager::freeCmdBufferAccess);
+    dirty = false;
 }
 
 void HudManager::computeFPS(float deltaT) {
@@ -97,8 +100,10 @@ void HudManager::computeFPS(float deltaT) {
     if (elapsed > 1.0f) {
         float fps = (float)countedFrame / elapsed;
         std::snprintf(str, 14, "FPS: %.1f", fps);
-        hudText.addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
+        hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
         dirty = true;
+        elapsed = 0;
+        countedFrame = 0;
     }
 }
 
@@ -113,14 +118,21 @@ HudManager::HudManager(BaseProject *basep, int w, int h) : bp(basep) {
     p.setCullMode(VK_CULL_MODE_NONE);
     p.setTransparency(true);
 
-    std::ifstream ifs("assets/textures/hud/hud.json");
-    nlohmann::json json = nlohmann::json::parse(ifs);
-    parseHudFrames(json);
-    parseHudElements(json);
+    std::ifstream ifs{"assets/textures/hud/hud_frames.json"};
+    nlohmann::json hud_frames = nlohmann::json::parse(ifs);
+    int texW = hud_frames.at("meta").at("size").at("w").get<int>();
+    int texH = hud_frames.at("meta").at("size").at("h").get<int>();
 
-    buildMesh();
+    parseHudFrames(hud_frames, texW, texH);
 
-    tex.init(bp, "assets/textures/hud/hud.png");
+    ifs = std::ifstream{"assets/textures/hud/hud_elements.json"};
+    nlohmann::json hud_elements = nlohmann::json::parse(ifs);
+    parseHudElements(hud_elements);
+
+    hudText = std::make_unique<HudText>("assets/textures/hud/hud_font.json",
+                                        this->frames["font"].pos * glm::vec2(texW, texH));
+
+    tex.init(bp, "assets/textures/hud/hud_frames.png");
 
     AttachmentProperties color = (*RenderPass::getStandardAttchmentsProperties(AT_SURFACE_NOAA_DEPTH, bp))[0];
     color.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;             // keep the scene
@@ -135,6 +147,8 @@ HudManager::HudManager(BaseProject *basep, int w, int h) : bp(basep) {
          VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0}};
 
     rp.init(bp, -1, -1, -1, &props, &deps);
+    bp->DPSZs.texturesInPool += 2;
+    bp->DPSZs.setsInPool += 2;
 }
 
 void HudManager::onResize(int w, int h) {
@@ -164,20 +178,24 @@ void HudManager::populateCommandBuffer(VkCommandBuffer cmdBuf, int currentImage)
 void HudManager::updateUniformBuffer(int currentImage, GameStatus gameStatus, float deltaT) {
     if (gameStatus.settings.showFps) {
         computeFPS(deltaT);
-    } else if (hudText.isTextPresent("fps")) {
-        hudText.removeText("fps");
+    } else if (hudText->isTextPresent("fps")) {
+        hudText->removeText("fps");
         countedFrame = 0;
         elapsed = 0.0f;
         dirty = true;
     }
     if (elements["menu"].visible != gameStatus.settings.paused) {
         elements["menu"].visible = gameStatus.settings.paused;
-        hudText.addText("pause", {"Game is paused!", glm::vec4(0.0f, 0.0f, 6.0f, 1.0f)});
+        // elements["z_play"].visible = gameStatus.settings.paused;
+        elements["z_settings"].visible = gameStatus.settings.paused;
+        elements["z_exit"].visible = gameStatus.settings.paused;
+        elements["z_resume"].visible = gameStatus.settings.paused;
+        hudText->addText("pause", {"Game is paused", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
         dirty = true;
     }
 
-    if (!gameStatus.settings.paused && hudText.isTextPresent("pause")) {
-        hudText.removeText("pause");
+    if (!gameStatus.settings.paused && hudText->isTextPresent("pause")) {
+        hudText->removeText("pause");
         dirty = true;
     }
 
@@ -188,25 +206,22 @@ void HudManager::updateUniformBuffer(int currentImage, GameStatus gameStatus, fl
         }
     }
 
+    for (const auto &elem : elements | std::views::values) {
+        dirty |= elem.dirty;
+    }
+
     if (dirty) {
         buildMesh();
-        auto *cmdBuf = new HudManager::CmdBufStruct();
-
-        cmdBuf->hudManager = this;
-        cmdBuf->mesh = this->m;
-
-        bp->submitCommandBuffer("hud", 1, HudManager::populateCmdBufferAccess, cmdBuf, HudManager::freeCmdBufferAccess);
-        dirty = false;
     }
 }
 
 void HudManager::setPrompt(std::string_view text) {
     elements["prompt"].visible = !text.empty();
     if (text.empty()) {
-        hudText.removeText("prompt");
+        hudText->removeText("prompt");
     } else {
-        hudText.addText("prompt",
-                        {text, glm::vec4(elements["prompt"].pos, 4.0f, elements["prompt"].centered ? 1.0f : 0.0f)});
+        hudText->addText("prompt",
+                         {text, glm::vec4(elements["prompt"].pos, 4.0f, elements["prompt"].centered ? 1.0f : 0.0f)});
     }
 
     dirty = true;
@@ -214,10 +229,18 @@ void HudManager::setPrompt(std::string_view text) {
 
 void HudManager::setStatus(std::string_view text) {}
 
+void HudManager::subscribeElements(Listenable<GameStatus &, MouseState> &listenable) {
+    for (auto &elem : elements | std::views::values) {
+        if (!elem.interactable)
+            continue;
+
+        listenable.addListener(elem.getPtr());
+    }
+}
+
 void HudManager::cleanUp() {
     if (m != nullptr) {
         m->cleanup();
-        delete m;
     }
     tex.cleanup();
     dsl.cleanup();
@@ -226,7 +249,7 @@ void HudManager::cleanUp() {
 }
 
 void HudManager::pipelinesAndDescriptorSetsCleanup() {
-    ds.cleanup();
     p.cleanup();
     rp.cleanup();
+    ds.cleanup();
 }

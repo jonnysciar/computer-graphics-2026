@@ -24,11 +24,11 @@ void Game::onWindowResize(int w, int h) {
 // Here you load and setup all your Vulkan Models and Texutures.
 // Here you also create your Descriptor set layouts and load the shaders for the pipelines
 void Game::localInit() {
-    hudManager = std::make_unique<HudManager>(this, windowWidth, windowHeight);
     sceneLoader = std::make_unique<SceneLoader>(this, "assets/models/scene.json", device, physicalDevice, windowWidth,
                                                 windowHeight);
-
     submitCommandBuffer("main", 0, populateCommandBufferAccess, this);
+
+    hudManager = std::make_unique<HudManager>(this, windowWidth, windowHeight);
 
     gameStatus.loadLights("assets/models/lights.json");
 
@@ -46,6 +46,8 @@ void Game::localInit() {
         inputManager->Listenable<GameStatus &, Key>::addListener(
             handler->template Listener<GameStatus &, Key>::getPtr());
     });
+
+    hudManager->subscribeElements(*inputManager);
 }
 
 // Here you create your pipelines and Descriptor Sets!
@@ -91,7 +93,6 @@ void Game::setWindowParameters() {
 
 void Game::populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
     sceneLoader->populateCommandBuffer(commandBuffer, currentImage);
-    hudManager->populateCommandBuffer(commandBuffer, currentImage);
 }
 
 float Game::handleMovement() {

@@ -6,7 +6,7 @@
 #include <string_view>
 #include <fstream>
 
-HudText::HudText(std::string_view jsonFile) {
+HudText::HudText(std::string_view jsonFile, glm::vec2 offset) {
     std::ifstream ifs(jsonFile.data());
     nlohmann::json json = nlohmann::json::parse(ifs);
 
@@ -14,6 +14,10 @@ HudText::HudText(std::string_view jsonFile) {
     int h = json.at("meta").at("size").at("h").get<int>();
 
     for (auto &frameJson : json.at("frames")) {
+        auto &fjson = frameJson.at("frame");
+        fjson.at("x") = fjson.at("x").get<float>() + offset.x;
+        fjson.at("y") = fjson.at("y").get<float>() + offset.y;
+
         auto frame = HudFrame{frameJson, w, h};
         chars[frame.name.front()] = std::move(frame);
     }
@@ -42,8 +46,15 @@ void HudText::genElements() {
 
             glm::vec2 pos{startPos.x + static_cast<float>(i) * localSpacing, startPos.y};
             HudElement elem{};
-            elem.sprite = &chars[text.str[i]], elem.name = {}, elem.pos = pos, elem.scale = text.params.z,
-            elem.visible = true, elem.centered = false,
+
+            elem.frames = {&chars[text.str[i]]};
+            elem.currentFrame = 0;
+            elem.name = {};
+            elem.pos = pos;
+            elem.scale = text.params.z;
+            elem.visible = true;
+            elem.centered = false;
+            elem.interactable = false;
 
             elements.push_back(std::move(elem));
         }

@@ -17,12 +17,12 @@ class HudText {
     std::map<char, HudFrame> chars;
     std::vector<HudElement> elements;
     std::map<std::string_view, Text> texts;
-    const float spacing = 0.7;
+    const float spacing = 0.6;
 
     void genElements();
 
   public:
-    HudText(std::string_view jsonFile);
+    HudText(std::string_view jsonFile, glm::vec2 offset = glm::vec2{0.0f});
     std::vector<HudElement> &getElements();
     void addText(std::string_view id, Text text);
     void removeText(std::string_view id);
