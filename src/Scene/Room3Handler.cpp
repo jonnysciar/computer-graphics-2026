@@ -7,11 +7,9 @@
 Room3Handler::Room3Handler(SceneLoader *sceneLoader, HudManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"key_2", Interactable{.instance = nullptr,
                                        .callback =
-                                           [this](Interactable &i, GameStatus &gs) {
+                                           [](Interactable &i, GameStatus &gs) {
                                                HandlerHelper::hideInstance(i.instance);
                                                gs.player.pickUp(*i.instance->id);
-                                               this->hudManager->setStatus("Keys: " +
-                                                                           std::to_string(gs.player.countItems()));
                                            }}},
                 {"door_2_3", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
                                               if (gs.door_2_3.getIsLocked() && !gs.player.hasItem("key_1")) {

@@ -1,8 +1,21 @@
 #pragma once
 
+#include "Listener/Listener.hpp"
 #include "Player.hpp"
-#include "Settings.hpp"
 #include "Door.hpp"
+#include <GLFW/glfw3.h>
+
+struct Settings {
+    enum Shading {
+        BASIC = 0,
+        BLINN_PHONG = 1,
+        COOK_TORRANCE = 2,
+    };
+    bool enableShadows = false;
+    Shading shading = BASIC;
+    int dynamicLight = false;
+    bool showFps = false;
+};
 
 struct Torch {
     static constexpr float CUTOFF = 1e-4f;
@@ -21,7 +34,7 @@ struct Torch {
     }
 };
 
-class GameStatus {
+class GameStatus : public Listener<Key> {
   public:
     Player player{};
     Settings settings{};
@@ -43,6 +56,9 @@ class GameStatus {
 
     // how many open doors the light of a torch can go through and still be seen by the player
     static constexpr int LIGHT_DOOR_DEPTH = 2;
+
+    enum class State { NONE, START, GAME, PAUSE, END };
+    State state{State::START};
 
     // rooms reachable from room through at most depth doors (only the open ones if onlyOpen)
     std::vector<int> roomsAround(int room, int depth, bool onlyOpen) {
@@ -81,6 +97,35 @@ class GameStatus {
                                     .on = l.value("on", true),
                                     .room = l.value("room", 0),
                                     .interactable = l.value("interactable", true)});
+        }
+    }
+
+    void onEvent(Key key) override {
+        switch (key.glfw_key) {
+        case GLFW_KEY_ESCAPE:
+            if (state == State::PAUSE) {
+                state = State::GAME;
+            } else if (state == State::GAME) {
+                state = State::PAUSE;
+            }
+            break;
+        case GLFW_KEY_1:
+            settings.enableShadows = !settings.enableShadows;
+            break;
+        case GLFW_KEY_2:
+            settings.shading = static_cast<Settings::Shading>((settings.shading + 1) % 3);
+            std::cout << "Shading is " << settings.shading << std::endl;
+            break;
+        case GLFW_KEY_3:
+            settings.dynamicLight = !settings.dynamicLight;
+            std::cout << "Dynamic light is " << (settings.dynamicLight ? "enabled" : "disabled") << std::endl;
+            break;
+        case GLFW_KEY_4:
+            settings.showFps = !settings.showFps;
+            std::cout << "Show FPS is " << (settings.showFps ? "enabled" : "disabled") << std::endl;
+            break;
+        default:
+            break;
         }
     }
 };

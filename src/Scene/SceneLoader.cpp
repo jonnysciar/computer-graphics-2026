@@ -179,7 +179,7 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
     }
 
     gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
-    gubo.settings.y = gameStatus.settings.cookTorrance;
+    gubo.settings.y = gameStatus.settings.shading;
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider
     for (auto *instance : techInstMap["General"]) {

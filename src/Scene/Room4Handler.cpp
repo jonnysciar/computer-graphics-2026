@@ -5,11 +5,9 @@
 #include <modules/Scene.hpp>
 
 Room4Handler::Room4Handler(SceneLoader *sceneLoader, HudManager *hudManager) : SceneHandler(sceneLoader, hudManager) {
-    interMap = {{"key_3", Interactable{.instance = nullptr, .callback = [this](Interactable &i, GameStatus &gs) {
+    interMap = {{"key_3", Interactable{.instance = nullptr, .callback = [](Interactable &i, GameStatus &gs) {
                                            HandlerHelper::hideInstance(i.instance);
                                            gs.player.pickUp(*i.instance->id);
-                                           this->hudManager->setStatus("Keys: " +
-                                                                       std::to_string(gs.player.countItems()));
                                        }}}};
     setupInteractionController();
 }

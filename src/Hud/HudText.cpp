@@ -2,7 +2,6 @@
 #include "Hud/HudStructs.hpp"
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
-#include <iostream>
 #include <ranges>
 #include <string_view>
 #include <fstream>
@@ -74,9 +73,6 @@ void HudText::removeText(std::string_view id) {
     genElements();
 }
 
-bool HudText::isTextPresent(std::string_view id) {
-    std::cout << "id: " << id << " count " << texts.count(id) << std::endl;
-    return texts.count(id) > 0;
-}
+bool HudText::isTextPresent(std::string_view id) { return texts.count(id) > 0; }
 
 void HudText::clean() { elements.clear(); }

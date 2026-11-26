@@ -1,6 +1,5 @@
 #include "Hud/HudManager.hpp"
 
-#include "Game.hpp"
 #include "GameStatus.hpp"
 #include "Hud/HudStructs.hpp"
 #include "Hud/HudText.hpp"
@@ -48,7 +47,10 @@ void HudManager::buildMesh() {
     std::vector<HudVertex> verts;
     std::vector<uint32_t> idxs;
 
-    for (const auto &elem : elements | std::views::values) {
+    dirty = false;
+
+    for (auto &elem : elements | std::views::values) {
+        elem.dirty = false;
         if (!elem.visible)
             continue;
 
@@ -74,43 +76,89 @@ void HudManager::buildMesh() {
         }
     }
 
-    if (verts.empty()) {
-        m = nullptr;
-        return;
+    m = nullptr;
+    if (!verts.empty()) {
+        m = new Model();
+        m->vertices.resize(verts.size() * sizeof(HudVertex));
+        std::memcpy(m->vertices.data(), verts.data(), m->vertices.size());
+        m->indices = std::move(idxs);
+
+        m->initMesh(bp, &vd, false);
     }
-
-    m = new Model();
-    m->vertices.resize(verts.size() * sizeof(HudVertex));
-    std::memcpy(m->vertices.data(), verts.data(), m->vertices.size());
-    m->indices = std::move(idxs);
-
-    m->initMesh(bp, &vd, false);
 
     auto *cmdBuf = new HudManager::CmdBufStruct();
     cmdBuf->hudManager = this;
     cmdBuf->mesh = this->m;
-
     bp->submitCommandBuffer("hud", 1, HudManager::populateCmdBufferAccess, cmdBuf, HudManager::freeCmdBufferAccess);
-    dirty = false;
 }
 
 void HudManager::buildFPS(GameStatus &gs, float deltaT) {
     static char str[15] = {0};
-    countedFrame++;
-    elapsed += deltaT;
-    if (elapsed > 1.0f) {
-        if (gs.settings.showFps) {
+
+    if (gs.settings.showFps) {
+        countedFrame++;
+        elapsed += deltaT;
+        if (elapsed > 1.0f) {
             float fps = (float)countedFrame / elapsed;
+            elapsed = 0;
+            countedFrame = 0;
+
             std::snprintf(str, 14, "FPS: %.1f", fps);
             hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
-            dirty = true;
-        } else {
-            dirty = hudText->isTextPresent("fps");
-            hudText->removeText("fps");
-        }
 
-        elapsed = 0;
-        countedFrame = 0;
+            dirty = true;
+        }
+        return;
+    }
+
+    if (!hudText->isTextPresent("fps"))
+        return;
+
+    elapsed = 0;
+    countedFrame = 0;
+    hudText->removeText("fps");
+    dirty = true;
+}
+
+void HudManager::buildUI(GameStatus &gs) {
+    if (gs.state == prevState) {
+        return;
+    }
+
+    std::cout << "Switch from " << static_cast<int>(prevState) << " to " << static_cast<int>(gs.state) << std::endl;
+
+    prevState = gs.state;
+
+    elements["menu"].visible = false;
+    elements["z_play"].visible = false;
+    elements["z_settings"].visible = false;
+    elements["z_exit"].visible = false;
+    elements["z_resume"].visible = false;
+
+    hudText->removeText("menu");
+    dirty = true;
+
+    switch (gs.state) {
+    case GameStatus::State::START:
+        elements["menu"].visible = true;
+        elements["z_play"].visible = true;
+        elements["z_settings"].visible = true;
+        elements["z_exit"].visible = true;
+        hudText->addText("menu", {"Welcome to Haunted Castle", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
+        break;
+    case GameStatus::State::GAME:
+        break;
+    case GameStatus::State::PAUSE:
+        elements["menu"].visible = true;
+        elements["z_resume"].visible = true;
+        elements["z_settings"].visible = true;
+        elements["z_exit"].visible = true;
+        hudText->addText("menu", {"Game is paused", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
+        break;
+    case GameStatus::State::END:
+        break;
+    default:
+        return;
     }
 }
 
@@ -184,30 +232,16 @@ void HudManager::populateCommandBuffer(VkCommandBuffer cmdBuf, int currentImage)
 
 void HudManager::updateUniformBuffer(int currentImage, GameStatus &gameStatus, float deltaT) {
     buildFPS(gameStatus, deltaT);
-
-    if (elements["menu"].visible != gameStatus.settings.paused) {
-        elements["menu"].visible = gameStatus.settings.paused;
-        elements["z_play"].visible = gameStatus.settings.paused;
-        elements["z_settings"].visible = gameStatus.settings.paused;
-        elements["z_exit"].visible = gameStatus.settings.paused;
-        // elements["z_resume"].visible = gameStatus.settings.paused;
-        hudText->addText("pause", {"Game is paused", glm::vec4(0.0f, -0.4f, 6.0f, 1.0f)});
-        dirty = true;
-    }
-
-    if (!gameStatus.settings.paused && hudText->isTextPresent("pause")) {
-        hudText->removeText("pause");
-        dirty = true;
-    }
+    buildUI(gameStatus);
 
     for (const auto &id : gameStatus.player.collectedItems) {
         if (!elements[id].visible) {
             elements[id].visible = true;
-            dirty = true;
+            dirty |= true;
         }
     }
 
-    for (const auto &elem : elements | std::views::values) {
+    for (auto &elem : elements | std::views::values) {
         dirty |= elem.dirty;
     }
 
@@ -227,8 +261,6 @@ void HudManager::setPrompt(std::string_view text) {
 
     dirty = true;
 }
-
-void HudManager::setStatus(std::string_view text) {}
 
 void HudManager::subscribeElements(Listenable<GameStatus &, MouseState> &listenable) {
     for (auto &elem : elements | std::views::values) {

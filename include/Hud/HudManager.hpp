@@ -38,6 +38,8 @@ class HudManager {
     uint32_t countedFrame = 0;
     float elapsed = 0.0;
 
+    GameStatus::State prevState{GameStatus::State::NONE};
+
     static void populateCmdBufferAccess(VkCommandBuffer cmdBuf, int i, void *params);
     static void freeCmdBufferAccess(void *params);
 
@@ -46,6 +48,7 @@ class HudManager {
     void buildMesh();
 
     void buildFPS(GameStatus &gs, float deltaT);
+    void buildUI(GameStatus &gs);
 
   public:
     HudManager(BaseProject *bp, int w, int h);
@@ -55,7 +58,6 @@ class HudManager {
     void populateCommandBuffer(VkCommandBuffer cmdBuf, int currentImage);
     void updateUniformBuffer(int currentImage, GameStatus &gameStatus, float deltaT);
     void setPrompt(std::string_view text);
-    void setStatus(std::string_view text);
 
     void subscribeElements(Listenable<GameStatus &, MouseState> &listenable);
 

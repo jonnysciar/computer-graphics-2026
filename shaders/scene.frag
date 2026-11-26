@@ -217,8 +217,8 @@ vec3 computeLight(vec3 albedo) {
         }
 
         vec3 fr;
-        if (mode == 1)      fr = cookTorrance(albedo, metallic, F0, N, V, L, NdotL, NdotV, brdf);
-        else if (mode == 2) fr = evalFastBRDF(albedo, metallic, F0, N, V, L, NdotL, brdf);
+        if (mode == 1)      fr = evalFastBRDF(albedo, metallic, F0, N, V, L, NdotL, brdf);
+        else if (mode == 2) fr = cookTorrance(albedo, metallic, F0, N, V, L, NdotL, NdotV, brdf);
         else                fr = albedo * NdotL;
 
         direct += lightCol * fr * visibility;

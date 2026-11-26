@@ -3,6 +3,7 @@
 #include "Game.hpp"
 
 #include "CameraController.hpp"
+#include "GameStatus.hpp"
 #include "Scene/Room1Handler.hpp"
 #include "Scene/Room2Handler.hpp"
 #include "Scene/Room3Handler.hpp"
@@ -41,7 +42,7 @@ void Game::localInit() {
 
     inputManager = std::make_unique<InputManager>(window, windowWidth, windowHeight);
     inputManager->Listenable<Key>::addListener(gameStatus.player.getPtr());
-    inputManager->Listenable<Key>::addListener(gameStatus.settings.getPtr());
+    inputManager->Listenable<Key>::addListener(gameStatus.getPtr());
     std::ranges::for_each(sceneHandlers, [&](auto &handler) {
         inputManager->Listenable<GameStatus &, Key>::addListener(
             handler->template Listener<GameStatus &, Key>::getPtr());
@@ -132,7 +133,7 @@ float Game::handleMovement() {
     bool fire = false;
     getSixAxis(deltaT, m, r, fire);
 
-    if (!gameStatus.settings.paused) {
+    if (gameStatus.state == GameStatus::State::GAME) {
         glm::vec3 newPos = cameraController.computePos(gameStatus.player.pos, m, r, deltaT);
         gameStatus.player.pos = sceneLoader->getCollisionDetector()->resolveCollision(gameStatus.player, newPos);
         gameStatus.player.updateColliders();

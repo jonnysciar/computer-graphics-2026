@@ -8,7 +8,6 @@
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
-#include <iostream>
 #include <string>
 
 namespace json = nlohmann;
@@ -105,17 +104,30 @@ class HudElement : public Listener<GameStatus &, MouseState> {
 
     void onEvent(GameStatus &gs, MouseState ms) override {
         if (!visible) {
-            dirty = currentFrame != 0;
             currentFrame = 0;
             return;
         }
 
         bool isHover = isMouseHover(ms.ndcX, ms.ndcY);
-        dirty = currentFrame ^ isHover;
-        currentFrame = isHover;
-        if (ms.leftJustClicked && isHover) {
-            dirty = currentFrame != 2;
-            currentFrame = 2;
+
+        if (!isHover) {
+            dirty = currentFrame != 0;
+            currentFrame = 0;
+            return;
+        }
+
+        if (!ms.leftJustClicked) {
+            dirty = currentFrame != 1;
+            currentFrame = 1;
+            return;
+        }
+
+        dirty = currentFrame != 2;
+        currentFrame = 2;
+
+        if (name == "z_play" || name == "z_resume") {
+            gs.state = GameStatus::State::GAME;
+            std::cout << "Set State to " << static_cast<int>(gs.state) << std::endl;
         }
     }
 };

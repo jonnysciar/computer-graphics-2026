@@ -6,11 +6,9 @@ Room1Handler::Room1Handler(SceneLoader *sceneLoader, HudManager *hudManager, Gam
     : SceneHandler(sceneLoader, hudManager) {
     interMap = {{"key_1", Interactable{.instance = nullptr,
                                        .callback =
-                                           [this](Interactable &i, GameStatus &gs) {
+                                           [](Interactable &i, GameStatus &gs) {
                                                HandlerHelper::hideInstance(i.instance);
                                                gs.player.pickUp(*i.instance->id);
-                                               this->hudManager->setStatus("Keys: " +
-                                                                           std::to_string(gs.player.countItems()));
                                            }}},
                 {"door_1_2", Interactable{.instance = nullptr,
                                           .callback =
