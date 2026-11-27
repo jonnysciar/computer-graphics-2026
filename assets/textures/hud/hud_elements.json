@@ -8,7 +8,7 @@
         "x": -0.98,
         "y": -0.98
       },
-      "scale": 1.5,
+      "scale": 3.0,
       "visible": false,
       "centered": false,
       "interactable": false
@@ -21,7 +21,7 @@
         "x": -0.855,
         "y": -0.98
       },
-      "scale": 1.5,
+      "scale": 3.0,
       "visible": false,
       "centered": false,
       "interactable": false
@@ -34,7 +34,7 @@
         "x": -0.73,
         "y": -0.98
       },
-      "scale": 1.5,
+      "scale": 3.0,
       "visible": false,
       "centered": false,
       "interactable": false
@@ -47,7 +47,7 @@
         "x": 0.0,
         "y": 0.8
       },
-      "scale": 5.0,
+      "scale": 10.0,
       "visible": false,
       "centered": true,
       "interactable": false
@@ -60,7 +60,7 @@
         "x": 0.0,
         "y": 0.0
       },
-      "scale": 3.5,
+      "scale": 7.0,
       "visible": false,
       "centered": true,
       "interactable": false
@@ -73,7 +73,7 @@
         "x": 0.0,
         "y": -0.1
       },
-      "scale": 2.0,
+      "scale": 4.0,
       "visible": false,
       "centered": true,
       "interactable": true,
@@ -91,7 +91,7 @@
         "x": 0.0,
         "y": 0.1
       },
-      "scale": 2.0,
+      "scale": 4.0,
       "visible": false,
       "centered": true,
       "interactable": true,
@@ -105,7 +105,7 @@
         "x": 0.0,
         "y": 0.3
       },
-      "scale": 2.0,
+      "scale": 4.0,
       "visible": false,
       "centered": true,
       "interactable": true,
@@ -123,7 +123,21 @@
         "x": 0.0,
         "y": -0.1
       },
-      "scale": 2.0,
+      "scale": 4.0,
+      "visible": false,
+      "centered": true,
+      "interactable": true,
+      "type": 1
+    },
+    {
+      "frames": ["back_button", "back_button_hover", "back_button_pressed"],
+      "currentFrame": 0,
+      "name": "z_back",
+      "pos": {
+        "x": -0.7,
+        "y": -0.45
+      },
+      "scale": 3.0,
       "visible": false,
       "centered": true,
       "interactable": true,
@@ -139,10 +153,10 @@
       "currentFrame": 0,
       "name": "z_toggle_fps",
       "pos": {
-        "x": 0.45,
-        "y": -0.15
+        "x": 0.5,
+        "y": -0.20
       },
-      "scale": 1.5,
+      "scale": 3.0,
       "visible": false,
       "centered": true,
       "interactable": true,
@@ -158,10 +172,10 @@
       "currentFrame": 0,
       "name": "z_toggle_shadows",
       "pos": {
-        "x": 0.45,
-        "y": 0.10
+        "x": 0.5,
+        "y": 0.0
       },
-      "scale": 1.5,
+      "scale": 3.0,
       "visible": false,
       "centered": true,
       "interactable": true,
@@ -177,10 +191,31 @@
       "currentFrame": 0,
       "name": "z_toggle_dyn_l",
       "pos": {
-        "x": 0.45,
-        "y": 0.35
+        "x": 0.5,
+        "y": 0.2
       },
-      "scale": 1.5,
+      "scale": 3.0,
+      "visible": false,
+      "centered": true,
+      "interactable": true,
+      "type": 2
+    },
+    {
+      "frames": [
+        "three_way_red",
+        "three_way_yellow",
+        "three_way_green",
+        "three_way_red_hover",
+        "three_way_yellow_hover",
+        "three_way_green_hover"
+      ],
+      "currentFrame": 0,
+      "name": "z_toggle_shading",
+      "pos": {
+        "x": 0.5,
+        "y": 0.4
+      },
+      "scale": 3.0,
       "visible": false,
       "centered": true,
       "interactable": true,

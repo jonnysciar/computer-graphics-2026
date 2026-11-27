@@ -14,6 +14,8 @@ struct Settings {
     Shading shading = BASIC;
     int dynamicLight = false;
     bool showFps = false;
+
+    std::string_view shadingString();
 };
 
 struct Torch {

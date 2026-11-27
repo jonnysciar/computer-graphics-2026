@@ -95,8 +95,8 @@
     "image": "font_atlas_128.png",
     "format": "RGBA8888",
     "size": {
-      "w": 2048,
-      "h": 2048
+      "w": 4096,
+      "h": 4096
     },
     "scale": 1
   }

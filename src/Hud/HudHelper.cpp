@@ -1,7 +1,6 @@
 #include "Hud/HudHelper.hpp"
 #include "GameStatus.hpp"
 #include <cstdlib>
-#include <iostream>
 
 HudFrame::HudFrame(nlohmann::json &json, int w, int h) {
     name = json.at("filename").get<std::string>();
@@ -81,7 +80,8 @@ void HudElement::buttonOnEvent(GameStatus &gs, MouseState ms) {
 }
 
 void HudElement::toggleOnEvent(GameStatus &gs, MouseState ms) {
-    int baseFrame = currentFrame % 2;
+    int states = frames.size() / 2;
+    int baseFrame = currentFrame % states;
     if (!visible) {
         currentFrame = baseFrame;
         return;
@@ -97,7 +97,7 @@ void HudElement::toggleOnEvent(GameStatus &gs, MouseState ms) {
 
     if (!ms.leftJustClicked) {
         dirty = currentFrame == baseFrame;
-        currentFrame = baseFrame + 2;
+        currentFrame = baseFrame + states;
         return;
     }
 
@@ -153,6 +153,12 @@ void shadowsToggleHandler(HudElement *self, GameStatus &gs) {
 void dynamicLightToggleHandler(HudElement *self, GameStatus &gs) {
     gs.settings.dynamicLight = !gs.settings.dynamicLight;
     self->currentFrame = gs.settings.dynamicLight;
+    self->dirty = true;
+}
+
+void shadingToggleHandler(HudElement *self, GameStatus &gs) {
+    gs.settings.shading = static_cast<Settings::Shading>((gs.settings.shading + 1) % 3);
+    self->currentFrame = gs.settings.shading;
     self->dirty = true;
 }
 } // namespace HudHelper

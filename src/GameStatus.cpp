@@ -1,4 +1,16 @@
 #include "GameStatus.hpp"
+#include <string_view>
+
+std::string_view Settings::shadingString() {
+    switch (this->shading) {
+    case BASIC:
+        return "Basic";
+    case BLINN_PHONG:
+        return "Blinn-Phong";
+    case COOK_TORRANCE:
+        return "Cook-Torrance";
+    }
+}
 
 // rooms reachable from room through at most depth doors (only the open ones if onlyOpen)
 std::vector<int> GameStatus::roomsAround(int room, int depth, bool onlyOpen) {

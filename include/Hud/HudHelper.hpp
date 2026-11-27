@@ -65,4 +65,5 @@ void exitButtonHandler(HudElement *self, GameStatus &gs);
 void fpsToggleHandler(HudElement *self, GameStatus &gs);
 void shadowsToggleHandler(HudElement *self, GameStatus &gs);
 void dynamicLightToggleHandler(HudElement *self, GameStatus &gs);
+void shadingToggleHandler(HudElement *self, GameStatus &gs);
 } // namespace HudHelper
