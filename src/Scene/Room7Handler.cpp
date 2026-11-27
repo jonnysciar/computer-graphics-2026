@@ -1,4 +1,5 @@
 #include "Scene/Room7Handler.hpp"
+#include "GameStatus.hpp"
 #include "Hud/HudManager.hpp"
 
 #include <modules/Scene.hpp>
@@ -10,8 +11,7 @@ Room7Handler::Room7Handler(SceneLoader *sceneLoader, HudManager *hudManager, Gam
                                                   this->hudManager->setPrompt("The door is locked");
                                               }
                                               if (!gs.door_7_o.getIsLocked()) {
-                                                  this->hudManager->setPrompt(
-                                                      "CONGRATULATIONS!\nYou completed the Hunted Castle Game");
+                                                  gs.state = GameStatus::State::END;
                                               }
                                           }}}};
 

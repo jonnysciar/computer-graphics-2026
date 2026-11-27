@@ -1,10 +1,35 @@
 {
   "frames": [
     {
-      "filename": "main_dialog",
+      "filename": "font",
       "frame": {
         "x": 0,
         "y": 0,
+        "w": 1024,
+        "h": 1408
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1408
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1408
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "main_dialog",
+      "frame": {
+        "x": 0,
+        "y": 1408,
         "w": 1024,
         "h": 768
       },
@@ -19,6 +44,156 @@
       "sourceSize": {
         "w": 1024,
         "h": 768
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "three_way_green",
+      "frame": {
+        "x": 0,
+        "y": 2176,
+        "w": 768,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 768,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "three_way_green_hover",
+      "frame": {
+        "x": 0,
+        "y": 2432,
+        "w": 768,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 768,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "three_way_red",
+      "frame": {
+        "x": 0,
+        "y": 2688,
+        "w": 768,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 768,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "three_way_red_hover",
+      "frame": {
+        "x": 0,
+        "y": 2944,
+        "w": 768,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 768,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "three_way_yellow",
+      "frame": {
+        "x": 0,
+        "y": 3200,
+        "w": 768,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 768,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "three_way_yellow_hover",
+      "frame": {
+        "x": 0,
+        "y": 3456,
+        "w": 768,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 768,
+        "h": 256
       },
       "pivot": {
         "x": 0.5,
@@ -28,8 +203,8 @@
     {
       "filename": "toggle_disabled",
       "frame": {
-        "x": 1024,
-        "y": 0,
+        "x": 0,
+        "y": 3712,
         "w": 512,
         "h": 256
       },
@@ -51,10 +226,35 @@
       }
     },
     {
+      "filename": "golden_key",
+      "frame": {
+        "x": 0,
+        "y": 3968,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
       "filename": "toggle_disabled_hover",
       "frame": {
-        "x": 1536,
-        "y": 0,
+        "x": 512,
+        "y": 3712,
         "w": 512,
         "h": 256
       },
@@ -78,8 +278,8 @@
     {
       "filename": "toggle_enabled",
       "frame": {
-        "x": 1024,
-        "y": 256,
+        "x": 768,
+        "y": 2176,
         "w": 512,
         "h": 256
       },
@@ -103,8 +303,8 @@
     {
       "filename": "toggle_enabled_hover",
       "frame": {
-        "x": 1536,
-        "y": 256,
+        "x": 768,
+        "y": 2432,
         "w": 512,
         "h": 256
       },
@@ -126,10 +326,85 @@
       }
     },
     {
+      "filename": "back_button",
+      "frame": {
+        "x": 768,
+        "y": 2688,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "back_button_hover",
+      "frame": {
+        "x": 768,
+        "y": 2944,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "back_button_pressed",
+      "frame": {
+        "x": 768,
+        "y": 3200,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
       "filename": "exit_button",
       "frame": {
-        "x": 1024,
-        "y": 512,
+        "x": 768,
+        "y": 3456,
         "w": 512,
         "h": 170
       },
@@ -153,8 +428,8 @@
     {
       "filename": "exit_button_hover",
       "frame": {
-        "x": 1536,
-        "y": 512,
+        "x": 1024,
+        "y": 3626,
         "w": 512,
         "h": 170
       },
@@ -179,7 +454,7 @@
       "filename": "exit_button_pressed",
       "frame": {
         "x": 1024,
-        "y": 682,
+        "y": 3796,
         "w": 512,
         "h": 170
       },
@@ -203,8 +478,8 @@
     {
       "filename": "interaction_dialog",
       "frame": {
-        "x": 1536,
-        "y": 682,
+        "x": 1024,
+        "y": 2688,
         "w": 512,
         "h": 170
       },
@@ -228,8 +503,8 @@
     {
       "filename": "play_button",
       "frame": {
-        "x": 0,
-        "y": 768,
+        "x": 1024,
+        "y": 2858,
         "w": 512,
         "h": 170
       },
@@ -253,8 +528,8 @@
     {
       "filename": "play_button_hover",
       "frame": {
-        "x": 512,
-        "y": 768,
+        "x": 1024,
+        "y": 3028,
         "w": 512,
         "h": 170
       },
@@ -279,7 +554,7 @@
       "filename": "play_button_pressed",
       "frame": {
         "x": 1024,
-        "y": 852,
+        "y": 3198,
         "w": 512,
         "h": 170
       },
@@ -303,8 +578,8 @@
     {
       "filename": "resume_button",
       "frame": {
-        "x": 1536,
-        "y": 852,
+        "x": 1280,
+        "y": 3368,
         "w": 512,
         "h": 170
       },
@@ -328,8 +603,8 @@
     {
       "filename": "resume_button_hover",
       "frame": {
-        "x": 0,
-        "y": 938,
+        "x": 1536,
+        "y": 3538,
         "w": 512,
         "h": 170
       },
@@ -353,8 +628,8 @@
     {
       "filename": "resume_button_pressed",
       "frame": {
-        "x": 512,
-        "y": 938,
+        "x": 1536,
+        "y": 3708,
         "w": 512,
         "h": 170
       },
@@ -369,31 +644,6 @@
       "sourceSize": {
         "w": 512,
         "h": 170
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    {
-      "filename": "font",
-      "frame": {
-        "x": 0,
-        "y": 1108,
-        "w": 256,
-        "h": 512
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 256,
-        "h": 512
-      },
-      "sourceSize": {
-        "w": 256,
-        "h": 512
       },
       "pivot": {
         "x": 0.5,
@@ -403,8 +653,8 @@
     {
       "filename": "settings_button",
       "frame": {
-        "x": 0,
-        "y": 1620,
+        "x": 1536,
+        "y": 3878,
         "w": 512,
         "h": 170
       },
@@ -428,8 +678,8 @@
     {
       "filename": "settings_button_hover",
       "frame": {
-        "x": 0,
-        "y": 1790,
+        "x": 2048,
+        "y": 0,
         "w": 512,
         "h": 170
       },
@@ -453,8 +703,8 @@
     {
       "filename": "settings_button_pressed",
       "frame": {
-        "x": 256,
-        "y": 1108,
+        "x": 1536,
+        "y": 0,
         "w": 512,
         "h": 170
       },
@@ -469,31 +719,6 @@
       "sourceSize": {
         "w": 512,
         "h": 170
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 0.5
-      }
-    },
-    {
-      "filename": "golden_key",
-      "frame": {
-        "x": 256,
-        "y": 1278,
-        "w": 128,
-        "h": 128
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
-      },
-      "sourceSize": {
-        "w": 128,
-        "h": 128
       },
       "pivot": {
         "x": 0.5,
@@ -507,8 +732,8 @@
     "image": "hud_frames.png",
     "format": "RGBA8888",
     "size": {
-      "w": 2048,
-      "h": 2048
+      "w": 4096,
+      "h": 4096
     },
     "scale": 1
   }
