@@ -5,45 +5,56 @@
 
 Room6Handler::Room6Handler(SceneLoader *sceneLoader, HudManager *hudManager, GameStatus &gs)
     : SceneHandler(sceneLoader, hudManager) {
-    interMap = {{"door_5_6", Interactable{.instance = nullptr,
-                                          .callback =
-                                              [this, sceneLoader](Interactable &i, GameStatus &gs) {
-                                                  if (gs.door_2_3.getIsLocked() && !gs.player.hasItem("key_2")) {
-                                                      this->hudManager->setPrompt("The door is locked");
-                                                  }
-                                                  if (!gs.door_5_6.getIsLocked()) {
-                                                      if (gs.door_5_6.getIsOpen()) {
-                                                          gs.door_5_6.rotateInstanceY(i.instance, -90.0f);
-                                                          gs.door_5_6.setIsOpen(false);
+    interMap = {
+        {"door_5_6",
+         Interactable{.instance = nullptr,
+                      .callback =
+                          [this, sceneLoader](Interactable &i, GameStatus &gs) {
+                              if (gs.door_2_3.getIsLocked() && !gs.player.hasItem("key_2")) {
+                                  this->hudManager->setPrompt("The door is locked");
+                              }
+                              if (!gs.door_5_6.getIsLocked()) {
+                                  if (gs.door_5_6.getIsOpen()) {
+                                      gs.door_5_6.rotateInstanceY(i.instance, -90.0f);
+                                      gs.door_5_6.setIsOpen(false);
 
-                                                          glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, 2.0f);
-                                                          gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
-                                                      } else {
-                                                          gs.door_5_6.rotateInstanceY(i.instance, +90.0f);
-                                                          gs.door_5_6.setIsOpen(true);
+                                      glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, 2.0f);
+                                      gs.player.pos =
+                                          sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(
+                                              gs.player, newPos);
+                                  } else {
+                                      gs.door_5_6.rotateInstanceY(i.instance, +90.0f);
+                                      gs.door_5_6.setIsOpen(true);
 
-                                                          glm::vec3 newPos = gs.player.pos + glm::vec3(-2.0f, 0.0f, 0.0f);
-                                                          gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
-                                                      }
-                                                  }
-                                              }}},
-                {"door_6_7", Interactable{.instance = nullptr, .callback = [this, sceneLoader](Interactable &i, GameStatus &gs) {
-                                              if (!gs.door_6_7.getIsLocked()) {
-                                                  if (gs.door_6_7.getIsOpen()) {
-                                                      gs.door_6_7.rotateInstanceY(i.instance, +90.0f);
-                                                      gs.door_6_7.setIsOpen(false);
+                                      glm::vec3 newPos = gs.player.pos + glm::vec3(-2.0f, 0.0f, 0.0f);
+                                      gs.player.pos =
+                                          sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(
+                                              gs.player, newPos);
+                                  }
+                              }
+                          }}},
+        {"door_6_7",
+         Interactable{.instance = nullptr, .callback = [this, sceneLoader](Interactable &i, GameStatus &gs) {
+                          if (!gs.door_6_7.getIsLocked()) {
+                              if (gs.door_6_7.getIsOpen()) {
+                                  gs.door_6_7.rotateInstanceY(i.instance, +90.0f);
+                                  gs.door_6_7.setIsOpen(false);
 
-                                                      glm::vec3 newPos = gs.player.pos + glm::vec3(2.0f, 0.0f, 0.0f);
-                                                      gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
-                                                  } else {
-                                                      gs.door_6_7.rotateInstanceY(i.instance, -90.0f);
-                                                      gs.door_6_7.setIsOpen(true);
+                                  glm::vec3 newPos = gs.player.pos + glm::vec3(2.0f, 0.0f, 0.0f);
+                                  gs.player.pos =
+                                      sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(
+                                          gs.player, newPos);
+                              } else {
+                                  gs.door_6_7.rotateInstanceY(i.instance, -90.0f);
+                                  gs.door_6_7.setIsOpen(true);
 
-                                                      glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, -1.0f);
-                                                      gs.player.pos = sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(gs.player, newPos);
-                                                  }
-                                              }
-                                          }}}};
+                                  glm::vec3 newPos = gs.player.pos + glm::vec3(0.0f, 0.0f, -1.0f);
+                                  gs.player.pos =
+                                      sceneLoader->getCollisionDetector()->CollisionDetector::resolveCollision(
+                                          gs.player, newPos);
+                              }
+                          }
+                      }}}};
 
     for (auto &torch : gs.torches) {
         if (torch.room != 6 || !torch.interactable)
