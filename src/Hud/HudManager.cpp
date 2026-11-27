@@ -1,5 +1,6 @@
 #include "Hud/HudManager.hpp"
 
+#include "GameStatus.hpp"
 #include "Hud/HudHelper.hpp"
 #include "modules/Starter.hpp"
 
@@ -99,7 +100,7 @@ void HudManager::buildFPS(GameStatus &gs, float deltaT) {
             countedFrame = 0;
 
             std::snprintf(str, 14, "FPS: %.1f", fps);
-            hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 4.0f, 1.0f)});
+            hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 1.5f, 1.0f)});
 
             dirty = true;
         }
@@ -120,17 +121,25 @@ void HudManager::buildUI(GameStatus &gs) {
         return;
     }
 
-    std::cout << "Switch from " << static_cast<int>(prevState) << " to " << static_cast<int>(gs.state) << std::endl;
-
     prevState = gs.state;
 
     elements["menu"].visible = false;
+
+    // Buttons
     elements["z_play"].visible = false;
     elements["z_settings"].visible = false;
     elements["z_exit"].visible = false;
     elements["z_resume"].visible = false;
 
+    // Toggles
+    elements["z_toggle_fps"].visible = false;
+    elements["z_toggle_shadows"].visible = false;
+    elements["z_toggle_dyn_l"].visible = false;
+
     hudText->removeText("menu");
+    hudText->removeText("settings_fps");
+    hudText->removeText("settings_shadows");
+    hudText->removeText("settings_dyn_l");
     dirty = true;
 
     switch (gs.state) {
@@ -139,7 +148,7 @@ void HudManager::buildUI(GameStatus &gs) {
         elements["z_play"].visible = true;
         elements["z_settings"].visible = true;
         elements["z_exit"].visible = true;
-        hudText->addText("menu", {"Welcome to Haunted Castle", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
+        hudText->addText("menu", {"Welcome to Haunted Castle!", glm::vec4(0.0f, -0.4f, 2.0f, 1.0f)});
         break;
     case GameStatus::State::GAME:
         break;
@@ -148,20 +157,31 @@ void HudManager::buildUI(GameStatus &gs) {
         elements["z_resume"].visible = true;
         elements["z_settings"].visible = true;
         elements["z_exit"].visible = true;
-        hudText->addText("menu", {"Game is paused", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
+        hudText->addText("menu", {"Game is paused", glm::vec4(0.0f, -0.4f, 2.0f, 1.0f)});
         break;
     case GameStatus::State::SETTINGS:
         elements["menu"].visible = true;
-        hudText->addText("menu", {"Settings", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
+        elements["z_toggle_fps"].visible = true;
+        elements["z_toggle_shadows"].visible = true;
+        elements["z_toggle_dyn_l"].visible = true;
+
+        elements["z_toggle_fps"].currentFrame = gs.settings.showFps;
+        elements["z_toggle_shadows"].currentFrame = gs.settings.shadows;
+        elements["z_toggle_dyn_l"].currentFrame = gs.settings.dynamicLight;
+
+        hudText->addText("menu", {"Settings", glm::vec4(0.0f, -0.4f, 2.0f, 1.0f)});
+        hudText->addText("settings_fps", {"Enable FPS counter   ", glm::vec4(-0.25f, -0.15f, 1.5f, 1.0f)});
+        hudText->addText("settings_shadows", {"Enable Shadows       ", glm::vec4(-0.25f, 0.10f, 1.5f, 1.0f)});
+        hudText->addText("settings_dyn_l", {"Enable dynamic lights", glm::vec4(-0.25f, 0.35f, 1.5f, 1.0f)});
         break;
     case GameStatus::State::END:
         hudText->removeAllTexts();
         elements["menu"].visible = true;
         elements["prompt"].visible = false;
         elements["z_exit"].visible = true;
-        hudText->addText("menu", {"CONGRATULATIONS!", glm::vec4(0.0f, -0.4f, 5.5f, 1.0f)});
-        hudText->addText("menu_2", {"You completed the ", glm::vec4(0.0f, -0.15f, 5.5f, 1.0f)});
-        hudText->addText("menu_3", {"Hunted Castle Game!", glm::vec4(0.0f, 0.0f, 6.5f, 1.0f)});
+        hudText->addText("menu", {"CONGRATULATIONS!", glm::vec4(0.0f, -0.4f, 2.0f, 1.0f)});
+        hudText->addText("menu_2", {"You completed the ", glm::vec4(0.0f, -0.15f, 2.0f, 1.0f)});
+        hudText->addText("menu_3", {"Hunted Castle Game!", glm::vec4(0.0f, 0.0f, 3.0f, 1.0f)});
         break;
     default:
         break;
@@ -189,6 +209,15 @@ HudManager::HudManager(BaseProject *basep, int w, int h) : bp(basep) {
     ifs = std::ifstream{"assets/textures/hud/hud_elements.json"};
     nlohmann::json hud_elements = nlohmann::json::parse(ifs);
     parseHudElements(hud_elements);
+
+    elements["z_play"].callback = HudHelper::playResumeButtonHandler;
+    elements["z_resume"].callback = HudHelper::playResumeButtonHandler;
+    elements["z_settings"].callback = HudHelper::settingsButtonHandler;
+    elements["z_exit"].callback = HudHelper::exitButtonHandler;
+
+    elements["z_toggle_fps"].callback = HudHelper::fpsToggleHandler;
+    elements["z_toggle_shadows"].callback = HudHelper::shadowsToggleHandler;
+    elements["z_toggle_dyn_l"].callback = HudHelper::dynamicLightToggleHandler;
 
     hudText = std::make_unique<HudText>("assets/textures/hud/hud_font.json",
                                         this->frames["font"].pos * glm::vec2(texW, texH));
@@ -262,7 +291,7 @@ void HudManager::setPrompt(std::string_view text) {
         hudText->removeText("prompt");
     } else {
         hudText->addText("prompt",
-                         {text, glm::vec4(elements["prompt"].pos, 4.0f, elements["prompt"].centered ? 1.0f : 0.0f)});
+                         {text, glm::vec4(elements["prompt"].pos, 1.5f, elements["prompt"].centered ? 1.0f : 0.0f)});
     }
 
     dirty = true;

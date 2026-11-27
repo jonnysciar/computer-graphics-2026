@@ -1,4 +1,7 @@
 #include "Hud/HudHelper.hpp"
+#include "GameStatus.hpp"
+#include <cstdlib>
+#include <iostream>
 
 HudFrame::HudFrame(nlohmann::json &json, int w, int h) {
     name = json.at("filename").get<std::string>();
@@ -44,21 +47,12 @@ HudElement::HudElement(nlohmann::json &json, std::map<std::string, HudFrame> &fr
     visible = json.at("visible").get<bool>();
     centered = json.at("centered").get<bool>();
     interactable = json.at("interactable").get<bool>();
+    if (interactable) {
+        type = static_cast<HudElement::Type>(json.at("type").get<int>());
+    }
 }
 
-HudFrame *HudElement::getCurrentFrame() const { return frames[currentFrame]; }
-
-HudQuad HudElement::getQuad() const {
-    return this->centered ? this->getCurrentFrame()->getCenteredQuad(this->pos.x, this->pos.y, this->scale)
-                          : this->getCurrentFrame()->getQuad(this->pos.x, this->pos.y, this->scale);
-}
-
-bool HudElement::isMouseHover(float x, float y) {
-    auto quad = getQuad();
-    return (x > quad[0].pos.x && y > quad[0].pos.y) && (x < quad[2].pos.x && y < quad[2].pos.y);
-}
-
-void HudElement::onEvent(GameStatus &gs, MouseState ms) {
+void HudElement::buttonOnEvent(GameStatus &gs, MouseState ms) {
     if (!visible) {
         currentFrame = 0;
         return;
@@ -81,8 +75,84 @@ void HudElement::onEvent(GameStatus &gs, MouseState ms) {
     dirty = currentFrame != 2;
     currentFrame = 2;
 
-    if (name == "z_play" || name == "z_resume") {
-        gs.state = GameStatus::State::GAME;
-        std::cout << "Set State to " << static_cast<int>(gs.state) << std::endl;
+    if (callback) {
+        callback(this, gs);
     }
 }
+
+void HudElement::toggleOnEvent(GameStatus &gs, MouseState ms) {
+    int baseFrame = currentFrame % 2;
+    if (!visible) {
+        currentFrame = baseFrame;
+        return;
+    }
+
+    bool isHover = isMouseHover(ms.ndcX, ms.ndcY);
+
+    if (!isHover) {
+        dirty = currentFrame != baseFrame;
+        currentFrame = baseFrame;
+        return;
+    }
+
+    if (!ms.leftJustClicked) {
+        dirty = currentFrame == baseFrame;
+        currentFrame = baseFrame + 2;
+        return;
+    }
+
+    if (callback) {
+        callback(this, gs);
+    }
+}
+
+HudFrame *HudElement::getCurrentFrame() const { return frames[currentFrame]; }
+
+HudQuad HudElement::getQuad() const {
+    return this->centered ? this->getCurrentFrame()->getCenteredQuad(this->pos.x, this->pos.y, this->scale)
+                          : this->getCurrentFrame()->getQuad(this->pos.x, this->pos.y, this->scale);
+}
+
+bool HudElement::isMouseHover(float x, float y) {
+    auto quad = getQuad();
+    return (x > quad[0].pos.x && y > quad[0].pos.y) && (x < quad[2].pos.x && y < quad[2].pos.y);
+}
+
+void HudElement::onEvent(GameStatus &gs, MouseState ms) {
+    switch (type) {
+    case BUTTON:
+        buttonOnEvent(gs, ms);
+        break;
+    case TOGGLE:
+        toggleOnEvent(gs, ms);
+        break;
+    default:
+        break;
+    }
+}
+
+namespace HudHelper {
+void playResumeButtonHandler(HudElement *self, GameStatus &gs) { gs.state = GameStatus::State::GAME; }
+
+void settingsButtonHandler(HudElement *self, GameStatus &gs) { gs.state = GameStatus::State::SETTINGS; }
+
+void exitButtonHandler(HudElement *self, GameStatus &gs) { std::exit(EXIT_SUCCESS); }
+
+void fpsToggleHandler(HudElement *self, GameStatus &gs) {
+    gs.settings.showFps = !gs.settings.showFps;
+    self->currentFrame = gs.settings.showFps;
+    self->dirty = true;
+}
+
+void shadowsToggleHandler(HudElement *self, GameStatus &gs) {
+    gs.settings.shadows = !gs.settings.shadows;
+    self->currentFrame = gs.settings.shadows;
+    self->dirty = true;
+}
+
+void dynamicLightToggleHandler(HudElement *self, GameStatus &gs) {
+    gs.settings.dynamicLight = !gs.settings.dynamicLight;
+    self->currentFrame = gs.settings.dynamicLight;
+    self->dirty = true;
+}
+} // namespace HudHelper

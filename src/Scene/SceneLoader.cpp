@@ -178,7 +178,7 @@ void SceneLoader::generalUpdateUB(int currentImage, GameStatus &gameStatus, Came
                                         static_cast<float>(validTs[i] - gameStatus.torches.data()));
     }
 
-    gubo.settings.x = gameStatus.settings.enableShadows ? 1.0f : 0.0f;
+    gubo.settings.x = gameStatus.settings.shadows ? 1.0f : 0.0f;
     gubo.settings.y = gameStatus.settings.shading;
 
     // Each instance is drawn with its own world matrix (from scene.json), the same one used by its collider

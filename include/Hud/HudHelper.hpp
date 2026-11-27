@@ -27,6 +27,14 @@ struct HudFrame {
 };
 
 class HudElement : public Listener<GameStatus &, MouseState> {
+  private:
+    enum Type { NONE = 0, BUTTON, TOGGLE };
+
+    Type type;
+
+    void buttonOnEvent(GameStatus &gs, MouseState ms);
+    void toggleOnEvent(GameStatus &gs, MouseState ms);
+
   public:
     std::vector<HudFrame *> frames{};
     int currentFrame{0};
@@ -39,6 +47,8 @@ class HudElement : public Listener<GameStatus &, MouseState> {
 
     bool dirty{false};
 
+    std::function<void(HudElement *self, GameStatus &gs)> callback;
+
     HudElement() = default;
     HudElement(nlohmann::json &json, std::map<std::string, HudFrame> &frames);
 
@@ -47,3 +57,12 @@ class HudElement : public Listener<GameStatus &, MouseState> {
     bool isMouseHover(float x, float y);
     void onEvent(GameStatus &gs, MouseState ms) override;
 };
+
+namespace HudHelper {
+void playResumeButtonHandler(HudElement *self, GameStatus &gs);
+void settingsButtonHandler(HudElement *self, GameStatus &gs);
+void exitButtonHandler(HudElement *self, GameStatus &gs);
+void fpsToggleHandler(HudElement *self, GameStatus &gs);
+void shadowsToggleHandler(HudElement *self, GameStatus &gs);
+void dynamicLightToggleHandler(HudElement *self, GameStatus &gs);
+} // namespace HudHelper

@@ -26,37 +26,49 @@ void HudText::genElements() {
     for (const auto &text : texts | std::views::values) {
         elements.reserve(elements.size() + text.str.size());
 
-        glm::vec2 startPos = glm::vec2(text.params.x, text.params.y);
-        const HudFrame &chFrame = chars.begin()->second;
-        float localSpacing = chFrame.size.x * text.params.z * spacing;
+        glm::vec2 pos = glm::vec2(text.params.x, text.params.y);
+        float localSpacing = spacing * chars.begin()->second.size.y * text.params.z;
 
         if (text.params.w > 0.0f) {
-            float w = localSpacing * text.str.size();
-            float h = chFrame.size.y * text.params.z;
+            float w = computeTextLength(text.str, text.params.z);
+            float h = chars.begin()->second.size.y * text.params.z;
 
-            startPos.x = startPos.x - w / 2.0f;
-            startPos.y = startPos.y - h / 2.0f;
+            pos.x = pos.x - w / 2.0f;
+            pos.y = pos.y - h / 2.0f;
         }
 
         for (int i = 0; i < text.str.size(); i++) {
-            if (text.str[i] == ' ')
-                continue;
 
-            glm::vec2 pos{startPos.x + static_cast<float>(i) * localSpacing, startPos.y};
+            if (text.str[i] == ' ') {
+                pos.x += localSpacing;
+                continue;
+            }
+            auto *frame = &chars[text.str[i]];
             HudElement elem{};
 
-            elem.frames = {&chars[text.str[i]]};
-            elem.currentFrame = 0;
-            elem.name = {};
+            elem.frames = {frame};
             elem.pos = pos;
             elem.scale = text.params.z;
-            elem.visible = true;
-            elem.centered = false;
-            elem.interactable = false;
 
             elements.push_back(std::move(elem));
+
+            pos.x += frame->size.x * text.params.z;
         }
     }
+}
+
+float HudText::computeTextLength(std::string_view text, float scale) {
+    float size = 0.0f;
+    for (const char c : text) {
+        if (c == ' ') {
+            size += chars.begin()->second.size.y * spacing;
+            continue;
+        }
+
+        size += chars[c].size.x;
+    }
+
+    return size * scale;
 }
 
 std::vector<HudElement> &HudText::getElements() { return elements; }

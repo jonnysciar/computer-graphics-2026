@@ -10,7 +10,7 @@ struct Settings {
         BLINN_PHONG = 1,
         COOK_TORRANCE = 2,
     };
-    bool enableShadows = false;
+    bool shadows = false;
     Shading shading = BASIC;
     int dynamicLight = false;
     bool showFps = false;

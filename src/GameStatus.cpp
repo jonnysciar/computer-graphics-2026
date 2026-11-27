@@ -43,14 +43,15 @@ void GameStatus::loadLights(std::string_view jsonFile) {
 void GameStatus::onEvent(Key key) {
     switch (key.glfw_key) {
     case GLFW_KEY_ESCAPE:
-        if (state == State::PAUSE) {
+        if (state == State::PAUSE || state == State::SETTINGS) {
             state = State::GAME;
         } else if (state == State::GAME) {
             state = State::PAUSE;
         }
         break;
     case GLFW_KEY_1:
-        settings.enableShadows = !settings.enableShadows;
+        settings.shadows = !settings.shadows;
+        std::cout << "Shadows are " << (settings.shadows ? "enabled" : "disabled") << std::endl;
         break;
     case GLFW_KEY_2:
         settings.shading = static_cast<Settings::Shading>((settings.shading + 1) % 3);

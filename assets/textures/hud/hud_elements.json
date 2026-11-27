@@ -45,9 +45,9 @@
       "name": "prompt",
       "pos": {
         "x": 0.0,
-        "y": 0.9
+        "y": 0.8
       },
-      "scale": 4.0,
+      "scale": 5.0,
       "visible": false,
       "centered": true,
       "interactable": false
@@ -60,7 +60,7 @@
         "x": 0.0,
         "y": 0.0
       },
-      "scale": 3.0,
+      "scale": 3.5,
       "visible": false,
       "centered": true,
       "interactable": false
@@ -76,10 +76,15 @@
       "scale": 2.0,
       "visible": false,
       "centered": true,
-      "interactable": true
+      "interactable": true,
+      "type": 1
     },
     {
-      "frames": ["settings_button", "settings_button_hover", "settings_button_pressed"],
+      "frames": [
+        "settings_button",
+        "settings_button_hover",
+        "settings_button_pressed"
+      ],
       "currentFrame": 0,
       "name": "z_settings",
       "pos": {
@@ -89,7 +94,8 @@
       "scale": 2.0,
       "visible": false,
       "centered": true,
-      "interactable": true
+      "interactable": true,
+      "type": 1
     },
     {
       "frames": ["exit_button", "exit_button_hover", "exit_button_pressed"],
@@ -102,10 +108,15 @@
       "scale": 2.0,
       "visible": false,
       "centered": true,
-      "interactable": true
+      "interactable": true,
+      "type": 1
     },
     {
-      "frames": ["resume_button", "resume_button_hover", "resume_button_pressed"],
+      "frames": [
+        "resume_button",
+        "resume_button_hover",
+        "resume_button_pressed"
+      ],
       "currentFrame": 0,
       "name": "z_resume",
       "pos": {
@@ -115,7 +126,65 @@
       "scale": 2.0,
       "visible": false,
       "centered": true,
-      "interactable": true
+      "interactable": true,
+      "type": 1
+    },
+    {
+      "frames": [
+        "toggle_disabled",
+        "toggle_enabled",
+        "toggle_disabled_hover",
+        "toggle_enabled_hover"
+      ],
+      "currentFrame": 0,
+      "name": "z_toggle_fps",
+      "pos": {
+        "x": 0.45,
+        "y": -0.15
+      },
+      "scale": 1.5,
+      "visible": false,
+      "centered": true,
+      "interactable": true,
+      "type": 2
+    },
+    {
+      "frames": [
+        "toggle_disabled",
+        "toggle_enabled",
+        "toggle_disabled_hover",
+        "toggle_enabled_hover"
+      ],
+      "currentFrame": 0,
+      "name": "z_toggle_shadows",
+      "pos": {
+        "x": 0.45,
+        "y": 0.10
+      },
+      "scale": 1.5,
+      "visible": false,
+      "centered": true,
+      "interactable": true,
+      "type": 2
+    },
+    {
+      "frames": [
+        "toggle_disabled",
+        "toggle_enabled",
+        "toggle_disabled_hover",
+        "toggle_enabled_hover"
+      ],
+      "currentFrame": 0,
+      "name": "z_toggle_dyn_l",
+      "pos": {
+        "x": 0.45,
+        "y": 0.35
+      },
+      "scale": 1.5,
+      "visible": false,
+      "centered": true,
+      "interactable": true,
+      "type": 2
     }
   ]
 }
