@@ -57,7 +57,6 @@ HudManager::HudManager(BaseProject *basep, int w, int h) : bp(basep) {
     elements["z_toggle_fps"].callback = HudHelper::fpsToggleHandler;
     elements["z_toggle_shadows"].callback = HudHelper::shadowsToggleHandler;
     elements["z_toggle_dyn_l"].callback = HudHelper::dynamicLightToggleHandler;
-    elements["z_toggle_shading"].callback = HudHelper::shadingToggleHandler;
 
     hudText = std::make_unique<HudText>("assets/textures/hud/hud_font.json",
                                         this->frames["font"].pos * glm::vec2(texW, texH));
@@ -227,6 +226,10 @@ void HudManager::buildUI(GameStatus &gs) {
         elements["z_back"].callback = [prevState = this->prevState](HudElement *self, GameStatus &gs) {
             gs.state = prevState;
         };
+        elements["z_toggle_shading"].callback = [prevState = this->prevState, this](HudElement *self, GameStatus &gs) {
+            HudHelper::shadingToggleHandler(self, gs);
+            this->prevState = prevState;
+        };
 
         elements["z_toggle_fps"].currentFrame = gs.settings.showFps;
         elements["z_toggle_shadows"].currentFrame = gs.settings.shadows;
@@ -239,7 +242,7 @@ void HudManager::buildUI(GameStatus &gs) {
         hudText->addText("settings_fps", {"Enable FPS counter   ", glm::vec4(-0.8f, -0.25f, 3.0f, 0.0f)});
         hudText->addText("settings_shadows", {"Enable Shadows       ", glm::vec4(-0.8f, -0.05f, 3.0f, 0.0f)});
         hudText->addText("settings_dyn_l", {"Enable dynamic lights", glm::vec4(-0.8f, 0.15f, 3.0f, 0.0f)});
-        hudText->addText("settings_shading", {str, glm::vec4(-0.8f, 0.35f, 2.3f, 0.0f)});
+        hudText->addText("settings_shading", {str, glm::vec4(-0.8f, 0.36f, 2.3f, 0.0f)});
         break;
     case GameStatus::State::END:
         hudText->removeAllTexts();
