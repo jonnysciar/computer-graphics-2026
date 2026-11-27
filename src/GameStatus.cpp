@@ -10,6 +10,8 @@ std::string_view Settings::shadingString() {
     case COOK_TORRANCE:
         return "Cook-Torrance";
     }
+
+    return "none";
 }
 
 // rooms reachable from room through at most depth doors (only the open ones if onlyOpen)
