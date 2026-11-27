@@ -154,7 +154,7 @@ void HudManager::buildFPS(GameStatus &gs, float deltaT) {
             elapsed = 0;
             countedFrame = 0;
 
-            std::snprintf(str, 14, "FPS: %.1f", fps);
+            std::snprintf(str, sizeof(str), "FPS: %.1f", fps);
             hudText->addText("fps", {str, glm::vec4(0.79f, -0.95f, 3.0f, 1.0f)});
 
             dirty = true;
@@ -236,7 +236,7 @@ void HudManager::buildUI(GameStatus &gs) {
         elements["z_toggle_dyn_l"].currentFrame = gs.settings.dynamicLight;
         elements["z_toggle_shading"].currentFrame = gs.settings.shading;
 
-        std::snprintf(str, 49, "Change shading (%s)", gs.settings.shadingString().data());
+        std::snprintf(str, sizeof(str), "Change shading (%s)", gs.settings.shadingString().data());
 
         hudText->addText("menu", {"Settings", glm::vec4(0.0f, -0.45f, 5.0f, 1.0f)});
         hudText->addText("settings_fps", {"Enable FPS counter   ", glm::vec4(-0.8f, -0.25f, 3.0f, 0.0f)});
